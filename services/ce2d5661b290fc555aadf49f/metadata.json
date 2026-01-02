@@ -1,0 +1,13 @@
+{
+  "service_id": "ce2d5661b290fc555aadf49f",
+  "repo_name": "apache/doris",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "68.51MB",
+  "language": "java",
+  "star": 14586,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T15:22:24.948757"
+}
