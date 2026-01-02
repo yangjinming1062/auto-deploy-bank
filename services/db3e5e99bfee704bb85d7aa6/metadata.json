@@ -1,0 +1,13 @@
+{
+  "service_id": "db3e5e99bfee704bb85d7aa6",
+  "repo_name": "unclecode/crawl4ai",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "8.11MB",
+  "language": "python",
+  "star": 55748,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:40:49.330687"
+}
