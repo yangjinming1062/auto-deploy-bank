@@ -1,0 +1,13 @@
+{
+  "service_id": "da0c5bb0ab7758a5b030cb07",
+  "repo_name": "plotly/dash",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "21.11MB",
+  "language": "python",
+  "star": 24241,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-01-02T15:42:38.964590"
+}
