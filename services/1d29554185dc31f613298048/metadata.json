@@ -1,0 +1,13 @@
+{
+  "service_id": "1d29554185dc31f613298048",
+  "repo_name": "zenml-io/zenml",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "147.08MB",
+  "language": "python",
+  "star": 5096,
+  "repo_flag": "PYTHON-langfuse",
+  "uploaded_at": "2026-01-02T14:48:02.284537"
+}
