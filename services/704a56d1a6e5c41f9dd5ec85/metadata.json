@@ -1,0 +1,13 @@
+{
+  "service_id": "704a56d1a6e5c41f9dd5ec85",
+  "repo_name": "LazyAGI/LazyLLM",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "6.65MB",
+  "language": "python",
+  "star": 3296,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T14:33:04.826960"
+}
