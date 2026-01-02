@@ -1,0 +1,13 @@
+{
+  "service_id": "5fcf523084161f8068c485b9",
+  "repo_name": "raga-ai-hub/RagaAI-Catalyst",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "39.16MB",
+  "language": "python",
+  "star": 16088,
+  "repo_flag": "PYTHON-langgraph",
+  "uploaded_at": "2026-01-02T15:00:19.358019"
+}
