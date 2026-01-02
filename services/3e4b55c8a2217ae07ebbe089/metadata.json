@@ -1,0 +1,13 @@
+{
+  "service_id": "3e4b55c8a2217ae07ebbe089",
+  "repo_name": "amundsen-io/amundsen",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "6.67MB",
+  "language": "python",
+  "star": 4686,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:22:51.677546"
+}
