@@ -1,0 +1,13 @@
+{
+  "service_id": "24d550faa64b927355aa1235",
+  "repo_name": "answeryt/Neosgenesis",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.43MB",
+  "language": "python",
+  "star": 3048,
+  "repo_flag": "PYTHON-langchain",
+  "uploaded_at": "2026-01-02T14:32:49.484048"
+}
