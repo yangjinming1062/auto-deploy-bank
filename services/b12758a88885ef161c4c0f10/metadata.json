@@ -1,0 +1,13 @@
+{
+  "service_id": "b12758a88885ef161c4c0f10",
+  "repo_name": "FoundationAgents/OpenManus",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "51KB",
+  "language": "python",
+  "star": 50809,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:41:55.684218"
+}
