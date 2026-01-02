@@ -1,0 +1,13 @@
+{
+  "service_id": "b7025b2d9c46a25e63c5104e",
+  "repo_name": "rail-berkeley/softlearning",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "157KB",
+  "language": "python",
+  "star": 1376,
+  "repo_flag": "PYTHON-TensorFlow",
+  "uploaded_at": "2026-01-02T14:01:23.503615"
+}
