@@ -1,0 +1,13 @@
+{
+  "service_id": "e4945baba314b44ba30f0b1e",
+  "repo_name": "cskefu/cskefu",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "20.95MB",
+  "language": "java",
+  "star": 2857,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T14:31:21.508996"
+}
