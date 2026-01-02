@@ -1,0 +1,13 @@
+{
+  "service_id": "4cb15f28966b6322f09c9e61",
+  "repo_name": "h2oai/h2o-3",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "113.87MB",
+  "language": "java",
+  "star": 7435,
+  "repo_flag": "JAVA-Guava",
+  "uploaded_at": "2026-01-02T14:58:36.601750"
+}
