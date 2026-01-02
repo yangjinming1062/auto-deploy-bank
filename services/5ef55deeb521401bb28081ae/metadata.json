@@ -1,0 +1,13 @@
+{
+  "service_id": "5ef55deeb521401bb28081ae",
+  "repo_name": "apache/spark",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "64.89MB",
+  "language": "java",
+  "star": 42465,
+  "repo_flag": "JAVA-Guava",
+  "uploaded_at": "2026-01-02T15:13:46.258112"
+}
