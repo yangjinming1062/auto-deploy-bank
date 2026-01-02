@@ -1,0 +1,13 @@
+{
+  "service_id": "efae52b7908b64c01aaa1f0d",
+  "repo_name": "binux/pyspider",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "2.21MB",
+  "language": "python",
+  "star": 16965,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:41:49.286347"
+}
