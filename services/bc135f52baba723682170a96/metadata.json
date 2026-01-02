@@ -1,0 +1,13 @@
+{
+  "service_id": "bc135f52baba723682170a96",
+  "repo_name": "buildbot/buildbot",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "4.58MB",
+  "language": "python",
+  "star": 5400,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:26:18.606333"
+}
