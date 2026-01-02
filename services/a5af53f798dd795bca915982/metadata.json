@@ -1,0 +1,13 @@
+{
+  "service_id": "a5af53f798dd795bca915982",
+  "repo_name": "BasedHardware/omi",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "451.44MB",
+  "language": "python",
+  "star": 7360,
+  "repo_flag": "PYTHON-langfuse",
+  "uploaded_at": "2026-01-02T14:59:10.395540"
+}
