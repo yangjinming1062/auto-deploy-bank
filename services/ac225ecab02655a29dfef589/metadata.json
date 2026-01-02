@@ -1,0 +1,13 @@
+{
+  "service_id": "ac225ecab02655a29dfef589",
+  "repo_name": "X-PLUG/MobileAgent",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "356.13MB",
+  "language": "python",
+  "star": 6574,
+  "repo_flag": "PYTHON-TensorFlow",
+  "uploaded_at": "2026-01-02T14:57:53.756553"
+}
