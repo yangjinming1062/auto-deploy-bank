@@ -1,0 +1,13 @@
+{
+  "service_id": "56a55337b64a55adfb4ee30f",
+  "repo_name": "realpython/materials",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "202.45MB",
+  "language": "python",
+  "star": 5051,
+  "repo_flag": "PYTHON-LangChain",
+  "uploaded_at": "2026-01-02T14:51:36.737937"
+}
