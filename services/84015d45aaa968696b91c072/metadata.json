@@ -1,0 +1,13 @@
+{
+  "service_id": "84015d45aaa968696b91c072",
+  "repo_name": "AGiXT/Interactive",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "644KB",
+  "language": "nodejs",
+  "star": 6,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:47:40.037911"
+}
