@@ -1,0 +1,13 @@
+{
+  "service_id": "0e2a5eed9e1cb8444def0fa7",
+  "repo_name": "xtekky/gpt4free",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "777KB",
+  "language": "python",
+  "star": 65636,
+  "repo_flag": "PYTHON-FastAPI",
+  "uploaded_at": "2026-01-02T15:01:10.422756"
+}
