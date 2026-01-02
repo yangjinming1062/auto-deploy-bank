@@ -1,0 +1,13 @@
+{
+  "service_id": "81955178aadffe7897ff8ea6",
+  "repo_name": "WebGoat/WebGoat",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "14.19MB",
+  "language": "java",
+  "star": 8682,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T15:24:58.542593"
+}
