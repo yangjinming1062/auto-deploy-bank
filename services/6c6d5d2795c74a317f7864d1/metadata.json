@@ -1,0 +1,13 @@
+{
+  "service_id": "6c6d5d2795c74a317f7864d1",
+  "repo_name": "dottxt-ai/outlines",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "2.84MB",
+  "language": "python",
+  "star": 13102,
+  "repo_flag": "PYTHON-BentoML",
+  "uploaded_at": "2026-01-02T14:59:50.436305"
+}
