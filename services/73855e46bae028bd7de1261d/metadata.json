@@ -1,0 +1,13 @@
+{
+  "service_id": "73855e46bae028bd7de1261d",
+  "repo_name": "shuup/shuup",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "7.60MB",
+  "language": "python",
+  "star": 2342,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T14:22:53.295582"
+}
