@@ -1,0 +1,13 @@
+{
+  "service_id": "d07f5d9ebec271de298d5a94",
+  "repo_name": "milvus-io/bootcamp",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "45.36MB",
+  "language": "python",
+  "star": 2304,
+  "repo_flag": "PYTHON-LlamaIndex",
+  "uploaded_at": "2026-01-02T14:19:02.185952"
+}
