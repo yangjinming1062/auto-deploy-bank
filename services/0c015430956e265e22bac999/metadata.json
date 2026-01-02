@@ -1,0 +1,13 @@
+{
+  "service_id": "0c015430956e265e22bac999",
+  "repo_name": "AgentOps-AI/agentops",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "150.71MB",
+  "language": "python",
+  "star": 5123,
+  "repo_flag": "PYTHON-langgraph",
+  "uploaded_at": "2026-01-02T14:51:13.581078"
+}
