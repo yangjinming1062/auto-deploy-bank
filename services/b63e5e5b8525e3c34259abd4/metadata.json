@@ -1,0 +1,13 @@
+{
+  "service_id": "b63e5e5b8525e3c34259abd4",
+  "repo_name": "bugsink/bugsink",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.05MB",
+  "language": "python",
+  "star": 1226,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:46:22.110943"
+}
