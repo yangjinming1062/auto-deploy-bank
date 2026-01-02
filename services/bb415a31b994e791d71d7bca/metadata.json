@@ -1,0 +1,13 @@
+{
+  "service_id": "bb415a31b994e791d71d7bca",
+  "repo_name": "apache/camel",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "83.57MB",
+  "language": "java",
+  "star": 6069,
+  "repo_flag": "JAVA-Guava",
+  "uploaded_at": "2026-01-02T14:55:43.644524"
+}
