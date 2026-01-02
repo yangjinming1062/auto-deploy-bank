@@ -1,0 +1,13 @@
+{
+  "service_id": "1e915edc9ae9d1ac1862637a",
+  "repo_name": "apache/grails-core",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "12.85MB",
+  "language": "java",
+  "star": 2859,
+  "repo_flag": "JAVA-Logback",
+  "uploaded_at": "2026-01-02T14:32:04.887370"
+}
