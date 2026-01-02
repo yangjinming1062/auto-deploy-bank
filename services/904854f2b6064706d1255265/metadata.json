@@ -1,0 +1,13 @@
+{
+  "service_id": "904854f2b6064706d1255265",
+  "repo_name": "JanusGraph/janusgraph",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "5.03MB",
+  "language": "java",
+  "star": 5680,
+  "repo_flag": "JAVA-Logback",
+  "uploaded_at": "2026-01-02T14:54:55.420765"
+}
