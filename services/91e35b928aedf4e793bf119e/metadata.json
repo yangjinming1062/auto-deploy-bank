@@ -1,0 +1,13 @@
+{
+  "service_id": "91e35b928aedf4e793bf119e",
+  "repo_name": "NanoNets/docext",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "5.60MB",
+  "language": "python",
+  "star": 1817,
+  "repo_flag": "PYTHON-vllm",
+  "uploaded_at": "2026-01-02T14:06:03.379497"
+}
