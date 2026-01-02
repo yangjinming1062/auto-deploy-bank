@@ -1,0 +1,13 @@
+{
+  "service_id": "e2025883835b7c9ebe55f254",
+  "repo_name": "archerysec/archerysec",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "14.43MB",
+  "language": "python",
+  "star": 2418,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T14:23:01.370318"
+}
