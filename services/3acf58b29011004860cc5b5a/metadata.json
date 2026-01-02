@@ -1,0 +1,13 @@
+{
+  "service_id": "3acf58b29011004860cc5b5a",
+  "repo_name": "AstrBotDevs/AstrBot",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "781KB",
+  "language": "python",
+  "star": 13260,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:45:46.439147"
+}
