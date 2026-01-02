@@ -1,0 +1,13 @@
+{
+  "service_id": "081154f7b7d67f85432dcc2c",
+  "repo_name": "sohutv/cachecloud",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "49.16MB",
+  "language": "java",
+  "star": 9210,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T15:40:29.331975"
+}
