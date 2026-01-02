@@ -1,0 +1,13 @@
+{
+  "service_id": "95505b8da277ad1a79a3353d",
+  "repo_name": "encode/httpx",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "2.09MB",
+  "language": "python",
+  "star": 14732,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:43:51.739916"
+}
