@@ -1,0 +1,13 @@
+{
+  "service_id": "e96753a8bad01fc0e8fc63ee",
+  "repo_name": "gradio-app/gradio",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "95.35MB",
+  "language": "python",
+  "star": 40849,
+  "repo_flag": "PYTHON-PyTorch",
+  "uploaded_at": "2026-01-02T15:01:34.818159"
+}
