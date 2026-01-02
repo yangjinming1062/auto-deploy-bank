@@ -1,0 +1,13 @@
+{
+  "service_id": "4f705328a0ae57443ea50ef1",
+  "repo_name": "griptape-ai/griptape",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "700KB",
+  "language": "python",
+  "star": 2407,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:46:00.342028"
+}
