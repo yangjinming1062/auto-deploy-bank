@@ -1,0 +1,13 @@
+{
+  "service_id": "1b865c5f8e50257ce7df3480",
+  "repo_name": "abixen/abixen-platform",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "68.39MB",
+  "language": "java",
+  "star": 684,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T15:30:23.760880"
+}
