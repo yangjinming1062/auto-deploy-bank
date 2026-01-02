@@ -1,0 +1,13 @@
+{
+  "service_id": "3ec65f029db698311d1aa636",
+  "repo_name": "google-research/google-research",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "471.61MB",
+  "language": "python",
+  "star": 36886,
+  "repo_flag": "PYTHON-vllm",
+  "uploaded_at": "2026-01-02T14:54:08.398827"
+}
