@@ -1,0 +1,13 @@
+{
+  "service_id": "f3e156c3b210d3f13f4be4e5",
+  "repo_name": "vikingco/django-ajax-utilities",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "69KB",
+  "language": "python",
+  "star": 9,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:45:12.512467"
+}
