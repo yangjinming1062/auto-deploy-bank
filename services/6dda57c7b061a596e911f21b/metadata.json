@@ -1,0 +1,13 @@
+{
+  "service_id": "6dda57c7b061a596e911f21b",
+  "repo_name": "agiresearch/OpenAGI",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "202KB",
+  "language": "python",
+  "star": 2220,
+  "repo_flag": "PYTHON-LlamaIndex",
+  "uploaded_at": "2026-01-02T14:18:19.265446"
+}
