@@ -1,0 +1,13 @@
+{
+  "service_id": "bd9656fbbcf998f4c08110d8",
+  "repo_name": "swagger-api/swagger-core",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.39MB",
+  "language": "java",
+  "star": 7500,
+  "repo_flag": "JAVA-Logback",
+  "uploaded_at": "2026-01-02T14:59:31.515018"
+}
