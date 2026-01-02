@@ -1,0 +1,13 @@
+{
+  "service_id": "861d5a5681f793fb75cef340",
+  "repo_name": "ngbdf/redis-manager",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "15.01MB",
+  "language": "java",
+  "star": 2948,
+  "repo_flag": "JAVA-Guava",
+  "uploaded_at": "2026-01-02T14:32:19.913545"
+}
