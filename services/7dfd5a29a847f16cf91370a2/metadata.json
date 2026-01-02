@@ -1,0 +1,13 @@
+{
+  "service_id": "7dfd5a29a847f16cf91370a2",
+  "repo_name": "localstack/localstack",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.05MB",
+  "language": "python",
+  "star": 62922,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:41:13.970951"
+}
