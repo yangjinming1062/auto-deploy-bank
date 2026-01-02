@@ -1,0 +1,13 @@
+{
+  "service_id": "be345e269f6b06ae5eb33f55",
+  "repo_name": "langchain-ai/langchainjs",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "10.02MB",
+  "language": "nodejs",
+  "star": 16500,
+  "repo_flag": "NODEJS-ChromaDB",
+  "uploaded_at": "2026-01-02T15:05:08.473103"
+}
