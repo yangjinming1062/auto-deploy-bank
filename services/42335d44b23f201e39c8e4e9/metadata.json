@@ -1,0 +1,13 @@
+{
+  "service_id": "42335d44b23f201e39c8e4e9",
+  "repo_name": "TencentBlueKing/bk-ci",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "28.37MB",
+  "language": "java",
+  "star": 2470,
+  "repo_flag": "JAVA-LangChain4j",
+  "uploaded_at": "2026-01-02T14:30:10.842063"
+}
