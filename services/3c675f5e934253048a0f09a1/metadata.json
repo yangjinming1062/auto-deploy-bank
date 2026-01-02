@@ -1,0 +1,13 @@
+{
+  "service_id": "3c675f5e934253048a0f09a1",
+  "repo_name": "assafelovic/gpt-researcher",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "2.35MB",
+  "language": "python",
+  "star": 24130,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:41:36.476379"
+}
