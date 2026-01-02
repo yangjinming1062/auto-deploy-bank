@@ -1,0 +1,13 @@
+{
+  "service_id": "036b5935a509e4c10ace91cd",
+  "repo_name": "wenda-LLM/wenda",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "13.32MB",
+  "language": "python",
+  "star": 6228,
+  "repo_flag": "PYTHON-LangChain",
+  "uploaded_at": "2026-01-02T14:57:35.042107"
+}
