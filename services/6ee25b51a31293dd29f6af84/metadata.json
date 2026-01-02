@@ -1,0 +1,13 @@
+{
+  "service_id": "6ee25b51a31293dd29f6af84",
+  "repo_name": "digitalfondue/lavagna",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "2.60MB",
+  "language": "java",
+  "star": 640,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T15:29:14.777706"
+}
