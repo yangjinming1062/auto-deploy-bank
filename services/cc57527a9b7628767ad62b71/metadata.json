@@ -1,0 +1,13 @@
+{
+  "service_id": "cc57527a9b7628767ad62b71",
+  "repo_name": "Netflix/consoleme",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "12.60MB",
+  "language": "python",
+  "star": 3197,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T14:32:56.968529"
+}
