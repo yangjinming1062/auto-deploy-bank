@@ -1,0 +1,13 @@
+{
+  "service_id": "0d21517c8888d1b6f5a3041e",
+  "repo_name": "ageerle/ruoyi-ai",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "6.17MB",
+  "language": "java",
+  "star": 4327,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T14:40:36.455535"
+}
