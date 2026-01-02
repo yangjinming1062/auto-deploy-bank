@@ -1,0 +1,13 @@
+{
+  "service_id": "c5cf5bc882cc7b2516555e9d",
+  "repo_name": "gradio-app/fastrtc",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "3.96MB",
+  "language": "python",
+  "star": 4447,
+  "repo_flag": "PYTHON-FastAPI",
+  "uploaded_at": "2026-01-02T14:44:11.734497"
+}
