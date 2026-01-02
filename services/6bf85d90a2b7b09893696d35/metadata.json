@@ -1,0 +1,13 @@
+{
+  "service_id": "6bf85d90a2b7b09893696d35",
+  "repo_name": "ltsopensource/light-task-scheduler",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "3.15MB",
+  "language": "java",
+  "star": 3018,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T15:15:38.374146"
+}
