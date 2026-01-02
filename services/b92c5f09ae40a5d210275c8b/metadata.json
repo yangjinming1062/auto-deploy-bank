@@ -1,0 +1,13 @@
+{
+  "service_id": "b92c5f09ae40a5d210275c8b",
+  "repo_name": "inception-project/inception",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "24.09MB",
+  "language": "java",
+  "star": 666,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T15:29:43.821033"
+}
