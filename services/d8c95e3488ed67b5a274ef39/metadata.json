@@ -1,0 +1,13 @@
+{
+  "service_id": "d8c95e3488ed67b5a274ef39",
+  "repo_name": "gatsbyjs/gatsby",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "223.60MB",
+  "language": "nodejs",
+  "star": 55960,
+  "repo_flag": "NODEJS-Lodash",
+  "uploaded_at": "2026-01-02T15:12:05.912663"
+}
