@@ -1,0 +1,13 @@
+{
+  "service_id": "ef855b2cb1a7961be754751a",
+  "repo_name": "souzatharsis/podcastfy",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "58.66MB",
+  "language": "python",
+  "star": 5614,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:41:05.412341"
+}
