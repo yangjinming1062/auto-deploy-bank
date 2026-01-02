@@ -1,0 +1,13 @@
+{
+  "service_id": "6c585a61a1c891448e798187",
+  "repo_name": "mymagicpower/AIAS",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "206.09MB",
+  "language": "java",
+  "star": 947,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T15:25:56.810387"
+}
