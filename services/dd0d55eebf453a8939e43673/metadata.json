@@ -1,0 +1,13 @@
+{
+  "service_id": "dd0d55eebf453a8939e43673",
+  "repo_name": "j3ers3/Hello-Java-Sec",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "3.92MB",
+  "language": "java",
+  "star": 1685,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T14:03:20.847170"
+}
