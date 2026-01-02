@@ -1,0 +1,13 @@
+{
+  "service_id": "ba0650128f9e3b4ab8966b90",
+  "repo_name": "SonarSource/sonar-java",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "9.24MB",
+  "language": "java",
+  "star": 1182,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T15:33:27.679749"
+}
