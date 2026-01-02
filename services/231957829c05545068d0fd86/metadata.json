@@ -1,0 +1,13 @@
+{
+  "service_id": "231957829c05545068d0fd86",
+  "repo_name": "OpenBMB/ToolBench",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "10.44MB",
+  "language": "python",
+  "star": 5366,
+  "repo_flag": "PYTHON-LangChain",
+  "uploaded_at": "2026-01-02T14:55:02.316976"
+}
