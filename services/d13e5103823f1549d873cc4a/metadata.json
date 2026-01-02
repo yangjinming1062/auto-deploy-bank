@@ -1,0 +1,13 @@
+{
+  "service_id": "d13e5103823f1549d873cc4a",
+  "repo_name": "simonw/datasette-query-links",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "5KB",
+  "language": "python",
+  "star": 6,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:46:07.078249"
+}
