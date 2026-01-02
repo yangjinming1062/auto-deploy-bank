@@ -1,0 +1,13 @@
+{
+  "service_id": "8eab5402932737d920c19949",
+  "repo_name": "krateng/maloja",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "2.76MB",
+  "language": "python",
+  "star": 1522,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:37:02.771902"
+}
