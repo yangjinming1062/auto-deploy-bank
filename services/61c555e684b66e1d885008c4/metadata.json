@@ -1,0 +1,13 @@
+{
+  "service_id": "61c555e684b66e1d885008c4",
+  "repo_name": "meta-llama/llama-cookbook",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "61.76MB",
+  "language": "python",
+  "star": 18081,
+  "repo_flag": "PYTHON-vllm",
+  "uploaded_at": "2026-01-02T15:01:21.809770"
+}
