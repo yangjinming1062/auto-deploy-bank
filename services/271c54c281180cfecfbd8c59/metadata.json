@@ -1,0 +1,13 @@
+{
+  "service_id": "271c54c281180cfecfbd8c59",
+  "repo_name": "valarchie/AgileBoot-Back-End",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "4.60MB",
+  "language": "java",
+  "star": 2193,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T14:18:08.619383"
+}
