@@ -1,0 +1,13 @@
+{
+  "service_id": "cb245a37924cc474a121716a",
+  "repo_name": "langflow-ai/langflow",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "134.17MB",
+  "language": "python",
+  "star": 138014,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:45:02.107613"
+}
