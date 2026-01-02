@@ -1,0 +1,13 @@
+{
+  "service_id": "a1d05d318afb781c8ca19b19",
+  "repo_name": "fossasia/susi_skill_cms",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "562KB",
+  "language": "nodejs",
+  "star": 1585,
+  "repo_flag": "NODEJS-Axios",
+  "uploaded_at": "2026-01-02T14:03:09.250228"
+}
