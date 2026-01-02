@@ -1,0 +1,13 @@
+{
+  "service_id": "d0845d0faa7f6b2cf12dad1b",
+  "repo_name": "dcm4che/dcm4che",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "11.78MB",
+  "language": "java",
+  "star": 1373,
+  "repo_flag": "JAVA-Logback",
+  "uploaded_at": "2026-01-02T14:01:16.196015"
+}
