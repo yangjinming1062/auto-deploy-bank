@@ -1,0 +1,13 @@
+{
+  "service_id": "7e585089a21a24ccbe1df6ff",
+  "repo_name": "firebase/genkit",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "20.07MB",
+  "language": "nodejs",
+  "star": 5142,
+  "repo_flag": "NODEJS-ChromaDB",
+  "uploaded_at": "2026-01-02T14:50:42.385012"
+}
