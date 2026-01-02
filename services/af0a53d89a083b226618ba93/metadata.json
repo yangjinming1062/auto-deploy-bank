@@ -1,0 +1,13 @@
+{
+  "service_id": "af0a53d89a083b226618ba93",
+  "repo_name": "GIScience/openrouteservice",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "56.13MB",
+  "language": "java",
+  "star": 1762,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T15:34:24.533344"
+}
