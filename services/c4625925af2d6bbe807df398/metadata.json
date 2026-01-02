@@ -1,0 +1,13 @@
+{
+  "service_id": "c4625925af2d6bbe807df398",
+  "repo_name": "OpenGVLab/LLaMA-Adapter",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "31.88MB",
+  "language": "python",
+  "star": 5924,
+  "repo_flag": "PYTHON-PyTorch",
+  "uploaded_at": "2026-01-02T14:55:11.550118"
+}
