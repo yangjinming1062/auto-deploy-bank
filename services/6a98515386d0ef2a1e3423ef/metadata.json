@@ -1,0 +1,13 @@
+{
+  "service_id": "6a98515386d0ef2a1e3423ef",
+  "repo_name": "hwchase17/notion-qa",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "46.63MB",
+  "language": "python",
+  "star": 2162,
+  "repo_flag": "PYTHON-langchain",
+  "uploaded_at": "2026-01-02T14:16:36.044326"
+}
