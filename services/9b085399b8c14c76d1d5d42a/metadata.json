@@ -1,0 +1,13 @@
+{
+  "service_id": "9b085399b8c14c76d1d5d42a",
+  "repo_name": "SonarSource/sonarqube",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "17.72MB",
+  "language": "java",
+  "star": 10092,
+  "repo_flag": "JAVA-Logback",
+  "uploaded_at": "2026-01-02T15:04:44.147681"
+}
