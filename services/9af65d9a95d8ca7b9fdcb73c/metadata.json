@@ -1,0 +1,13 @@
+{
+  "service_id": "9af65d9a95d8ca7b9fdcb73c",
+  "repo_name": "geopython/pywps",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "432KB",
+  "language": "python",
+  "star": 180,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:44:44.203305"
+}
