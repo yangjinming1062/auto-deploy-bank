@@ -1,0 +1,13 @@
+{
+  "service_id": "f2315e199ce89e8e256186d9",
+  "repo_name": "web2py/web2py",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "6.30MB",
+  "language": "python",
+  "star": 2167,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:47:59.878546"
+}
