@@ -1,0 +1,13 @@
+{
+  "service_id": "5ad15722a9c4010b05d0d2be",
+  "repo_name": "apache/gobblin",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "12.73MB",
+  "language": "java",
+  "star": 2256,
+  "repo_flag": "JAVA-Guava",
+  "uploaded_at": "2026-01-02T14:18:41.538960"
+}
