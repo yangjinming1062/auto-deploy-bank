@@ -1,0 +1,13 @@
+{
+  "service_id": "91505f2b9edd913ca366901e",
+  "repo_name": "django-cms/django-cms",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "6.01MB",
+  "language": "python",
+  "star": 10579,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-01-02T15:27:52.257478"
+}
