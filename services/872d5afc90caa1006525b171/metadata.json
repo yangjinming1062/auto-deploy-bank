@@ -1,0 +1,13 @@
+{
+  "service_id": "872d5afc90caa1006525b171",
+  "repo_name": "spring-projects/spring-boot",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "17.25MB",
+  "language": "java",
+  "star": 79336,
+  "repo_flag": "JAVA-Logback",
+  "uploaded_at": "2026-01-02T15:07:31.985270"
+}
