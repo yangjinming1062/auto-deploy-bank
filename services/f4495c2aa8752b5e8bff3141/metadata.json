@@ -1,0 +1,13 @@
+{
+  "service_id": "f4495c2aa8752b5e8bff3141",
+  "repo_name": "OS-Copilot/OS-Copilot",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "7.19MB",
+  "language": "python",
+  "star": 1697,
+  "repo_flag": "PYTHON-langchain",
+  "uploaded_at": "2026-01-02T14:03:31.240265"
+}
