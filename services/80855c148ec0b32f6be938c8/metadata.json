@@ -1,0 +1,13 @@
+{
+  "service_id": "80855c148ec0b32f6be938c8",
+  "repo_name": "pallets-eco/flask-admin",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "7.71MB",
+  "language": "python",
+  "star": 6037,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-01-02T15:48:55.660547"
+}
