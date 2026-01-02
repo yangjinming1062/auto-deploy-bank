@@ -1,0 +1,13 @@
+{
+  "service_id": "f7d45fe1ae5a3b290127c268",
+  "repo_name": "BerriAI/litellm",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "72.54MB",
+  "language": "python",
+  "star": 30996,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:45:30.471507"
+}
