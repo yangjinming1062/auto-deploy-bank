@@ -1,0 +1,13 @@
+{
+  "service_id": "f90a5b7bac9e7481f3914682",
+  "repo_name": "django-commons/django-debug-toolbar",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "347KB",
+  "language": "python",
+  "star": 8307,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:43:58.979282"
+}
