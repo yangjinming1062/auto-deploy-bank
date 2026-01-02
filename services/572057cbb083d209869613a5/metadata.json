@@ -1,0 +1,13 @@
+{
+  "service_id": "572057cbb083d209869613a5",
+  "repo_name": "alibaba/GraphScope",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "53.92MB",
+  "language": "python",
+  "star": 3500,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T14:33:55.065859"
+}
