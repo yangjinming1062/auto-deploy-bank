@@ -1,0 +1,13 @@
+{
+  "service_id": "13765aa59994765c41537d01",
+  "repo_name": "meta-pytorch/tnt",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.14MB",
+  "language": "python",
+  "star": 1718,
+  "repo_flag": "PYTHON-PyTorch",
+  "uploaded_at": "2026-01-02T14:04:54.318499"
+}
