@@ -1,0 +1,13 @@
+{
+  "service_id": "fdb85c9db4488b05c2a3c9e8",
+  "repo_name": "pgadmin-org/pgadmin4",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "42.60MB",
+  "language": "python",
+  "star": 3286,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:37:21.434188"
+}
