@@ -1,0 +1,13 @@
+{
+  "service_id": "8c0e5fb497c74933d8eb02ad",
+  "repo_name": "apache/streampark",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "3.50MB",
+  "language": "java",
+  "star": 4230,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T15:18:53.530298"
+}
