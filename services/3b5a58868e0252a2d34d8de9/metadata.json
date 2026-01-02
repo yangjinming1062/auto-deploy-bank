@@ -1,0 +1,13 @@
+{
+  "service_id": "3b5a58868e0252a2d34d8de9",
+  "repo_name": "mlrun/mlrun",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "41.19MB",
+  "language": "python",
+  "star": 1613,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:48:25.069809"
+}
