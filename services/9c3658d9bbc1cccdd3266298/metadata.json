@@ -1,0 +1,13 @@
+{
+  "service_id": "9c3658d9bbc1cccdd3266298",
+  "repo_name": "awslabs/agent-squad",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "38.71MB",
+  "language": "python",
+  "star": 7127,
+  "repo_flag": "PYTHON-langfuse",
+  "uploaded_at": "2026-01-02T14:58:11.502917"
+}
