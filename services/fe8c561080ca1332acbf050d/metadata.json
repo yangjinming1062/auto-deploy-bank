@@ -1,0 +1,13 @@
+{
+  "service_id": "fe8c561080ca1332acbf050d",
+  "repo_name": "renrenio/renren-security",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.87MB",
+  "language": "java",
+  "star": 2028,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T14:13:17.059515"
+}
