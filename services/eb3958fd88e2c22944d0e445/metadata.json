@@ -1,0 +1,13 @@
+{
+  "service_id": "eb3958fd88e2c22944d0e445",
+  "repo_name": "lilishop/lilishop",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "35.60MB",
+  "language": "java",
+  "star": 4026,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T15:19:04.072290"
+}
