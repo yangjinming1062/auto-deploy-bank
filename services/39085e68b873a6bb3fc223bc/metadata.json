@@ -1,0 +1,13 @@
+{
+  "service_id": "39085e68b873a6bb3fc223bc",
+  "repo_name": "lyft/confidant",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "754KB",
+  "language": "python",
+  "star": 1856,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:35:52.347767"
+}
