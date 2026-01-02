@@ -1,0 +1,13 @@
+{
+  "service_id": "06a5518280d321de65a460a6",
+  "repo_name": "huashengdun/webssh",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "329KB",
+  "language": "python",
+  "star": 4992,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:44:50.775996"
+}
