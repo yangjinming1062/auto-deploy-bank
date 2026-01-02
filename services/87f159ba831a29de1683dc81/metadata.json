@@ -1,0 +1,13 @@
+{
+  "service_id": "87f159ba831a29de1683dc81",
+  "repo_name": "ckan/ckan",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "13.33MB",
+  "language": "python",
+  "star": 4878,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:42:10.094457"
+}
