@@ -1,0 +1,13 @@
+{
+  "service_id": "79c353238f1d3a78a077ae43",
+  "repo_name": "apache/incubator-kie-drools",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "33.79MB",
+  "language": "java",
+  "star": 6181,
+  "repo_flag": "JAVA-Logback",
+  "uploaded_at": "2026-01-02T14:57:26.134906"
+}
