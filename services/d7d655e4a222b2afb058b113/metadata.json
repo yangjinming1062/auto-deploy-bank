@@ -1,0 +1,13 @@
+{
+  "service_id": "d7d655e4a222b2afb058b113",
+  "repo_name": "apache/gravitino",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "30.81MB",
+  "language": "java",
+  "star": 2468,
+  "repo_flag": "JAVA-Guava",
+  "uploaded_at": "2026-01-02T14:21:37.679399"
+}
