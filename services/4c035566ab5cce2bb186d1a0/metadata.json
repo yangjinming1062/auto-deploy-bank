@@ -1,0 +1,13 @@
+{
+  "service_id": "4c035566ab5cce2bb186d1a0",
+  "repo_name": "agentscope-ai/agentscope",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "6.35MB",
+  "language": "python",
+  "star": 13841,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:45:19.142531"
+}
