@@ -1,0 +1,13 @@
+{
+  "service_id": "51b7593789d60415470e264f",
+  "repo_name": "themanojdesai/python-a2a",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "724KB",
+  "language": "python",
+  "star": 948,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:46:29.137511"
+}
