@@ -1,0 +1,13 @@
+{
+  "service_id": "b2715b62a4ff9b50b1b78384",
+  "repo_name": "chroma-core/chroma",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "42.40MB",
+  "language": "python",
+  "star": 24819,
+  "repo_flag": "NODEJS-ChromaDB",
+  "uploaded_at": "2026-01-02T15:10:02.548940"
+}
