@@ -1,0 +1,13 @@
+{
+  "service_id": "b2c05239b61c2647f9004e2d",
+  "repo_name": "redisson/redisson",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "5.51MB",
+  "language": "java",
+  "star": 24154,
+  "repo_flag": "JAVA-Logback",
+  "uploaded_at": "2026-01-02T15:06:13.555246"
+}
