@@ -1,0 +1,13 @@
+{
+  "service_id": "833f57e19bd5d9efa3139adb",
+  "repo_name": "n8n-io/n8n",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "26.05MB",
+  "language": "nodejs",
+  "star": 161621,
+  "repo_flag": "NODEJS-Lodash",
+  "uploaded_at": "2026-01-02T15:10:59.583347"
+}
