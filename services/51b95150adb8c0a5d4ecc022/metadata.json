@@ -1,0 +1,13 @@
+{
+  "service_id": "51b95150adb8c0a5d4ecc022",
+  "repo_name": "FlowiseAI/Flowise",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "23.06MB",
+  "language": "nodejs",
+  "star": 47186,
+  "repo_flag": "NODEJS-ChromaDB",
+  "uploaded_at": "2026-01-02T15:13:21.542707"
+}
