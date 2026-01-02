@@ -1,0 +1,13 @@
+{
+  "service_id": "c91d5fa581822ce7607de2bc",
+  "repo_name": "facebookresearch/ParlAI",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "20.27MB",
+  "language": "python",
+  "star": 10623,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:41:29.088484"
+}
