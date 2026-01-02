@@ -1,0 +1,13 @@
+{
+  "service_id": "e1b95cf4b356c604502fb07e",
+  "repo_name": "Intel-bigdata/HiBench",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "12.08MB",
+  "language": "java",
+  "star": 1491,
+  "repo_flag": "JAVA-Mahout",
+  "uploaded_at": "2026-01-02T14:01:38.494801"
+}
