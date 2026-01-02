@@ -1,0 +1,13 @@
+{
+  "service_id": "8e585c71a0bb860e71dc0249",
+  "repo_name": "mindspore-ai/mindspore",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "271.09MB",
+  "language": "python",
+  "star": 4647,
+  "repo_flag": "PYTHON-Scikit-learn",
+  "uploaded_at": "2026-01-02T14:43:30.498472"
+}
