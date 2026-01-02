@@ -1,0 +1,13 @@
+{
+  "service_id": "93b35d99bde635badf3d7777",
+  "repo_name": "nteract/nteract",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "2.52MB",
+  "language": "nodejs",
+  "star": 6271,
+  "repo_flag": "NODEJS-Lodash",
+  "uploaded_at": "2026-01-02T14:56:47.684659"
+}
