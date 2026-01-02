@@ -1,0 +1,13 @@
+{
+  "service_id": "a6b4548797fb9cea0131498c",
+  "repo_name": "OpenGVLab/DragGAN",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "7.56MB",
+  "language": "python",
+  "star": 4977,
+  "repo_flag": "PYTHON-PyTorch",
+  "uploaded_at": "2026-01-02T14:47:48.731610"
+}
