@@ -1,0 +1,13 @@
+{
+  "service_id": "07a35bea8b2a24a1bd820518",
+  "repo_name": "elastic/elasticsearch",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "127.86MB",
+  "language": "java",
+  "star": 75624,
+  "repo_flag": "JAVA-Guava",
+  "uploaded_at": "2026-01-02T15:12:44.852098"
+}
