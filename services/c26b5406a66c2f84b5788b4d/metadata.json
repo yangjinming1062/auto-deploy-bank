@@ -1,0 +1,13 @@
+{
+  "service_id": "c26b5406a66c2f84b5788b4d",
+  "repo_name": "flaskbb/flaskbb",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "4.81MB",
+  "language": "python",
+  "star": 2655,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-01-02T15:16:29.004545"
+}
