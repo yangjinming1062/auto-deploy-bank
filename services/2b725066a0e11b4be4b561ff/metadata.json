@@ -1,0 +1,13 @@
+{
+  "service_id": "2b725066a0e11b4be4b561ff",
+  "repo_name": "benbusby/whoogle-search",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "652KB",
+  "language": "python",
+  "star": 11113,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:47:52.310175"
+}
