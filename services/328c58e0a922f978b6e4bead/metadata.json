@@ -1,0 +1,13 @@
+{
+  "service_id": "328c58e0a922f978b6e4bead",
+  "repo_name": "greshake/llm-security",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "657KB",
+  "language": "python",
+  "star": 2028,
+  "repo_flag": "PYTHON-langchain",
+  "uploaded_at": "2026-01-02T14:15:33.325572"
+}
