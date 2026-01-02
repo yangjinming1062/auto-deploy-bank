@@ -1,0 +1,13 @@
+{
+  "service_id": "e6f559c4b3f7ece3c54e27c1",
+  "repo_name": "apolloconfig/apollo",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "15.34MB",
+  "language": "java",
+  "star": 29700,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T15:28:51.901868"
+}
