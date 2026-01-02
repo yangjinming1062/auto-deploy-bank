@@ -1,0 +1,13 @@
+{
+  "service_id": "8e935c6ba5c1e842737d767f",
+  "repo_name": "languagetool-org/languagetool",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "93.72MB",
+  "language": "java",
+  "star": 13828,
+  "repo_flag": "JAVA-OpenNLP",
+  "uploaded_at": "2026-01-02T15:00:08.464116"
+}
