@@ -1,0 +1,13 @@
+{
+  "service_id": "4e0f563eaf25321512a7695e",
+  "repo_name": "mapproxy/mapproxy",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "2.13MB",
+  "language": "python",
+  "star": 626,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:48:06.906163"
+}
