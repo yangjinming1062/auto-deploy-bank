@@ -1,0 +1,13 @@
+{
+  "service_id": "a3aa53229c207c67d7835e61",
+  "repo_name": "micrometer-metrics/micrometer",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "13.68MB",
+  "language": "java",
+  "star": 4768,
+  "repo_flag": "JAVA-Guava",
+  "uploaded_at": "2026-01-02T14:46:41.250495"
+}
