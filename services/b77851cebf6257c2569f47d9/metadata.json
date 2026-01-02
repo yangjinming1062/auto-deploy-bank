@@ -1,0 +1,13 @@
+{
+  "service_id": "b77851cebf6257c2569f47d9",
+  "repo_name": "aboutcode-org/scancode.io",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "9.00MB",
+  "language": "python",
+  "star": 154,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T14:42:38.325918"
+}
