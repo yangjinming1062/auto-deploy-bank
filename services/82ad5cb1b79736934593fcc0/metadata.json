@@ -1,0 +1,13 @@
+{
+  "service_id": "82ad5cb1b79736934593fcc0",
+  "repo_name": "jetlinks/jetlinks-community",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "36.72MB",
+  "language": "java",
+  "star": 6224,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T15:16:11.437035"
+}
