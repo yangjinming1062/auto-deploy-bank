@@ -1,0 +1,13 @@
+{
+  "service_id": "f6bb5f8ab716b92e70648550",
+  "repo_name": "birkir/prime",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.23MB",
+  "language": "nodejs",
+  "star": 1721,
+  "repo_flag": "NODEJS-Lodash",
+  "uploaded_at": "2026-01-02T14:04:42.898475"
+}
