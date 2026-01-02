@@ -1,0 +1,13 @@
+{
+  "service_id": "816a59199cf12491d0c2f63e",
+  "repo_name": "skypilot-org/skypilot",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "13.26MB",
+  "language": "python",
+  "star": 8945,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:44:22.059726"
+}
