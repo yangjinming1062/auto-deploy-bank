@@ -1,0 +1,13 @@
+{
+  "service_id": "474e51e2997b3b00590dc1ce",
+  "repo_name": "encode/django-rest-framework",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "9.84MB",
+  "language": "python",
+  "star": 29660,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:43:44.871217"
+}
