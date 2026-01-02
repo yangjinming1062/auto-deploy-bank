@@ -1,0 +1,13 @@
+{
+  "service_id": "bbf251b594f2659a1718de85",
+  "repo_name": "alerta/alerta",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "2.17MB",
+  "language": "python",
+  "star": 2483,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:45:53.437261"
+}
