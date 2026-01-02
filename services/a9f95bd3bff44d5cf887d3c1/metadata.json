@@ -1,0 +1,13 @@
+{
+  "service_id": "a9f95bd3bff44d5cf887d3c1",
+  "repo_name": "ray-project/ray",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "185.28MB",
+  "language": "python",
+  "star": 40330,
+  "repo_flag": "PYTHON-vllm",
+  "uploaded_at": "2026-01-02T15:00:58.692400"
+}
