@@ -1,0 +1,13 @@
+{
+  "service_id": "c7a052c5822843656e754639",
+  "repo_name": "almarklein/timetagger",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "2.87MB",
+  "language": "python",
+  "star": 1564,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:44:29.496484"
+}
