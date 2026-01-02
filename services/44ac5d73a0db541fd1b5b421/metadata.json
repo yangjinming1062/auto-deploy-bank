@@ -1,0 +1,13 @@
+{
+  "service_id": "44ac5d73a0db541fd1b5b421",
+  "repo_name": "zai-org/Open-AutoGLM",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "2.76MB",
+  "language": "python",
+  "star": 15271,
+  "repo_flag": "PYTHON-vllm",
+  "uploaded_at": "2026-01-02T15:00:27.228330"
+}
