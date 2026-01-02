@@ -1,0 +1,13 @@
+{
+  "service_id": "a0cc53619b737cae495afb38",
+  "repo_name": "linkedin/greykite",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "22.71MB",
+  "language": "python",
+  "star": 1849,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:46:14.543728"
+}
