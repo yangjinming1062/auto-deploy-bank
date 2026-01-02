@@ -1,0 +1,13 @@
+{
+  "service_id": "80475637835f60114f6ff419",
+  "repo_name": "jmrivas86/django-json-widget",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "333KB",
+  "language": "python",
+  "star": 480,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:45:39.491503"
+}
