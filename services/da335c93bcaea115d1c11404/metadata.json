@@ -1,0 +1,13 @@
+{
+  "service_id": "da335c93bcaea115d1c11404",
+  "repo_name": "django-oscar/django-oscar",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "25.62MB",
+  "language": "python",
+  "star": 6510,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-01-02T15:43:23.817808"
+}
