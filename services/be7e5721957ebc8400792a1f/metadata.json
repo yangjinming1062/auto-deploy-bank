@@ -1,0 +1,13 @@
+{
+  "service_id": "be7e5721957ebc8400792a1f",
+  "repo_name": "apache/ignite",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "36.37MB",
+  "language": "java",
+  "star": 5019,
+  "repo_flag": "JAVA-Logback",
+  "uploaded_at": "2026-01-02T14:47:39.693874"
+}
