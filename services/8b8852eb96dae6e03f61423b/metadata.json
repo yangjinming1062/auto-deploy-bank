@@ -1,0 +1,13 @@
+{
+  "service_id": "8b8852eb96dae6e03f61423b",
+  "repo_name": "rafalp/Misago",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "7.34MB",
+  "language": "python",
+  "star": 2691,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:27:04.019230"
+}
