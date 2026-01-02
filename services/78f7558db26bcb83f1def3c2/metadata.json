@@ -1,0 +1,13 @@
+{
+  "service_id": "78f7558db26bcb83f1def3c2",
+  "repo_name": "apache/incubator-seata",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "6.03MB",
+  "language": "java",
+  "star": 25876,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T15:22:40.536081"
+}
