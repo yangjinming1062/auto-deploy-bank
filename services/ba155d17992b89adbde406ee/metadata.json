@@ -1,0 +1,13 @@
+{
+  "service_id": "ba155d17992b89adbde406ee",
+  "repo_name": "apache/solr",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "93.12MB",
+  "language": "java",
+  "star": 1528,
+  "repo_flag": "JAVA-OpenNLP",
+  "uploaded_at": "2026-01-02T14:03:00.186772"
+}
