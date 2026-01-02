@@ -1,0 +1,13 @@
+{
+  "service_id": "dfca5c84afb8759b773a922a",
+  "repo_name": "camunda/camunda",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "42.97MB",
+  "language": "java",
+  "star": 3926,
+  "repo_flag": "JAVA-Guava",
+  "uploaded_at": "2026-01-02T14:39:33.850058"
+}
