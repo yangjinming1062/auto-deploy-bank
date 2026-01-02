@@ -1,0 +1,13 @@
+{
+  "service_id": "231a5d51bfa2da40050cb8c4",
+  "repo_name": "didi/KnowStreaming",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "7.15MB",
+  "language": "java",
+  "star": 7157,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T15:27:41.391210"
+}
