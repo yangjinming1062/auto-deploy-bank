@@ -1,0 +1,13 @@
+{
+  "service_id": "94ef585b8b616909615d4098",
+  "repo_name": "whylabs/whylogs",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "7.00MB",
+  "language": "python",
+  "star": 2780,
+  "repo_flag": "PYTHON-BentoML",
+  "uploaded_at": "2026-01-02T14:31:55.740029"
+}
