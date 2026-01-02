@@ -1,0 +1,13 @@
+{
+  "service_id": "67865196951ded28a5447158",
+  "repo_name": "zalando/problem-spring-web",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "224KB",
+  "language": "java",
+  "star": 1071,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T15:33:15.766678"
+}
