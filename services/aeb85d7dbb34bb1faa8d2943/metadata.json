@@ -1,0 +1,13 @@
+{
+  "service_id": "aeb85d7dbb34bb1faa8d2943",
+  "repo_name": "elunez/eladmin",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "440KB",
+  "language": "java",
+  "star": 21833,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T15:28:21.687863"
+}
