@@ -1,0 +1,13 @@
+{
+  "service_id": "f2fb5896b091d35fd4c03227",
+  "repo_name": "brycedrennan/imaginAIry",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "143.76MB",
+  "language": "python",
+  "star": 8144,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:44:10.449465"
+}
