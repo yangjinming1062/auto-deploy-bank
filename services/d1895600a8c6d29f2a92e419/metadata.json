@@ -1,0 +1,13 @@
+{
+  "service_id": "d1895600a8c6d29f2a92e419",
+  "repo_name": "Drakkar-Software/OctoBot",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "9.67MB",
+  "language": "python",
+  "star": 4929,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:20:01.205806"
+}
