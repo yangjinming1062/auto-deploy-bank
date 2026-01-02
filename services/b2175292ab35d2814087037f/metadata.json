@@ -1,0 +1,13 @@
+{
+  "service_id": "b2175292ab35d2814087037f",
+  "repo_name": "apache/geode",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "28.10MB",
+  "language": "java",
+  "star": 2325,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T14:22:43.967975"
+}
