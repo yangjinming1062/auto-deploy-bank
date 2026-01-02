@@ -1,0 +1,13 @@
+{
+  "service_id": "3da75562ad0fec7269f8de03",
+  "repo_name": "nccgroup/ScoutSuite",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "3.03MB",
+  "language": "python",
+  "star": 7417,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:41:20.779560"
+}
