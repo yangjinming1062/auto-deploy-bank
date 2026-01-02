@@ -1,0 +1,13 @@
+{
+  "service_id": "52e8514a8fd175551ba08720",
+  "repo_name": "apache/dubbo",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "4.98MB",
+  "language": "java",
+  "star": 41574,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T15:19:51.679416"
+}
