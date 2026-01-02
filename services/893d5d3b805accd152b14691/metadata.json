@@ -1,0 +1,13 @@
+{
+  "service_id": "893d5d3b805accd152b14691",
+  "repo_name": "simple-login/app",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "7.35MB",
+  "language": "python",
+  "star": 6177,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-01-02T15:37:10.208337"
+}
