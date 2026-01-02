@@ -1,0 +1,13 @@
+{
+  "service_id": "9b225d93bad95b92f0c5c29f",
+  "repo_name": "Mintplex-Labs/vector-admin",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "2.83MB",
+  "language": "nodejs",
+  "star": 2112,
+  "repo_flag": "NODEJS-ChromaDB",
+  "uploaded_at": "2026-01-02T14:16:19.308926"
+}
