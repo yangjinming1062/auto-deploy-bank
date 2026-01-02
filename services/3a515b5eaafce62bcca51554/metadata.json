@@ -1,0 +1,13 @@
+{
+  "service_id": "3a515b5eaafce62bcca51554",
+  "repo_name": "wagtail/wagtail",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "14.83MB",
+  "language": "python",
+  "star": 19822,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-01-02T15:28:09.387209"
+}
