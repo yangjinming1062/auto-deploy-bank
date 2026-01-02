@@ -1,0 +1,13 @@
+{
+  "service_id": "14b75b36ba02c8133996d5ee",
+  "repo_name": "zlt2000/microservices-platform",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "90.98MB",
+  "language": "java",
+  "star": 4724,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T15:24:18.816453"
+}
