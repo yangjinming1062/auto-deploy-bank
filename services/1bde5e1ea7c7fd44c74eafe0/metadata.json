@@ -1,0 +1,13 @@
+{
+  "service_id": "1bde5e1ea7c7fd44c74eafe0",
+  "repo_name": "smart-cloud/smart-cloud",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.52MB",
+  "language": "java",
+  "star": 668,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T15:30:36.560244"
+}
