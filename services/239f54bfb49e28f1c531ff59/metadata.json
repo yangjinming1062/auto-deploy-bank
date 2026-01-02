@@ -1,0 +1,13 @@
+{
+  "service_id": "239f54bfb49e28f1c531ff59",
+  "repo_name": "jupyterhub/jupyterhub",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "9.66MB",
+  "language": "python",
+  "star": 8182,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:37:47.011396"
+}
