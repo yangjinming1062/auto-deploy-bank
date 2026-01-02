@@ -1,0 +1,13 @@
+{
+  "service_id": "28b250f9bcfafb8331fe5cf0",
+  "repo_name": "GNS3/gns3-server",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "9.76MB",
+  "language": "python",
+  "star": 948,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-02T15:48:15.230224"
+}
