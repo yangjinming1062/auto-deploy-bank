@@ -1,0 +1,13 @@
+{
+  "service_id": "a9375e52a2616b36408f695f",
+  "repo_name": "myreader-io/myGPTReader",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "4.98MB",
+  "language": "python",
+  "star": 4438,
+  "repo_flag": "PYTHON-langchain",
+  "uploaded_at": "2026-01-02T14:44:04.531470"
+}
