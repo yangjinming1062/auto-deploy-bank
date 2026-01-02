@@ -1,0 +1,13 @@
+{
+  "service_id": "d1db5b0b84656c240382b065",
+  "repo_name": "GoogleCloudPlatform/training-data-analyst",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "468.55MB",
+  "language": "java",
+  "star": 8345,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T15:36:41.432805"
+}
