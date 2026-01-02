@@ -1,0 +1,13 @@
+{
+  "service_id": "1ef75c0c9e3bef8a980f01d8",
+  "repo_name": "LeapLabTHU/Absolute-Zero-Reasoner",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "100.35MB",
+  "language": "python",
+  "star": 1772,
+  "repo_flag": "PYTHON-vllm",
+  "uploaded_at": "2026-01-02T14:05:36.680510"
+}
