@@ -1,0 +1,13 @@
+{
+  "service_id": "06975368bdc53823da2b4f22",
+  "repo_name": "alibaba/spring-ai-alibaba",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "17.79MB",
+  "language": "java",
+  "star": 6917,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T15:25:21.615982"
+}
