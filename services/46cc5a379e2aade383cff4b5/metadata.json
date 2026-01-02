@@ -1,0 +1,13 @@
+{
+  "service_id": "46cc5a379e2aade383cff4b5",
+  "repo_name": "cn-panda/JavaCodeAudit",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "72.06MB",
+  "language": "java",
+  "star": 926,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T15:32:39.196531"
+}
