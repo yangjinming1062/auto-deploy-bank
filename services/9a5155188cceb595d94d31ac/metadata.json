@@ -1,0 +1,13 @@
+{
+  "service_id": "9a5155188cceb595d94d31ac",
+  "repo_name": "Mintplex-Labs/anything-llm",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "8.79MB",
+  "language": "nodejs",
+  "star": 51979,
+  "repo_flag": "NODEJS-ChromaDB",
+  "uploaded_at": "2026-01-02T15:12:56.067149"
+}
