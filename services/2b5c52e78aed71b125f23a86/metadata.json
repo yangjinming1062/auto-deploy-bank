@@ -1,0 +1,13 @@
+{
+  "service_id": "2b5c52e78aed71b125f23a86",
+  "repo_name": "Azure/azureml-examples",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "500.52MB",
+  "language": "python",
+  "star": 1957,
+  "repo_flag": "PYTHON-MLflow",
+  "uploaded_at": "2026-01-02T14:12:48.039114"
+}
