@@ -1,0 +1,13 @@
+{
+  "service_id": "78db540bb8f6608542fe125d",
+  "repo_name": "roncoo/roncoo-pay",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "15.12MB",
+  "language": "java",
+  "star": 4938,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-02T15:38:24.452291"
+}
