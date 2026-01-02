@@ -1,0 +1,13 @@
+{
+  "service_id": "410b5d3193bc9486f989e786",
+  "repo_name": "kermitt2/grobid",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "471.67MB",
+  "language": "java",
+  "star": 4500,
+  "repo_flag": "JAVA-OpenNLP",
+  "uploaded_at": "2026-01-02T14:45:31.919024"
+}
