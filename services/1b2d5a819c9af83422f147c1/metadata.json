@@ -1,0 +1,13 @@
+{
+  "service_id": "1b2d5a819c9af83422f147c1",
+  "repo_name": "stoplightio/elements",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.20MB",
+  "language": "nodejs",
+  "star": 2292,
+  "repo_flag": "NODEJS-Lodash",
+  "uploaded_at": "2026-01-05T23:15:19.995218"
+}
