@@ -1,0 +1,13 @@
+{
+  "service_id": "0b275302b55f59a5ea358920",
+  "repo_name": "cer/event-sourcing-examples",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.51MB",
+  "language": "java",
+  "star": 3158,
+  "repo_flag": "JAVA-SpringBoot",
+  "uploaded_at": "2026-01-05T18:07:51.923507"
+}
