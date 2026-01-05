@@ -1,0 +1,13 @@
+{
+  "service_id": "2ba05223a418bb9ded524172",
+  "repo_name": "spring-io/initializr",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.18MB",
+  "language": "java",
+  "star": 3627,
+  "repo_flag": "JAVA-Logback",
+  "uploaded_at": "2026-01-05T15:08:43.834295"
+}
