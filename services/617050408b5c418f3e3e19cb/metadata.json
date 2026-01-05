@@ -1,0 +1,13 @@
+{
+  "service_id": "617050408b5c418f3e3e19cb",
+  "repo_name": "NVIDIA/GenerativeAIExamples",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "100.98MB",
+  "language": "python",
+  "star": 3660,
+  "repo_flag": "PYTHON-langgraph",
+  "uploaded_at": "2026-01-05T13:37:53.200674"
+}
