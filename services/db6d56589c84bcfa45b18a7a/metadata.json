@@ -1,0 +1,13 @@
+{
+  "service_id": "db6d56589c84bcfa45b18a7a",
+  "repo_name": "CherryHQ/cherry-studio",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "11.63MB",
+  "language": "nodejs",
+  "star": 36363,
+  "repo_flag": "NODEJS-EmbedJs",
+  "uploaded_at": "2026-01-05T13:38:20.033194"
+}
