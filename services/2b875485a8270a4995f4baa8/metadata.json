@@ -1,0 +1,13 @@
+{
+  "service_id": "2b875485a8270a4995f4baa8",
+  "repo_name": "openrewrite/rewrite",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "13.49MB",
+  "language": "java",
+  "star": 3134,
+  "repo_flag": "JAVA-Logback",
+  "uploaded_at": "2026-01-05T18:22:29.998950"
+}
