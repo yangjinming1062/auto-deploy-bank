@@ -1,0 +1,13 @@
+{
+  "service_id": "a03c59e6a54c59601a5e7f90",
+  "repo_name": "intel/BigDL",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "106.39MB",
+  "language": "python",
+  "star": 2690,
+  "repo_flag": "JAVA-OpenNLP",
+  "uploaded_at": "2026-01-05T23:30:13.655031"
+}
