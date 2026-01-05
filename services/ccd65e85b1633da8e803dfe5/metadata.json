@@ -1,0 +1,13 @@
+{
+  "service_id": "ccd65e85b1633da8e803dfe5",
+  "repo_name": "Paper2Poster/Paper2Poster",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "545.06MB",
+  "language": "python",
+  "star": 2961,
+  "repo_flag": "PYTHON-vllm",
+  "uploaded_at": "2026-01-05T19:00:58.657328"
+}
