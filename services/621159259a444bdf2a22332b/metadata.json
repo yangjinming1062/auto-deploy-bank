@@ -1,0 +1,13 @@
+{
+  "service_id": "621159259a444bdf2a22332b",
+  "repo_name": "crmeb/crmeb_java",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "60.68MB",
+  "language": "java",
+  "star": 2478,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-06T03:15:19.019531"
+}
