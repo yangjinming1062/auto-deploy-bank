@@ -1,0 +1,13 @@
+{
+  "service_id": "1dc2509183ff78babdd65dca",
+  "repo_name": "dromara/forest",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "3.72MB",
+  "language": "java",
+  "star": 1902,
+  "repo_flag": "JAVA-SpringBoot",
+  "uploaded_at": "2026-01-06T11:28:21.288823"
+}
