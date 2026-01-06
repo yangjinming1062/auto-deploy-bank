@@ -1,0 +1,13 @@
+{
+  "service_id": "799d5310bbba8f46b559ea60",
+  "repo_name": "Alpha-VLLM/Lumina-T2X",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "5.25MB",
+  "language": "python",
+  "star": 2237,
+  "repo_flag": "PYTHON-Transformers",
+  "uploaded_at": "2026-01-06T01:58:02.794696"
+}
