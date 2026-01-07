@@ -1,0 +1,13 @@
+{
+  "service_id": "43055209b74c30db842f8db1",
+  "repo_name": "yinjihuan/spring-cloud",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1017KB",
+  "language": "java",
+  "star": 1779,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-07T03:47:48.761961"
+}
