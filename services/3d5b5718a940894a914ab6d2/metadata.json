@@ -1,0 +1,13 @@
+{
+  "service_id": "3d5b5718a940894a914ab6d2",
+  "repo_name": "bentoml/BentoML",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "33.19MB",
+  "language": "python",
+  "star": 8302,
+  "repo_flag": "PYTHON-BentoML",
+  "uploaded_at": "2026-01-12T12:04:22.348191"
+}
