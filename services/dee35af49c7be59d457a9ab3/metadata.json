@@ -1,0 +1,13 @@
+{
+  "service_id": "dee35af49c7be59d457a9ab3",
+  "repo_name": "apache/beam",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "41.69MB",
+  "language": "java",
+  "star": 8397,
+  "repo_flag": "JAVA-Guava",
+  "uploaded_at": "2026-01-12T12:02:43.357994"
+}
