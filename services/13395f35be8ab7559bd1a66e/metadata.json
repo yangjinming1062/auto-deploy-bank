@@ -1,0 +1,13 @@
+{
+  "service_id": "13395f35be8ab7559bd1a66e",
+  "repo_name": "GrailStack/Moss",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "3.50MB",
+  "language": "java",
+  "star": 1363,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-12T12:17:44.406780"
+}
