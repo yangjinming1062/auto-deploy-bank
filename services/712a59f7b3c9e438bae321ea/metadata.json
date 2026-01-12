@@ -1,0 +1,13 @@
+{
+  "service_id": "712a59f7b3c9e438bae321ea",
+  "repo_name": "vespa-engine/vespa",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "140.96MB",
+  "language": "java",
+  "star": 6660,
+  "repo_flag": "JAVA-OpenNLP",
+  "uploaded_at": "2026-01-12T17:23:17.953492"
+}
