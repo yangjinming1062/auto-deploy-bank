@@ -1,0 +1,13 @@
+{
+  "service_id": "57e75a349747e90a0d3204b5",
+  "repo_name": "lowcoder-org/lowcoder",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "128.44MB",
+  "language": "java",
+  "star": 1413,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-12T12:18:31.493784"
+}
