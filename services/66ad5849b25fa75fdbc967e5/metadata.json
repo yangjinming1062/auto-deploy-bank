@@ -1,0 +1,13 @@
+{
+  "service_id": "66ad5849b25fa75fdbc967e5",
+  "repo_name": "testsigmahq/testsigma",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "14.69MB",
+  "language": "java",
+  "star": 1028,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-12T12:14:34.602661"
+}
