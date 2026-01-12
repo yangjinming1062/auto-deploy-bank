@@ -1,0 +1,13 @@
+{
+  "service_id": "a3985d90a9ce6f3e29d01ca8",
+  "repo_name": "dmayboroda/minima",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "448KB",
+  "language": "python",
+  "star": 1021,
+  "repo_flag": "PYTHON-langfuse",
+  "uploaded_at": "2026-01-12T12:12:39.472489"
+}
