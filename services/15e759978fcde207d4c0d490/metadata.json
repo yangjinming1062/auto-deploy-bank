@@ -1,0 +1,13 @@
+{
+  "service_id": "15e759978fcde207d4c0d490",
+  "repo_name": "frappe/frappe",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "18.92MB",
+  "language": "python",
+  "star": 9319,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-01-12T12:06:31.464110"
+}
