@@ -1,0 +1,13 @@
+{
+  "service_id": "9e8c5d159fe460d2b0592105",
+  "repo_name": "LockerProject/Locker",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "4.64MB",
+  "language": "nodejs",
+  "star": 1063,
+  "repo_flag": "NODEJS-SocketIO",
+  "uploaded_at": "2026-01-12T12:15:06.917995"
+}
