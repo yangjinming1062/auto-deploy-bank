@@ -1,0 +1,13 @@
+{
+  "service_id": "7c52581f84f96b41c379eb60",
+  "repo_name": "h2oai/h2ogpt",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "33.24MB",
+  "language": "python",
+  "star": 11972,
+  "repo_flag": "PYTHON-Scikit-learn",
+  "uploaded_at": "2026-01-12T12:09:05.564661"
+}
