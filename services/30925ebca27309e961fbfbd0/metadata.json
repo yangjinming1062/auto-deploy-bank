@@ -1,0 +1,13 @@
+{
+  "service_id": "30925ebca27309e961fbfbd0",
+  "repo_name": "apache/doris",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "75.10MB",
+  "language": "java",
+  "star": 14717,
+  "repo_flag": "JAVA-Guava",
+  "uploaded_at": "2026-01-12T12:04:51.877409"
+}
