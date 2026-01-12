@@ -1,0 +1,13 @@
+{
+  "service_id": "5e5459e88d7c1b04a0b460eb",
+  "repo_name": "Alluxio/alluxio",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "46.19MB",
+  "language": "java",
+  "star": 7126,
+  "repo_flag": "JAVA-Guava",
+  "uploaded_at": "2026-01-12T12:01:18.837423"
+}
