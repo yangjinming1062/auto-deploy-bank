@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  definitely-typed:
+    build: .
+    container_name: definitely-typed
+    ports:
+      - "40024:41464"
+    environment:
+      - NODE_ENV=production
+      - PORT=41464
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:41464"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
