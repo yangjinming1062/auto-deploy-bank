@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  elasticsearch:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: elasticsearch:local
+    container_name: elasticsearch
+
+    # Resource limits to prevent consuming all system resources
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'          # Maximum 2 CPU cores
+          memory: 4G           # Maximum 4GB memory
+        reservations:
+          cpus: '1.0'          # Reserve 1 CPU core
+          memory: 1G           # Reserve 1GB memory
+
+    # Environment variables for Elasticsearch configuration
+    environment:
+      - node.name=elasticsearch-node-1
+      - cluster.name=elasticsearch-cluster
+      - discovery.type=single-node
+      - bootstrap.memory_lock=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - path.data=/usr/share/elasticsearch/data
+      - path.logs=/usr/share/elasticsearch/logs
+      - network.host=0.0.0.0
+      - http.port=40345
+      - transport.port=9300
+      - ingest.geoip.downloader.enabled=false
+      - xpack.security.enabled=false
+      - xpack.ml.enabled=false
+      - xpack.security.http.ssl.enabled=false
+
+    # Port mapping - expose HTTP API on port 40345
+    # Note: Using host network mode, so port mapping is not needed
+    # ports:
+    #   - "40345:9200"
+
+    # Volumes for data persistence
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+      - elasticsearch_logs:/usr/share/elasticsearch/logs
+      - ./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+
+    # Health check to ensure Elasticsearch is running properly
+    healthcheck:
+      disable: true
+
+    # Security options
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+
+    # Network mode
+    network_mode: host
+
+    # Restart policy
+    restart: unless-stopped
+
+# Named volumes for data persistence
+volumes:
+  elasticsearch_data:
+    driver: local
+  elasticsearch_logs:
+    driver: local
+
+# Custom network
+networks:
+  elasticsearch-network:
+    driver: bridge
