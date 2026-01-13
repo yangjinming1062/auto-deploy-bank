@@ -1,0 +1,162 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: lazyllm-redis
+    restart: unless-stopped
+    networks:
+      - lazyllm-network
+    volumes:
+      - redis-data:/data
+    # Internal service - no port exposure to host
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  milvus:
+    image: milvusdb/milvus:v2.3.4
+    container_name: lazyllm-milvus
+    restart: unless-stopped
+    command: ["milvus", "run", "standalone"]
+    networks:
+      - lazyllm-network
+    environment:
+      ETCD_ENDPOINTS: etcd:2379
+      MINIO_ADDRESS: minio:9000
+    volumes:
+      - milvus-data:/var/lib/milvus
+    # Internal service - no port exposure to host
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    depends_on:
+      etcd:
+        condition: service_started
+      minio:
+        condition: service_started
+
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.5
+    container_name: lazyllm-etcd
+    restart: unless-stopped
+    networks:
+      - lazyllm-network
+    environment:
+      ETCD_AUTO_COMPACTION_MODE: revision
+      ETCD_AUTO_COMPACTION_RETENTION: 1000
+      ETCD_QUOTA_BACKEND_BYTES: 4294967296
+      ETCD_SNAPSHOT_COUNT: 50000
+    volumes:
+      - etcd-data:/etcd
+    # Internal service - no port exposure to host
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  minio:
+    image: minio/minio:RELEASE.2023-03-20T20-16-18Z
+    container_name: lazyllm-minio
+    restart: unless-stopped
+    networks:
+      - lazyllm-network
+    environment:
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+    command: minio server /data/minio --console-address ":9001"
+    volumes:
+      - minio-data:/data/minio
+    # Internal service - no port exposure to host
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  lazyllm-app:
+    build: .
+    container_name: lazyllm-app
+    restart: unless-stopped
+    networks:
+      - lazyllm-network
+    ports:
+      - "40356:20500"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - MILVUS_HOST=milvus
+      - MILVUS_PORT=19530
+      - LAZYLLM_HOME=/app/.lazyllm
+      - LAZYLLM_DATA_PATH=/app/data
+      - LAZYLLM_MODEL_PATH=/app/models
+      - LAZYLLM_DEFAULT_LAUNCHER=empty
+      - LAZYLLM_ON_CLOUDPICKLE=OFF
+      - LAZYLLM_MODE=Normal
+      - CUDA_VISIBLE_DEVICES=-1
+      - TORCH_CUDA_ARCH_LIST=6.0;6.1;7.0;7.5;8.0;8.6;8.9;9.0
+      - TORCH_NO_CUDA=1
+      - NO_CUDA=1
+      - FORCE_CPU=1
+      - LIGHTLLM_USE_CPU=1
+      - VLLM_USE_CPU=1
+      - ACCELERATE_CPU=1
+      - TRANSFORMERS_OFFLINE=1
+    volumes:
+      - lazyllm-data:/app/.lazyllm
+      - lazyllm-models:/app/models
+      - lazyllm-temp:/app/.temp
+    # Set resource limits to prevent resource exhaustion
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 8G
+        reservations:
+          cpus: '2.0'
+          memory: 2G
+    depends_on:
+      redis:
+        condition: service_started
+      milvus:
+        condition: service_started
+      etcd:
+        condition: service_started
+      minio:
+        condition: service_started
+
+networks:
+  lazyllm-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+    driver: local
+  milvus-data:
+    driver: local
+  etcd-data:
+    driver: local
+  minio-data:
+    driver: local
+  lazyllm-data:
+    driver: local
+  lazyllm-models:
+    driver: local
+  lazyllm-temp:
+    driver: local
