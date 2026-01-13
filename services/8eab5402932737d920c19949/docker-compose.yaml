@@ -1,0 +1,16 @@
+
+version: '3.8'
+services:
+  web:
+    build: .
+    ports:
+      - "40228:42010"
+    environment:
+      - MALOJA_DATA_DIRECTORY=/config
+      - MALOJA_FORCE_PASSWORD=claude-password
+      - MALOJA_SKIP_SETUP=yes
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:42010/api/1/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
