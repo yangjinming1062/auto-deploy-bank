@@ -1,0 +1,169 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgresql:
+    image: postgres:15-alpine
+    container_name: vectoradmin-postgresql
+    environment:
+      POSTGRES_USER: vectoradmin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: vdbms
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data
+    networks:
+      - vectoradmin-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vectoradmin -d vdbms"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+
+  # Backend API Service
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: vectoradmin-backend
+    ports:
+      - "40292:3001"
+    environment:
+      NODE_ENV: production
+      SERVER_PORT: 3001
+      JWT_SECRET: "YoUr_RaNd0M_sTr1nG_Change_In_Production"
+      DATABASE_CONNECTION_STRING: "postgresql://vectoradmin:password@postgresql:5432/vdbms"
+      DISABLE_TELEMETRY: "true"
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    networks:
+      - vectoradmin-network
+    volumes:
+      - backend_storage:/app/storage
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/api/ping', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # Frontend React Application
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: vectoradmin-frontend
+    environment:
+      NODE_ENV: production
+      VITE_APP_NAME: "VectorAdmin"
+      VITE_API_BASE: "/api"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - vectoradmin-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5173"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Background Workers
+  workers:
+    build:
+      context: .
+      dockerfile: workers/Dockerfile
+    container_name: vectoradmin-workers
+    environment:
+      NODE_ENV: production
+      INNGEST_EVENT_KEY: "background_workers"
+      INNGEST_SIGNING_KEY: "YoUr_RaNd0M_sTr1nG_Change_In_Production"
+      DATABASE_CONNECTION_STRING: "postgresql://vectoradmin:password@postgresql:5432/vdbms"
+      DISABLE_TELEMETRY: "true"
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    networks:
+      - vectoradmin-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3355"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+
+  # Document Processor (Python Flask)
+  document-processor:
+    build:
+      context: ./document-processor
+      dockerfile: Dockerfile
+    container_name: vectoradmin-document-processor
+    environment:
+      FLASK_APP: app.py
+      FLASK_ENV: production
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - vectoradmin-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8888/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+
+# Network configuration
+networks:
+  vectoradmin-network:
+    driver: bridge
+
+# Volume definitions
+volumes:
+  postgresql_data:
+    driver: local
+  backend_storage:
+    driver: local
