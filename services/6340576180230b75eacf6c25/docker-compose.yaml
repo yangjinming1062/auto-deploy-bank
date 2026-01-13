@@ -1,0 +1,34 @@
+# Google Cloud Platform Java Samples - Root docker-compose.yaml
+# This is a multi-module repository with 70+ independent samples.
+# This root file provides access to the image-processing sample.
+
+services:
+  image-processing:
+    build:
+      context: ./run/image-processing
+      dockerfile: Dockerfile
+    ports:
+      - "40143:8080"
+    environment:
+      - PORT=8080
+      - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT:-your-project-id}
+    volumes:
+      - ./target.jar:/app/target.jar
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "curl --max-time 5 http://localhost:8080/ || exit 0"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  default:
+    name: gcp-samples-network
