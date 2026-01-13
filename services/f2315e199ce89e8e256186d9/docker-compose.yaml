@@ -1,0 +1,58 @@
+services:
+  web:
+    build: .
+    ports:
+      - "40136:8000"
+    environment:
+      DB_URI: "mysql://web2py_user:web2py_pass@db:3306/web2py_db"
+      DB_POOL_SIZE: "10"
+      DB_MIGRATE: "true"
+      SMTP_SERVER: "smtp.gmail.com:587"
+      SMTP_SENDER: "you@gmail.com"
+      SMTP_LOGIN: "username:password"
+      SMTP_TLS: "true"
+      SMTP_SSL: "true"
+      SCHEDULER_ENABLED: "false"
+      SCHEDULER_HEARTBEAT: "1"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      memcached:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/welcome/default/index || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: 'web2py_db'
+      MYSQL_USER: 'web2py_user'
+      MYSQL_PASSWORD: 'web2py_pass'
+      MYSQL_ROOT_PASSWORD: 'root_password'
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+
+  memcached:
+    image: memcached:1.6-alpine
+
+volumes:
+  db_data:
