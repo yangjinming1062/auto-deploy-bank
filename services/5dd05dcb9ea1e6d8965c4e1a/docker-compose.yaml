@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  nlper-arsenal:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nlper-arsenal-service
+    ports:
+      - "40162:40162"
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+      - PYTHONHASHSEED=1000
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./codes/data:/app/codes/data
+      - ./codes/saved:/app/codes/saved
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "ps", "aux"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
