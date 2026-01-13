@@ -1,0 +1,125 @@
+services:
+  # Main StreamPark Console Service
+  streampark:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: streampark-console
+    ports:
+      - "40004:10000"  # Map host port 40004 to container port 10000
+    volumes:
+      # Volume mount for security scanning
+      - ./target.jar:/app/target.jar
+      # Mount configuration for customization
+      - ./streampark-config.yaml:/app/conf/config.yaml:ro
+      # Logs directory
+      - streampark-logs:/app/logs
+    environment:
+      # Use MySQL database
+      - datasource.dialect=mysql
+      - datasource.url=jdbc:mysql://mysql:3306/streampark?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowPublicKeyRetrieval=true
+      - datasource.username=streampark
+      - datasource.password=streampark
+
+      # Application settings
+      - server.port=10000
+      - streampark.workspace.local=/tmp/streampark
+
+      # Security settings (disabled for demo)
+      - security.kerberos.login.enable=false
+      - ldap.enable=false
+      - sso.enable=false
+
+      # Logging
+      - logging.level.root=info
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "10000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - streampark-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      postgresql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # MySQL Database (internal, no host port exposed)
+  mysql:
+    image: mysql:8.0
+    container_name: streampark-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpass
+      - MYSQL_DATABASE=streampark
+      - MYSQL_USER=streampark
+      - MYSQL_PASSWORD=streampark
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpass"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - streampark-network
+    # No ports exposed to host - internal only
+
+  # PostgreSQL Database (internal, no host port exposed)
+  postgresql:
+    image: postgres:15
+    container_name: streampark-postgresql
+    environment:
+      - POSTGRES_DB=streampark
+      - POSTGRES_USER=streampark
+      - POSTGRES_PASSWORD=streampark
+      - POSTGRES_INITDB_ARGS=--encoding=UTF8 --lc-collate=C --lc-ctype=C
+    volumes:
+      - postgresql-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U streampark"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - streampark-network
+    # No ports exposed to host - internal only
+
+  # Redis (internal, no host port exposed)
+  redis:
+    image: redis:7-alpine
+    container_name: streampark-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - streampark-network
+    # No ports exposed to host - internal only
+
+# Named volumes for data persistence
+volumes:
+  mysql-data:
+    driver: local
+  postgresql-data:
+    driver: local
+  redis-data:
+    driver: local
+  streampark-logs:
+    driver: local
+
+# Custom network
+networks:
+  streampark-network:
+    driver: bridge
