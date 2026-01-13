@@ -1,0 +1,31 @@
+services:
+  supir:
+    build: .
+    container_name: supir-service
+    ports:
+      - "40351:6688"
+    environment:
+      - CUDA_VISIBLE_DEVICES=
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - LLAVA_CLIP_PATH=${LLAVA_CLIP_PATH:-}
+      - LLAVA_MODEL_PATH=${LLAVA_MODEL_PATH:-}
+      - SDXL_CLIP1_PATH=${SDXL_CLIP1_PATH:-}
+      - SDXL_CLIP2_CKPT_PTH=${SDXL_CLIP2_CKPT_PTH:-}
+      - SDXL_CKPT=${SDXL_CKPT:-}
+      - SUPIR_CKPT_Q=${SUPIR_CKPT_Q:-}
+      - SUPIR_CKPT_F=${SUPIR_CKPT_F:-}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6688"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 28G
+        reservations:
+          cpus: '2.0'
+          memory: 16G
