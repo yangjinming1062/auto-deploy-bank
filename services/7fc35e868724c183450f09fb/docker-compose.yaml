@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  pulid:
+    build: .
+    ports:
+      - "40586:7860"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      disable: true
+    restart: unless-stopped
