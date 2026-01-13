@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  whoogle:
+    build: .
+    container_name: whoogle
+    restart: unless-stopped
+    ports:
+      - "40088:5000"
+    environment:
+      PYTHONUNBUFFERED: 1
+      WHOOGLE_USER: "admin"
+      WHOOGLE_PASS: "password"
+      WHOOGLE_DOTENV: "1"
+      WHOOGLE_ALT_TW: "farside.link/nitter"
+      WHOOGLE_ALT_YT: "farside.link/invidious"
+      WHOOGLE_ALT_IG: "farside.link/bibliogram/u"
+      WHOOGLE_ALT_RD: "farside.link/libreddit"
+      WHOOGLE_ALT_MD: "farside.link/scribe"
+      WHOOGLE_ALT_TL: "farside.link/lingva"
+      WHOOGLE_ALT_IMG: "farside.link/rimgo"
+      WHOOGLE_ALT_WIKI: "farside.link/wikiless"
+      WHOOGLE_ALT_IMDB: "farside.link/libremdb"
+      WHOOGLE_ALT_QUORA: "farside.link/quetre"
+      WHOOGLE_PROXY_USER: ""
+      WHOOGLE_PROXY_PASS: ""
+      WHOOGLE_PROXY_TYPE: "socks5"
+      WHOOGLE_PROXY_LOC: "tor:9050"
+      WHOOGLE_CSP: "1"
+      HTTPS_ONLY: "1"
+      WHOOGLE_URL_PREFIX: ""
+      WHOOGLE_CONFIG_NEAR: ""
+      WHOOGLE_CONFIG_COUNTRY: "US"
+      WHOOGLE_CONFIG_LANGUAGE: "lang_en"
+      WHOOGLE_CONFIG_SEARCH_LANGUAGE: "lang_en"
+      WHOOGLE_CONFIG_DISABLE: "0"
+      WHOogle_CONFIG_BLOCK: ""
+      WHOOGLE_CONFIG_THEME: "system"
+      WHOOGLE_CONFIG_SAFE: "1"
+      WHOOGLE_CONFIG_ALTS: "1"
+      WHOOGLE_CONFIG_TOR: "1"
+      WHOOGLE_CONFIG_NEW_TAB: "1"
+      WHOOGLE_CONFIG_VIEW_IMAGE: "1"
+      WHOOGLE_CONFIG_GET_ONLY: "0"
+      WHOOGLE_MINIMAL: "0"
+      WHOOGLE_RESULTS_PER_PAGE: "10"
+      WHOOGLE_AUTOCOMPLETE: "1"
+      EXPOSE_PORT: "5000"
+      WHOOGLE_CONFIG_URL: ""
+      WHOOGLE_CONFIG_STYLE: ""
+      WHOOGLE_CONFIG_PREFERENCES_ENCRYPTED: "0"
+      WHOOGLE_CONFIG_PREFERENCES_KEY: ""
+    depends_on:
+      - tor
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  tor:
+    image: dperson/torproxy
+    container_name: tor
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges
