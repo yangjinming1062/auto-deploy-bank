@@ -1,0 +1,18 @@
+services:
+  janusgraph:
+    image: janusgraph/janusgraph:1.0.0
+    container_name: janusgraph
+    ports:
+      - "40227:8182"
+    environment:
+      - JANUS_PROPS_TEMPLATE=inmemory
+      - JANUS_SERVER_TIMEOUT=300
+    volumes:
+      - janusgraph-data:/var/lib/janusgraph
+      - ./janusgraph-http-server.yaml:/etc/opt/janusgraph/janusgraph-server.yaml:ro
+    command: janusgraph /etc/opt/janusgraph/janusgraph-server.yaml
+    restart: unless-stopped
+
+volumes:
+  janusgraph-data:
+    driver: local
