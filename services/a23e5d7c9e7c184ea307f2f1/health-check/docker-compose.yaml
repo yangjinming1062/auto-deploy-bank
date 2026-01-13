@@ -1,0 +1,56 @@
+version: '3.7'
+
+services:
+  health-check-service:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    ports:
+      - '40192:6161'
+    environment:
+      # Spring Boot specific environment variables
+      SPRING_PROFILES_ACTIVE: default
+      # Cache configuration (Simple cache manager)
+      SPRING_CACHE_TYPE: simple
+      # Database configuration (H2 in-memory)
+      SPRING_DATASOURCE_URL: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+      SPRING_DATASOURCE_DRIVERCLASSNAME: org.h2.Driver
+      SPRING_DATASOURCE_USERNAME: sa
+      SPRING_DATASOURCE_PASSWORD:
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.H2Dialect
+      SPRING_JPA_HIBERNATE_DDL_AUTO: create
+      # Health check configuration
+      HEALTH_CHECK_TIMEOUT: 10
+      HEALTH_CHECK_CACHE_EVICT_INTERVAL: 60000
+      CPU_SYSTEM_LOAD_THRESHOLD: 95.0
+      CPU_PROCESS_LOAD_THRESHOLD: 70.0
+      CPU_LOAD_AVERAGE_THRESHOLD: 10.0
+      RETRY_BACKOFF_PERIOD: 2000
+      RETRY_MAX_ATTEMPTS: 3
+      MEMORY_USAGE_THRESHOLD: 0.8
+      # Actuator endpoints
+      MANAGEMENT_ENDPOINTS_WEB_BASE_PATH: /actuator
+      MANAGEMENT_ENDPOINT_HEALTH_PROBES_ENABLED: 'true'
+      MANAGEMENT_HEALTH_LIVENESSTATE_ENABLED: 'true'
+      MANAGEMENT_HEALTH_READINESSSTATE_ENABLED: 'true'
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:6161/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    command: java -Dspring.config.location=file:/app/application.properties -Dspring.logging.level.org.springframework=DEBUG -cp app.jar com.iluwatar.health.check.App
+    volumes:
+      - ./target.jar:/app/target.jar
+      - ./application.properties:/app/application.properties:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
