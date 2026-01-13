@@ -1,0 +1,62 @@
+services:
+  app:
+    build: .
+    ports:
+      - "40101:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=local
+      - CACHECLOUD_PRIMARY_JDBCURL=jdbc:mysql://mysql:3306/cachecloud?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+      - CACHECLOUD_PRIMARY_USERNAME=root
+      - CACHECLOUD_PRIMARY_PASSWORD=password
+      - CACHECLOUD_REDIS_ENABLE=true
+      - CACHECLOUD_REDIS_MAIN_HOST=redis
+      - CACHECLOUD_REDIS_MAIN_PORT=6379
+      - SERVER_TOMCAT_ADDITIONAL_TLD_SKIP_PATTERNS=jstl-*.jar,spring-webmvc-*.jar,struts-taglib-*.jar
+    volumes:
+      - ./cachecloud-web/target/cachecloud-web.war:/app/app.war
+      - ./target.jar:/app/target.jar
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    networks:
+      - cachecloud_net
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: cachecloud
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init-db:/docker-entrypoint-initdb.d
+    networks:
+      - cachecloud_net
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cachecloud_net
+
+networks:
+  cachecloud_net:
+    driver: bridge
+
+volumes:
+  mysql_data:
