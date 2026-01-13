@@ -1,0 +1,98 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: yudao-mysql
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: ruoyi-vue-pro
+    command: >
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_general_ci
+      --explicit_defaults_for_timestamp=true
+      --lower_case_table_names=1
+    volumes:
+      - mysql-data:/var/lib/mysql/
+      - ./sql/mysql:/docker-entrypoint-initdb.d:ro
+    networks:
+      - yudao-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: yudao-redis
+    restart: unless-stopped
+    command: redis-server --requirepass "yudao123" --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - yudao-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  yudao-server:
+    build:
+      context: .
+      dockerfile: yudao-server/Dockerfile
+    container_name: yudao-server
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_URL: jdbc:mysql://mysql:3306/ruoyi-vue-pro?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true&rewriteBatchedStatements=true
+      SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_USERNAME: root
+      SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_PASSWORD: 123456
+      SPRING_DATASOURCE_DYNAMIC_DATASOURCE_SLAVE_URL: jdbc:mysql://mysql:3306/ruoyi-vue-pro?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&nullCatalogMeansCurrent=true&rewriteBatchedStatements=true
+      SPRING_DATASOURCE_DYNAMIC_DATASOURCE_SLAVE_USERNAME: root
+      SPRING_DATASOURCE_DYNAMIC_DATASOURCE_SLAVE_PASSWORD: 123456
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_REDIS_DATABASE: 0
+      SPRING_REDIS_PASSWORD: "yudao123"
+      SERVER_PORT: 48080
+      SERVER_SERVLET_ENCODING_CHARSET: UTF-8
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "*"
+      YUDAO_API_ENCRYPT_ENABLE: false
+      YUDAO_WEB_XSS_ENABLE: false
+      YUDAO_MYBATIS_PLUS_ENCRYPTOR_PASSWORD: XDV71a+xqStEA3WH
+      YUDAO_INITIAL_ADMIN_PASSWORD: yudaoyuanma
+      YUDAO_TENANT_ENABLE: false
+    ports:
+      - "40886:48080"
+    volumes:
+      - ./target.jar:/app/target.jar:ro
+      - ./application-local.yaml:/app/config/application-local.yaml:ro
+    networks:
+      - yudao-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:48080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+volumes:
+  mysql-data:
+    driver: local
+  redis-data:
+    driver: local
+
+networks:
+  yudao-network:
+    driver: bridge
