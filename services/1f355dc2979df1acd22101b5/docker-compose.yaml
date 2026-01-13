@@ -1,0 +1,21 @@
+version: '3.8'
+services:
+  web:
+    build: .
+    ports:
+      - "40191:5000"
+    environment:
+      - SECRET_KEY=This is an INSECURE secret!! DO NOT use this in production!!
+      - SQLALCHEMY_DATABASE_URI=sqlite:///basic_app.sqlite
+      - MAIL_SERVER=smtp.gmail.com
+      - MAIL_PORT=465
+      - MAIL_USE_SSL=True
+      - MAIL_USE_TLS=False
+      - MAIL_USERNAME=email@example.com
+      - MAIL_PASSWORD=password
+      - MAIL_DEFAULT_SENDER="MyApp" <noreply@example.com>
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
