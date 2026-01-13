@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  cot-hub:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chain-of-thought-hub
+    ports:
+      - "40642:40642"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - API_KEY=${API_KEY:-sk-test-key}
+    volumes:
+      - ./outputs:/app/outputs
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:40642/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - cot-network
+
+networks:
+  cot-network:
+    driver: bridge
