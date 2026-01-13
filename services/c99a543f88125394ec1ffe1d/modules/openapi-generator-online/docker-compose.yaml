@@ -1,0 +1,33 @@
+services:
+  openapi-generator-online:
+    build:
+      context: ../../
+      dockerfile: modules/openapi-generator-online/Dockerfile
+    ports:
+      - "40207:8080"
+    volumes:
+      - ./target.jar:/app/target.jar
+    environment:
+      - GENERATOR_HOST=
+      - JAVA_OPTS=-DloggerPath=conf/log4j.properties
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - openapi-generator-network
+
+networks:
+  openapi-generator-network:
+    driver: bridge
