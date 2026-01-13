@@ -1,0 +1,93 @@
+services:
+  # KnowStreaming Manager Service
+  knowstreaming-manager:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: knowstreaming-manager
+    restart: always
+    ports:
+      - "40002:8080"
+    environment:
+      TZ: Asia/Shanghai
+      # MySQL configuration
+      SERVER_MYSQL_ADDRESS: knowstreaming-mysql:3306
+      SERVER_MYSQL_DB: know_streaming
+      SERVER_MYSQL_USER: root
+      SERVER_MYSQL_PASSWORD: mysql_pass
+      # Elasticsearch configuration
+      SERVER_ES_ADDRESS: elasticsearch-single:9200
+      # JVM options
+      JAVA_OPTS: -Xms2g -Xmx2g -Xmn1g
+      # Spring profile
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      knowstreaming-mysql:
+        condition: service_healthy
+      elasticsearch-single:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/metrics/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    volumes:
+      - ./target.jar:/app/target.jar
+      - ./application-docker.yml:/app/config/application-docker.yml:ro
+    networks:
+      - knowstreaming-network
+
+  # MySQL Database Service
+  knowstreaming-mysql:
+    build:
+      context: ./km-dist/docker/mysql
+      dockerfile: dockerfile
+    container_name: knowstreaming-mysql
+    restart: always
+    environment:
+      TZ: Asia/Shanghai
+      MYSQL_ROOT_PASSWORD: mysql_pass
+      MYSQL_DATABASE: know_streaming
+      MYSQL_ROOT_HOST: '%'
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pmysql_pass"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - knowstreaming-network
+
+  # Elasticsearch Service
+  elasticsearch-single:
+    image: docker.io/library/elasticsearch:6.6.2
+    container_name: elasticsearch-single
+    restart: always
+    environment:
+      TZ: Asia/Shanghai
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+      discovery.type: single-node
+      # Disable X-Pack security for development
+      xpack.security.enabled: false
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - knowstreaming-network
+
+volumes:
+  mysql-data:
+    driver: local
+  es-data:
+    driver: local
+
+networks:
+  knowstreaming-network:
+    driver: bridge
