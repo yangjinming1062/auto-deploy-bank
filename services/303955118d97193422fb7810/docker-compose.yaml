@@ -1,0 +1,36 @@
+services:
+  mt-dnn:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mt-dnn:latest
+    container_name: mt-dnn-service
+    ports:
+      - "40214:40214"
+    environment:
+      - RANK=0
+      - WORLD_SIZE=1
+      - MASTER_ADDR=localhost
+      - MASTER_PORT=6600
+      - MTDNN_CO_RESOLVE_ENDPOINT=https://mrc.blob.core.windows.net/mt-dnn-model
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./data:/workspace/data
+      - ./models:/workspace/models
+      - ./output:/workspace/output
+    command: ["python", "web_server.py"]
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import torch; print('MT-DNN environment is healthy')"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 40s
