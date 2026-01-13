@@ -1,0 +1,13 @@
+{
+  "service_id": "3e8a588499350209b8bd5f44",
+  "repo_name": "tolgee/tolgee-platform",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "106.52MB",
+  "language": "java",
+  "star": 3679,
+  "repo_flag": "JAVA-SpringBoot",
+  "uploaded_at": "2026-01-13T01:15:51.147775"
+}
