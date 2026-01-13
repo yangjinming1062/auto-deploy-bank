@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  gatsby:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "40091:8000"
+    environment:
+      - NODE_ENV=development
+      - GATSBY_ACTIVE_ENV=development
+      - PORT=8000
+      - HOST=localhost
+      - GATSBY_LOGGER=ink
+      - GATSBY_QUERY_ON_DEMAND=false
+      - GATSBY_TELEMETRY_DISABLED=0
+      - GATSBY_EXPERIMENTAL_FAST_DEV=false
+      - GATSBY_EXPERIMENTAL_DEV_SSR=false
+      - GATSBY_WORKER_POOL_WORKER=false
+      - GATSBY_DISABLE_CACHE_PERSISTENCE=false
+      - GATSBY_DETECT_NODE_MUTATIONS=false
+      - GATSBY_DISABLE_CUSTOM_404=false
+      - GATSBY_EXPERIMENTAL_PRESERVE_FILE_DOWNLOAD_CACHE=false
+      - GATSBY_PRECOMPILE_DEVELOP_FUNCTIONS=false
+      - GATSBY_CPU_COUNT=auto
+      - GATSBY_SLICES=
+      - GATSBY_ENABLE_QUERY_ON_DEMAND_IN_CI=false
+      - ENABLE_GATSBY_REFRESH_ENDPOINT=false
+      - PUBLIC_DIR=public
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
