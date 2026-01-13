@@ -1,0 +1,10 @@
+services:
+  app:
+    build: .
+    ports:
+      - "40077:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 5s
+      timeout: 10s
+      retries: 3
