@@ -1,0 +1,25 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /app/examples/regular-django
+    ports:
+      - "40114:8000"
+    volumes:
+      - ./db:/srv/db
+    environment:
+      - DATABASE_NAME=/srv/db/example.db
+      - SECRET_KEY=a-secure-secret-key
+      - DJANGO_SETTINGS_MODULE=example.settings
+      - GOOGLE_CLIENT_ID=
+      - GOOGLE_CLIENT_SECRET=
+      - GITHUB_CLIENT_ID=
+      - GITHUB_CLIENT_SECRET=
+      - PYTHONPATH=/app:/app/examples/regular-django
+    command: ["python", "manage.py", "runserver", "0.0.0.0:8000", "--settings=example.settings"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
