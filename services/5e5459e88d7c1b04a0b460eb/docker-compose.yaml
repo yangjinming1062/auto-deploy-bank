@@ -1,0 +1,71 @@
+services:
+  alluxio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: alluxio
+    hostname: alluxio
+
+    # Web UI port: Map host port 40760 to container port 19999 (Alluxio Web UI)
+    # RPC port: 19998 for internal communication
+    ports:
+      - "40760:19999"
+      - "19998:19998"
+
+    environment:
+      - ALLUXIO_MASTER_HOSTNAME=localhost
+      - ALLUXIO_UNDERFS_ADDRESS=/underFSStorage
+      - ALLUXIO_RAM_FOLDER=/dev/shm
+      - ALLUXIO_LOGS_DIR=/tmp/alluxio/logs
+      - ALLUXIO_JAVA_OPTS=-Dalluxio.root.logger=INFO,CONSOLE
+      - LANG=en_US.UTF-8
+
+    volumes:
+      # JAR file volume mount for security scanning (required)
+      - ./target.jar:/app/target.jar
+      # Data persistence volumes
+      - alluxio-journal:/opt/alluxio/journal
+      - alluxio-storage:/underFSStorage
+      - alluxio-logs:/tmp/alluxio/logs
+
+    # Resource limits to prevent container from consuming all system resources
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:19999/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+    # Shared memory size for ramdisk
+    shm_size: 1g
+
+    # Security options
+    security_opt:
+      - no-new-privileges:true
+
+    # Stop grace period for clean shutdown
+    stop_grace_period: 30s
+
+    restart: unless-stopped
+
+networks:
+  default:
+    name: alluxio-network
+    driver: bridge
+
+volumes:
+  alluxio-journal:
+    driver: local
+  alluxio-storage:
+    driver: local
+  alluxio-logs:
+    driver: local
