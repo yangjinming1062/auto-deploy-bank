@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  flaskbb:
+    build: .
+    ports:
+      - "40106:8000"
+    environment:
+      # FlaskBB Configuration
+      - FLASKBB_SECRET_KEY=your-secret-key-change-in-production
+      - FLASKBB_WTF_CSRF_SECRET_KEY=reallyhardtoguess
+      - FLASKBB_DATABASE_URI=postgresql://flaskbb:flaskbb_password@db:5432/flaskbb
+      - FLASKBB_SQLALCHEMY_DATABASE_URI=postgresql://flaskbb:flaskbb_password@db:5432/flaskbb
+      - FLASKBB_SERVER_NAME=127.0.0.1:40106
+      - FLASKBB_DEBUG=false
+      - FLASKBB_REMOVE_DEAD_PLUGINS=false
+      - FLASKBB_DEFAULT_LANGUAGE=en
+      - FLASKBB_BABEL_DEFAULT_LOCALE=en
+      # Mail Configuration (disable for now)
+      - FLASKBB_MAIL_DEBUG=0
+
+      # Redis Configuration
+      - FLASKBB_REDIS_ENABLED=true
+      - FLASKBB_REDIS_URL=redis://redis:6379/0
+
+      # Celery Configuration
+      - FLASKBB_CELERY_BROKER_URL=redis://redis:6379/0
+      - FLASKBB_CELERY_RESULT_BACKEND=redis://redis:6379/0
+
+      # Mail Configuration (disable for now)
+      - FLASKBB_MAIL_SERVER=localhost
+      - FLASKBB_MAIL_PORT=25
+      - FLASKBB_MAIL_USERNAME=
+      - FLASKBB_MAIL_PASSWORD=
+      - FLASKBB_MAIL_DEFAULT_SENDER=FlaskBB <noreply@flaskbb.org>
+
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=flaskbb
+      - POSTGRES_USER=flaskbb
+      - POSTGRES_PASSWORD=flaskbb_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U flaskbb -d flaskbb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
