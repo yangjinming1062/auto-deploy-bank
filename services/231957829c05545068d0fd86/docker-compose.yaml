@@ -1,0 +1,43 @@
+services:
+  toolbench:
+    build: .
+    ports:
+      - "40147:5000"
+    command: >
+      python toolbench/inference/toolbench_server.py
+      --backbone_model "chatgpt_function"
+      --model_path "dummy"
+      --tool_root_dir "data_example/toolenv/tools"
+      --retrieved_api_nums 0
+      --corpus_tsv_path "dummy_corpus.tsv"
+      --retrieval_model_path "mock_model"
+    environment:
+      - PYTHONPATH=.
+      - PYTHONUNBUFFERED=1
+      - TOKENIZERS_PARALLELISM=false
+      - BNB_DISABLE_TRITON=1
+      - TOOLBENCH_KEY=
+      - OPENAI_KEY=
+      - OPENAI_ORG=
+      - OPENAI_TYPE=
+      - OPENAI_VER=
+      - RAPIDAPI_KEY=
+      - CUDA_VISIBLE_DEVICES=
+      - API_POOL_FILE=
+      - WORLD_SIZE=1
+      - LOCAL_RANK=0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
