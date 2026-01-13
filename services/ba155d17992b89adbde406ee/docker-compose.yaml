@@ -1,0 +1,122 @@
+services:
+  # Zookeeper service (internal - no port exposure to host)
+  zookeeper:
+    image: zookeeper:3.9
+    container_name: solr-zookeeper
+    environment:
+      # Zookeeper configuration
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=zookeeper:2888:3888;2181
+      ZOO_PORT: 2181
+      ZOO_TICK_TIME: 2000
+      ZOO_INIT_LIMIT: 5
+      ZOO_SYNC_LIMIT: 2
+      # Java options for Zookeeper
+      JVMFLAGS: "-Xms256m -Xmx512m"
+    volumes:
+      - zookeeper_data:/data
+      - zookeeper_datalog:/datalog
+    networks:
+      - solr-network
+    restart: unless-stopped
+    # No ports exposed to host - internal communication only
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "zkServer.sh", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Solr service
+  solr:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: solr-server
+    ports:
+      - "40049:8983"  # Map host port 40049 to container port 8983
+    environment:
+      # Zookeeper configuration - point to internal Zookeeper service
+      ZK_HOST: zookeeper:2181
+      ZK_CLIENT_TIMEOUT: 30000
+      ZK_CREATE_CHROOT: "true"
+
+      # Solr configuration
+      SOLR_HOST_ADVERTISE: "true"
+      SOLR_CLOUD_WAIT_FOR_ZK_SECONDS: 30
+      SOLR_DELETE_UNKNOWN_CORES: "false"
+      SOLR_TIMEZONE: "UTC"
+      SOLR_PORT_LISTEN: "8983"
+      SOLR_HOST_BIND: "0.0.0.0"
+
+      # Logging configuration
+      SOLR_LOG_LEVEL: "INFO"
+      SOLR_LOGS_DIR: "/var/solr/logs"
+      SOLR_LOGS_REQUESTLOG_ENABLED: "false"
+
+      # Security configuration
+      SOLR_SSL_ENABLED: "false"
+      SOLR_SECURITY_MANAGER_ENABLED: "false"
+
+      # Resource limits
+      SOLR_HEAP: "1g"
+      SOLR_OPTS: "-Xms1g -Xmx2g"
+
+      # UI configuration
+      SOLR_UI_ENABLED: "true"
+      SOLR_UI_EXPERIMENTAL_ENABLED: "false"
+
+      # Cluster configuration
+      SOLR_CLUSTERING_ENABLED: "false"
+
+      # Zookeeper embedded configuration
+      SOLR_ZOOKEEPER_EMBEDDED_HOST: "0.0.0.0"
+
+    volumes:
+      - solr_data:/var/solr/data
+      - ./target.jar:/app/target.jar:ro
+
+    networks:
+      - solr-network
+    restart: unless-stopped
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    # Resource limits to prevent resource exhaustion
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    # Health check for Solr service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8983/solr/admin/cores"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+# Volumes for data persistence (but container should be stateless)
+volumes:
+  solr_data:
+    driver: local
+  zookeeper_data:
+    driver: local
+  zookeeper_datalog:
+    driver: local
+
+# Network for internal communication
+networks:
+  solr-network:
+    driver: bridge
