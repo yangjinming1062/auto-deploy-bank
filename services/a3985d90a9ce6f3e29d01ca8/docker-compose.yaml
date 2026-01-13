@@ -1,0 +1,152 @@
+services:
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    volumes:
+      - ./ollama:/root/.ollama
+    entrypoint: ["/bin/sh", "-c"]
+    environment:
+      - OLLAMA_MODEL=${OLLAMA_MODEL}
+    command: >
+      "ollama serve &
+      sleep 10 &&
+      ollama pull ${OLLAMA_MODEL} &&
+      wait"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: qdrant
+    expose:
+      - 6333
+      - 6334
+    volumes:
+      - ./qdrant_data:/qdrant/storage
+    environment:
+      QDRANT__LOG_LEVEL: "INFO"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/dashboard"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  indexer:
+    build:
+      context: ./indexer
+      dockerfile: Dockerfile
+      args:
+        EMBEDDING_MODEL_ID: ${EMBEDDING_MODEL_ID}
+        EMBEDDING_SIZE: ${EMBEDDING_SIZE}
+    volumes:
+      - ${LOCAL_FILES_PATH}:/usr/src/app/local_files/
+      - ./indexer:/usr/src/app
+      - ./indexer_data:/indexer/storage
+    expose:
+      - 8000
+    environment:
+      - PYTHONPATH=/usr/src
+      - PYTHONUNBUFFERED=1
+      - LOCAL_FILES_PATH=${LOCAL_FILES_PATH}
+      - EMBEDDING_MODEL_ID=${EMBEDDING_MODEL_ID}
+      - EMBEDDING_SIZE=${EMBEDDING_SIZE}
+      - CONTAINER_PATH=/usr/src/app/local_files/
+    depends_on:
+      - qdrant
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  llm:
+    build:
+      context: ./llm
+      dockerfile: Dockerfile
+      args:
+        RERANKER_MODEL: ${RERANKER_MODEL}
+    volumes:
+      - ./llm:/usr/src/app
+    ports:
+      - 40116:8000
+    environment:
+      - PYTHONPATH=/usr/src
+      - PYTHONUNBUFFERED=1
+      - OLLAMA_MODEL=${OLLAMA_MODEL}
+      - RERANKER_MODEL=${RERANKER_MODEL}
+      - LOCAL_FILES_PATH=${LOCAL_FILES_PATH}
+      - CONTAINER_PATH=/usr/src/app/local_files/
+    depends_on:
+      - ollama
+      - qdrant
+      - indexer
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  chat:
+    build: ./chat
+    volumes:
+      - ./chat:/usr/src/app
+    expose:
+      - 3000
+    depends_on:
+      - ollama
+      - qdrant
+      - llm
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
