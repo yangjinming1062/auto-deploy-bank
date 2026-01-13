@@ -1,0 +1,33 @@
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:22.0.5
+    command: start-dev
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin123
+    ports:
+      - "40510:8080"
+    healthcheck:
+      test: ["CMD", "sh", "-c", "exec 3<>/dev/tcp/localhost/8080"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 90s
+
+  app:
+    build: .
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    ports:
+      - "40013:40013"
+    environment:
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: admin123
+      IMPORT_FILES_LOCATIONS: /config/*
+      import.cache.enabled: 'false'
+      LOGGING_LEVEL_ROOT: info
+    volumes:
+      - ./contrib/example-config:/config
+      - ./target.jar:/app/target.jar
