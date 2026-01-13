@@ -1,0 +1,72 @@
+services:
+  # Redis server for Redisson to connect to
+  redis:
+    image: redis:7-alpine
+    container_name: redisson-redis
+    restart: unless-stopped
+    # Internal only - not exposed to host
+    ports: []
+    networks:
+      - redisson-network
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Redisson Node service
+  redisson:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: redisson-node
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - redisson-network
+    # Port 40218 is reserved but not actually used - RedissonNode doesn't expose HTTP endpoints
+    # This is a background service for distributed task execution
+    environment:
+      - REDIS_ADDRESS=redis://redis:6379
+      - REDIS_PASSWORD=
+      - REDISSON_CONFIG_PATH=redisson.yaml
+    # Volume mount for security scanning
+    volumes:
+      - ./target.jar:/app/target.jar:ro
+    healthcheck:
+      test: ["CMD", "sh", "-c", "pgrep -f 'java.*app.jar' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+networks:
+  redisson-network:
+    driver: bridge
+    name: redisson-network
+
+volumes:
+  redis-data:
+    name: redisson-redis-data
