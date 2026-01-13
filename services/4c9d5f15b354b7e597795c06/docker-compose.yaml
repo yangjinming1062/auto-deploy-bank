@@ -1,0 +1,63 @@
+services:
+  java-sec-code:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "40095:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/java_sec_code?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=woshishujukumima
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
+      - MYBATIS_MAPPER_LOCATIONS=classpath:mapper/*.xml
+      - LOGGING_LEVEL_ORG_JOYCHOU_MAPPER=debug
+      - MANAGEMENT_SECURITY_ENABLED=false
+      - LOGGING_CONFIG=classpath:logback-online.xml
+      - JOYCHOU_BUSINESS_CALLBACK=callback_
+      - JOYCHOU_SECURITY_REFERER_ENABLED=false
+      - JOYCHOU_SECURITY_REFERER_HOST=joychou.org, joychou.com
+      - JOYCHOU_SECURITY_REFERER_URI=/jsonp/**
+      - JOYCHOU_SECURITY_CSRF_ENABLED=false
+      - JOYCHOU_SECURITY_CSRF_EXCLUDE_URL=/xxe/**, /fastjson/**, /xstream/**, /ssrf/**, /deserialize/**
+      - JOYCHOU_SECURITY_CSRF_METHOD=POST
+      - JOYCHOU_SECURITY_JSONP_REFERER_CHECK_ENABLED=true
+      - JOYCHOU_SECURITY_JSONP_CALLBACK=callback, _callback
+      - SWAGGER_ENABLE=true
+      - JOYCHOU_NO_NEED_LOGIN_URL=/css/**, /js/**, /xxe/**, /rce/**, /deserialize/**, /test/**, /ws/**, /shiro/**, /ssrf/**, /spel/**, /qlexpress/**
+      - SERVER_MAX_HTTP_HEADER_SIZE=30000
+      - JSC_ACCESSKEY_ID=LTAI5tSAEPX3Z5N2Yt8ogc2y
+      - JSC_ACCESSKEY_SECRET=W1Poxj09wN0Zu6dDsS0on3SIUhOhK7
+    volumes:
+      - ./target.jar:/app/target.jar
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=woshishujukumima
+      - MYSQL_DATABASE=java_sec_code
+    volumes:
+      - ./src/main/resources/create_db.sql:/docker-entrypoint-initdb.d/create_db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "mysql -uroot -pwoshishujukumima -e 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
