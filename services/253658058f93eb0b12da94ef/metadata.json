@@ -1,0 +1,13 @@
+{
+  "service_id": "253658058f93eb0b12da94ef",
+  "repo_name": "apache/servicecomb-java-chassis",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "4.99MB",
+  "language": "java",
+  "star": 1938,
+  "repo_flag": "JAVA-Guava",
+  "uploaded_at": "2026-01-13T18:22:24.459701"
+}

@@ -1,0 +1,35 @@
+services:
+  simple-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: simple-spring-boot-server
+    ports:
+      - "40842:8080"
+    environment:
+      - spring.application.name=$${SERVICEcomb_SERVICE_NAME:-defaultMicroservice}
+      - servicecomb.service.application=$${SERVICEcomb_SERVICE_APPLICATION:-default}
+      - servicecomb.service.name=$${SERVICEcomb_SERVICE_NAME:-defaultMicroservice}
+      - servicecomb.service.version=$${SERVICEcomb_SERVICE_VERSION:-1.0.0.0}
+      - servicecomb.service.environment=$${SERVICEcomb_SERVICE_ENVIRONMENT:-production}
+      - servicecomb.registry.local.enabled=$${SERVICEcomb_REGISTRY_LOCAL_ENABLED:-true}
+      - servicecomb.registry.sc.enabled=$${SERVICEcomb_REGISTRY_SC_ENABLED:-false}
+      - servicecomb.rest.address=$${SERVICEcomb_REST_ADDRESS:-0.0.0.0:8080}
+      - JAVA_OPTS=-Xmx512m -Xms256m
+    volumes:
+      - ./target/simple-server-1.0.0.jar:/app/target.jar
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--method=GET", "-O", "/dev/null", "http://localhost:8080/springmvc/annotations/sayhi?name=healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
