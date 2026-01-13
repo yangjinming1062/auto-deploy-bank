@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  mlr2:
+    build: .
+    container_name: mlr2
+    ports:
+      - "40199:8888"
+    working_dir: /usr/src/mlr2
+    volumes:
+      - ./:/usr/src/mlr2
+    command: >
+      sh -c "jupyter notebook --port=8888 --ip=0.0.0.0 --allow-root --NotebookApp.token=''"
+    restart: "always"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
