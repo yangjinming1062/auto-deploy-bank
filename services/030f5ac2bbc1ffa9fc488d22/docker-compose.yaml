@@ -1,0 +1,20 @@
+services:
+  wire-grpc-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "40326:8080"
+    environment:
+      - DEPLOYMENT=testing
+      - GRADLE_OPTS=-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false -Dkotlin.incremental=false
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    volumes:
+      - ./target.jar:/app/target.jar
