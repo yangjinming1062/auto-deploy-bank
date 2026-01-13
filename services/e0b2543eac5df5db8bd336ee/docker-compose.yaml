@@ -1,0 +1,51 @@
+services:
+  zookeeper:
+    image: zookeeper:3.9
+    environment:
+      - ZOO_INIT_LIMIT=10
+      - ZOO_SYNC_LIMIT=5
+    healthcheck:
+      test: ["CMD", "zkServer.sh", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    restart: unless-stopped
+
+  curator:
+    build: .
+    ports:
+      - "40602:40427"
+    volumes:
+      - ./target.jar:/app/target.jar
+    environment:
+      - JAVA_OPTS=-Xmx512m
+      - ZOOKEEPER_CONNECTION_STRING=zookeeper:2181
+      - curator-default-session-timeout=60000
+      - curator-default-connection-timeout=15000
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:40427/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    depends_on:
+      zookeeper:
+        condition: service_healthy

@@ -1,0 +1,13 @@
+{
+  "service_id": "e0b2543eac5df5db8bd336ee",
+  "repo_name": "apache/curator",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.24MB",
+  "language": "java",
+  "star": 3167,
+  "repo_flag": "JAVA-Guava",
+  "uploaded_at": "2026-01-13T09:09:37.701902"
+}
