@@ -1,0 +1,10 @@
+services:
+  web:
+    build: .
+    ports:
+      - "40171:8080"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:8080/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
