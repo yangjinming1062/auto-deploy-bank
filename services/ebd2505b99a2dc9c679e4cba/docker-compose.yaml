@@ -1,0 +1,80 @@
+services:
+  myth-admin:
+    build: .
+    ports:
+      - "8888:8888"
+    environment:
+      - SERVER_PORT=8888
+      - SERVER_SERVLET_CONTEXT_PATH=/myth-admin
+      - SPRING_APPLICATION_NAME=myth-admin
+      - SPRING_PROFILES_ACTIVE=db
+      - MYTH_ADMIN_USERNAME=admin
+      - MYTH_ADMIN_PASSWORD=admin
+      - MYTH_DB_DRIVER=com.mysql.jdbc.Driver
+      - MYTH_DB_URL=jdbc:mysql://mysql:3306/tx?useUnicode=true&characterEncoding=utf8
+      - MYTH_DB_USERNAME=xiaoyu
+      - MYTH_DB_PASSWORD=Wgj@555888
+      - spring.redis.host=redis
+      - spring.data.mongodb.uri=mongodb://mongodb:27017/myth
+      - myth.zookeeper.host=zookeeper:2181
+    volumes:
+      - ./target.jar:/app/target.jar
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      zookeeper:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/myth-admin"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  mysql:
+    image: mysql:5.7
+    environment:
+      - MYSQL_DATABASE=tx
+      - MYSQL_USER=xiaoyu
+      - MYSQL_PASSWORD=Wgj@555888
+      - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 10
+
+  redis:
+    image: redis:alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongodb:
+    image: mongo:4.4
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  zookeeper:
+    image: zookeeper:3.4
+    healthcheck:
+      test: ["CMD-SHELL", "echo ruok | nc localhost 2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mysql_data:
+  mongodb_data:
