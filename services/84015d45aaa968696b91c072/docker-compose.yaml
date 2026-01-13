@@ -1,0 +1,88 @@
+version: '3.8'
+services:
+  web:
+    build:
+      context: .
+      args:
+        - NEXT_PUBLIC_AGIXT_SERVER=http://127.0.0.1:7437
+    ports:
+      - "40224:3437"
+    environment:
+      NODE_ENV: production
+      PORT: 3437
+      APP_NAME: "AGiXT"
+      APP_DESCRIPTION: "An AGiXT application."
+      APP_URI: "http://localhost:3437"
+      DEFAULT_THEME_MODE: "dark"
+      TZ: "America/New_York"
+      ADSENSE_ACCOUNT: ""
+      PRIVATE_ROUTES: "/chat,/team,/settings/"
+      AUTH_WEB: "http://localhost:3437/user"
+      NEXT_PUBLIC_AGIXT_SERVER: "http://127.0.0.1:7437"
+      ALLOW_EMAIL_SIGN_IN: "true"
+      AGIXT_API_KEY: ""
+      AGIXT_CONVERSATION: "-"
+      AGIXT_CONVERSATION_MODE: "static"
+      INTERACTIVE_UI: "chat"
+      AGIXT_SHOW_APP_BAR: "true"
+      AGIXT_SHOW_SELECTION: ""
+      AGIXT_FOOTER_MESSAGE: "Powered by AGiXT"
+      AGIXT_RLHF: "true"
+      AGIXT_SHOW_CHAT_THEME_TOGGLES: "false"
+      AGIXT_FILE_UPLOAD_ENABLED: "true"
+      AGIXT_VOICE_INPUT_ENABLED: "true"
+      AGIXT_ALLOW_MESSAGE_EDITING: "true"
+      AGIXT_ALLOW_MESSAGE_DELETION: "true"
+      AGIXT_SHOW_OVERRIDE_SWITCHES: "tts,websearch"
+      AGIXT_ENABLE_SEARCHPARAM_CONFIG: "true"
+      AGIXT_MODE: "prompt"
+      AGIXT_AGENT: "AGiXT"
+      AGIXT_INSIGHT_AGENT: ""
+      AGIXT_USE_SELECTED_AGENT: ""
+      AGIXT_PROMPT_NAME: "Think About It"
+      AGIXT_PROMPT_CATEGORY: "Default"
+      AGIXT_COMMAND: ""
+      AGIXT_COMMAND_MESSAGE_ARG: "message"
+      AGIXT_CHAIN: ""
+      AGIXT_CHAIN_ARGS: "{}"
+      STRIPE_PUBLISHABLE_KEY: ""
+      STRIPE_PRICING_TABLE_ID: ""
+      GITHUB_CLIENT_ID: ""
+      GOOGLE_CLIENT_ID: ""
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3437/ || exit 1"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+  agixt:
+    image: joshxt/agixt:latest
+    init: true
+    ports:
+      - "7437:7437"
+    environment:
+      - AGIXT_API_KEY=dummy
+      - DATABASE_TYPE=sqlite
+      - DATABASE_NAME=models/agixt
+      - UVICORN_WORKERS=10
+      - AGIXT_URI=http://127.0.0.1:7437
+      - MAGIC_LINK_URL=http://localhost:3437
+      - WORKING_DIRECTORY=/agixt/WORKSPACE
+      - REGISTRATION_DISABLED=false
+      - TOKENIZERS_PARALLELISM=false
+      - LOG_LEVEL=INFO
+      - STORAGE_BACKEND=local
+      - STORAGE_CONTAINER=agixt-workspace
+      - S3_BUCKET=agixt-workspace
+      - S3_ENDPOINT=http://minio:9000
+      - AWS_ACCESS_KEY_ID=minioadmin
+      - AWS_SECRET_ACCESS_KEY=minioadmin
+      - AWS_STORAGE_REGION=us-east-1
+      - SEED_DATA=true
+      - AGENT_NAME=AGiXT
+      - GRAPHIQL=true
+      - TZ=America/New_York
+    volumes:
+      - ./models:/agixt/models
+      - ./WORKSPACE:/agixt/WORKSPACE
+      - /var/run/docker.sock:/var/run/docker.sock
