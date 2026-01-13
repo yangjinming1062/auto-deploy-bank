@@ -1,0 +1,89 @@
+services:
+  litellm:
+    build:
+      context: .
+    image: ghcr.io/berriai/litellm:main-stable
+    ports:
+      - "51423:4000" # Map the container port 4000 to host port 51423
+    environment:
+      DATABASE_URL: "postgresql://llmproxy:dbpassword9090@db:5432/litellm"
+      STORE_MODEL_IN_DB: "True" # allows adding models to proxy via UI
+      LITELLM_MASTER_KEY: "sk-1234"
+      LITELLM_SALT_KEY: "sk-1234"
+      # Redis configuration
+      REDIS_HOST: "redis"
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ""
+    env_file:
+      - .env # Load local .env file
+    depends_on:
+      db:
+        condition: service_healthy  # Indicates that this service depends on the 'db' service, ensuring 'db' starts first
+      redis:
+        condition: service_healthy
+    healthcheck:  # Defines the health check configuration for the container
+      test:
+        - CMD-SHELL
+        - curl -f http://localhost:4000/health/liveliness || exit 1  # Command to execute for health check using curl
+      interval: 30s  # Perform health check every 30 seconds
+      timeout: 10s   # Health check command times out after 10 seconds
+      retries: 3     # Retry up to 3 times if health check fails
+      start_period: 40s  # Wait 40 seconds after container start before beginning health checks
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'      # Maximum 2 CPU cores
+          memory: 4G       # Maximum 4GB memory
+        reservations:
+          cpus: '1.0'      # Reserve 1 CPU cores
+          memory: 1G       # Reserve 1GB memory
+
+  db:
+    image: postgres:16
+    restart: always
+    container_name: litellm_db
+    environment:
+      POSTGRES_DB: litellm
+      POSTGRES_USER: llmproxy
+      POSTGRES_PASSWORD: dbpassword9090
+    # Don't expose port to host - internal communication only
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Persists Postgres data across container restarts
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d litellm -U llmproxy"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    container_name: litellm_redis
+    # Don't expose port to host - internal communication only
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+volumes:
+  postgres_data:
+    name: litellm_postgres_data # Named volume for Postgres data persistence
