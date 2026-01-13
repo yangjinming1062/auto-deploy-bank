@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  bentoml-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bentoml-service
+    ports:
+      - "40735:3000"  # Map host port 40735 to container port 3000
+    environment:
+      - PYTHONUNBUFFERED=1
+      - BENTOML_HOME=/bentoml
+      - BENTOML_BUNDLE_LOCAL_BUILD=true
+      - BENTOML_NUM_THREAD=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'      # Maximum 2 CPU cores
+          memory: 4G       # Maximum 4GB memory
+        reservations:
+          cpus: '1.0'      # Reserve 1 CPU cores
+          memory: 1G       # Reserve 1GB memory
+    networks:
+      - bentoml-network
+
+networks:
+  bentoml-network:
+    driver: bridge
