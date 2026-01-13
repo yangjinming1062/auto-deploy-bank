@@ -1,0 +1,76 @@
+services:
+  flowise:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: flowise:latest
+    container_name: flowise
+    restart: always
+    environment:
+      # Core settings
+      - NODE_ENV=production
+      - PORT=3000
+
+      # DATABASE - Using SQLite for simplicity (no external database needed)
+      - DATABASE_TYPE=sqlite
+      - DATABASE_PATH=/home/node/.flowise
+
+      # SECRET KEYS
+      - SECRETKEY_STORAGE_TYPE=local
+      - SECRETKEY_PATH=/home/node/.flowise
+      - FLOWISE_SECRETKEY_OVERWRITE=
+
+      # LOGGING
+      - DEBUG=false
+      - LOG_PATH=/home/node/.flowise/logs
+      - LOG_LEVEL=info
+
+      # STORAGE
+      - STORAGE_TYPE=local
+      - BLOB_STORAGE_PATH=/home/node/.flowise/storage
+
+      # SETTINGS
+      - CORS_ORIGINS=*
+      - IFRAME_ORIGINS=*
+      - FLOWISE_FILE_SIZE_LIMIT=50mb
+      - SHOW_COMMUNITY_NODES=true
+      - DISABLE_FLOWISE_TELEMETRY=true
+      - DISABLED_NODES=
+
+      # AUTH PARAMETERS
+      - APP_URL=http://localhost:40376
+      - JWT_AUTH_TOKEN_SECRET=AABBCCDDAABBCCDDAABBCCDDAABBCCDDAABBCCDD
+      - JWT_REFRESH_TOKEN_SECRET=AABBCCDDAABBCCDDAABBCCDDAABBCCDDAABBCCDD
+      - JWT_ISSUER=ISSUER
+      - JWT_AUDIENCE=AUDIENCE
+      - JWT_TOKEN_EXPIRY_IN_MINUTES=360
+      - JWT_REFRESH_TOKEN_EXPIRY_IN_MINUTES=43200
+      - PASSWORD_SALT_HASH_ROUNDS=10
+      - EXPRESS_SESSION_SECRET=flowise
+
+      # QUEUE CONFIGURATION (standalone mode)
+      - MODE=main
+
+      # PUPPETEER
+      - PUPPETEER_SKIP_DOWNLOAD=true
+      - PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
+    ports:
+      - "40376:3000"
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/v1/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+    # Resource limits to prevent consuming all system resources
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
