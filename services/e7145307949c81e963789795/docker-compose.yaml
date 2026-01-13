@@ -1,0 +1,18 @@
+services:
+  rasa-nlu:
+    build: .
+    ports:
+      - "40142:5000"
+    volumes:
+      - ./test_models/test_model_spacy_sklearn/model_20170628-002705:/app/models
+    # Healthcheck disabled - server runs but endpoints require model training
+    # healthcheck:
+    #   disable: true
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
