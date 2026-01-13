@@ -1,0 +1,17 @@
+services:
+  bizlog-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mzt-biz-log
+    ports:
+      - "40046:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:test
+      - SPRING_DATASOURCE_USERNAME=sa
+      - SPRING_DATASOURCE_PASSWORD=9527
+      - SPRING_SERVER_PORT=8080
+      - SERVER_PORT=8080
+    volumes:
+      - ./target.jar:/app/target.jar
+    restart: unless-stopped
