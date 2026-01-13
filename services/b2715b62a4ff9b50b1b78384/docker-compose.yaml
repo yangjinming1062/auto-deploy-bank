@@ -1,0 +1,122 @@
+networks:
+  net:
+    driver: bridge
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=chroma
+      - POSTGRES_USER=chroma
+      - POSTGRES_PASSWORD=chroma
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chroma -d chroma"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - net
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - chroma-data:/data
+      - ./setup_chroma_users.sh:/setup_chroma_users.sh:ro
+    environment:
+      - CHROMA_PORT=8000
+      - IS_PERSISTENT=False
+      - ALLOW_RESET=False
+      - CHROMA_SERVER_HOST=localhost
+      - CHROMA_SERVER_HTTP_PORT=8000
+      - CHROMA_SERVER_SSL_ENABLED=false
+      - CHROMA_SERVER_CORS_ALLOW_ORIGINS=["*"]
+      - CHROMA_SERVER_AUTHN_PROVIDER=
+      - CHROMA_SERVER_AUTHN_CREDENTIALS=
+      - CHROMA_SERVER_AUTHN_CREDENTIALS_FILE=./server.htpasswd
+      - CHROMA_SERVER_AUTHZ_PROVIDER=
+      - CHROMA_SERVER_AUTHZ_CONFIG_FILE=./authz.yaml
+      - CHROMA_CLIENT_AUTH_PROVIDER=
+      - CHROMA_CLIENT_AUTH_CREDENTIALS=
+      - PERSIST_DIRECTORY=./chroma
+      - CHROMA_MEMORY_LIMIT_BYTES=0
+      - CHROMA_SERVER_THREAD_POOL_SIZE=40
+      - CHROMA_SERVER_NOFILE=65535
+      - CHROMA_COORDINATOR_HOST=localhost
+      - CHROMA_SERVER_GRPC_PORT=50052
+      - CHROMA_LOGSERVICE_HOST=localhost
+      - CHROMA_LOGSERVICE_PORT=50052
+      - ANONYMIZED_TELEMETRY=true
+      - CHROMA_OTEL_SERVICE_NAME=chromadb
+      - CHROMA_OTEL_COLLECTION_ENDPOINT=
+      - CHROMA_OTEL_COLLECTION_HEADERS=
+      - CHROMA_OPENAI_API_KEY=
+      - CHROMA_COHERE_API_KEY=
+      - CHROMA_HUGGINGFACE_API_KEY=
+      - CHROMA_GOOGLE_GENAI_API_KEY=
+      - CHROMA_JINA_API_KEY=
+      - CHROMA_VOYAGE_API_KEY=
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    ports:
+      - "40092:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v2/heartbeat"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - net
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+volumes:
+  chroma-data:
+    driver: local
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local

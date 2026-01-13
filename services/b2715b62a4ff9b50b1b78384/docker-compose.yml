@@ -1,0 +1,136 @@
+networks:
+  net:
+    driver: bridge
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=chroma
+      - POSTGRES_USER=chroma
+      - POSTGRES_PASSWORD=chroma
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chroma -d chroma"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - net
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - chroma-data:/data
+    environment:
+      - IS_PERSISTENT=False
+      - CHROMA_PORT=8000
+      - ALLOW_RESET=False
+      - PYTHONUNBUFFERED=1
+      - CHROMA_SERVER_HOST=0.0.0.0
+      - CHROMA_SERVER_HTTP_PORT=8000
+      - CHROMA_API_IMPL=chromadb.api.segment.SegmentAPI
+      - CHROMA_SERVER_AUTHN_PROVIDER=chromadb.auth.basic_authn.BasicAuthenticationServerProvider
+      - CHROMA_SERVER_AUTHN_CREDENTIALS_FILE=./server.htpasswd
+      - CHROMA_AUTH_TOKEN_TRANSPORT_HEADER=X-Chroma-Token
+      - CHROMA_API_KEY=
+      - CHROMA_TENANT=default_tenant
+      - CHROMA_DATABASE=default_database
+      - CHROMA_SERVER_CORS_ALLOW_ORIGINS=[]
+      - ANONYMIZED_TELEMETRY=True
+      - CHROMA_OPEN_TELEMETRY__SERVICE_NAME=chromadb
+      - CHROMA_OPEN_TELEMETRY__ENDPOINT=
+      - OTEL_EXPORTER_OTLP_HEADERS=
+      - CHROMA_COORDINATOR_HOST=postgres
+      - CHROMA_SERVER_GRPC_PORT=50052
+      - CHROMA_LOGSERVICE_HOST=redis
+      - CHROMA_LOGSERVICE_PORT=50052
+      - CHROMA_SYSDB_IMPL=chromadb.db.impl.sqlite.SqliteDB
+      - CHROMA_PRODUCER_IMPL=chromadb.db.impl.sqlite.SqliteDB
+      - CHROMA_CONSUMER_IMPL=chromadb.db.impl.sqlite.SqliteDB
+      - CHROMA_SEGMENT_MANAGER_IMPL=chromadb.segment.impl.manager.local.LocalSegmentManager
+      - CHROMA_EXECUTOR_IMPL=chromadb.execution.executor.local.LocalExecutor
+      - CHROMA_QUERY_REPLICATION_FACTOR=2
+      - CHROMA_QUOTA_ENFORCER_IMPL=chromadb.quota.simple_quota_enforcer.SimpleQuotaEnforcer
+      - CHROMA_RATE_LIMIT_ENFORCER_IMPL=chromadb.rate_limit.simple_rate_limit.SimpleRateLimitEnforcer
+      - CHROMA_ASYNC_RATE_LIMIT_ENFORCER_IMPL=chromadb.rate_limit.simple_rate_limit.SimpleAsyncRateLimitEnforcer
+      - CHROMA_SERVER_NOFILE=
+      - CHROMA_SERVER_THREAD_POOL_SIZE=40
+      - CHROMA_MEMORY_LIMIT_BYTES=0
+      - CHROMA_SEGMENT_CACHE_POLICY=
+      - CHROMA_SERVER_SSL_ENABLED=False
+      - CHROMA_SERVER_AUTHZ_PROVIDER=
+      - CHROMA_SERVER_AUTHZ_CONFIG=
+      - CHROMA_SERVER_AUTHZ_CONFIG_FILE=
+      - CHROMA_PRODUCT_TELEMETRY_IMPL=chromadb.telemetry.product.posthog.Posthog
+      - CHROMA_OTEL_COLLECTION_ENDPOINT=
+      - CHROMA_OTEL_GRANULARITY=
+      - CHROMA_MIGRATIONS=apply
+      - CHROMA_MIGRATIONS_HASH_ALGORITHM=md5
+      - WORKER_MEMBERLIST_NAME=query-service-memberlist
+      - CHROMA_LOGSERVICE_REQUEST_TIMEOUT_SECONDS=3
+      - CHROMA_SYSDB_REQUEST_TIMEOUT_SECONDS=3
+      - CHROMA_QUERY_REQUEST_TIMEOUT_SECONDS=60
+    restart: unless-stopped
+    ports:
+      - "40066:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v2/heartbeat"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - net
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+volumes:
+  chroma-data:
+    driver: local
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
