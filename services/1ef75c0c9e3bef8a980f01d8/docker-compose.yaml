@@ -1,0 +1,54 @@
+services:
+  azr-training:
+    build: .
+    container_name: absolute-zero-reasoner
+    ports:
+      - "40294:40294"  # Port for monitoring/metrics
+    environment:
+      - PYTHONUNBUFFERED=1
+      - TOKENIZERS_PARALLELISM=false
+      - VLLM_ATTENTION_BACKEND=FLASH_ATTN
+      - RAY_memory_monitor_refresh_ms=0
+      - RAY_LOGGING_LEVEL=INFO
+      - HYDRA_FULL_ERROR=1
+      # Training configuration (users can override with docker-compose run)
+      - OUTPUT_SEED_PATH=data/seed_data.jsonl
+      - OUTPUT_CODE_F_SEED_PATH=data/code_f_seed_data.jsonl
+      # API Keys (users should set these in .env file)
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY:-}
+      - COHERE_API_KEY=${COHERE_API_KEY:-}
+      - FIREWORKS_API=${FIREWORKS_API:-}
+      - BEDROCK_ROLE_ARN=${BEDROCK_ROLE_ARN:-}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+    volumes:
+      # Mount data directory for persistence
+      - ./data:/app/data
+      # Mount output directories
+      - ./outputs:/app/outputs
+      # Optional: Mount model cache
+      - ./model_cache:/app/model_cache
+    # Resource limits to prevent container from consuming all system resources
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'      # Maximum 2 CPU cores
+          memory: 4G       # Maximum 4GB memory
+        reservations:
+          cpus: '1.0'      # Reserve 1 CPU core
+          memory: 1G       # Reserve 1GB memory
+    # Healthcheck configuration
+    healthcheck:
+      test: ["CMD", "sleep", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    # Keep the container running
+    restart: unless-stopped
+    # Web service command - serves the Absolute Zero Reasoner monitoring interface
+    # Users can override with: docker compose run --rm azr-training python -m absolute_zero_reasoner.main_azr_ppo [training_params]
+    # Or use: docker compose up azr-training && docker compose exec azr-training python -m absolute_zero_reasoner.main_azr_ppo [params]
+    command: python /app/web_service.py
