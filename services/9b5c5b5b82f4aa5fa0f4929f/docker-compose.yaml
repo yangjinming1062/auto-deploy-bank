@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  t-digest:
+    build: .
+    container_name: t-digest-service
+    ports:
+      - "40319:8080"
+    environment:
+      - runSlowTests=false
+    volumes:
+      - ./target.jar:/app/target.jar:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "test", "-f", "/app/service-ready.txt"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
