@@ -1,0 +1,29 @@
+version: '2.1'
+services:
+  localstack:
+    image: localstack/localstack
+    privileged: true
+    container_name: "${LOCALSTACK_DOCKER_NAME-localstack_main}"
+    ports:
+      - "40038:4566"
+    environment:
+      - SERVICES=apigateway,cloudformation,cloudwatch,dynamodb,dynamodbstreams,ec2,es,firehose,iam,kinesis,lambda,logs,route53,s3,secretsmanager,ses,sns,sqs,ssm,stepfunctions,sts
+      - DEBUG=0
+      - DEFAULT_REGION=us-east-1
+      - HOSTNAME=localhost
+      - HOSTNAME_EXTERNAL=localhost
+      - LAMBDA_EXECUTOR=docker
+      - LAMBDA_REMOTE_DOCKER=1
+      - LAMBDA_REMOVE_CONTAINERS=1
+      - KINESIS_ERROR_PROBABILITY=0.0
+      - DYNAMODB_ERROR_PROBABILITY=0.0
+      - USE_SSL=0
+      - STEPFUNCTIONS_LAMBDA_ENDPOINT=http://localhost:4566
+      - DOCKER_HOST=unix:///var/run/docker.sock
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:4566/_localstack/health || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
