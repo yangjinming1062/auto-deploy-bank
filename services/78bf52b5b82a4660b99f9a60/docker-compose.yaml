@@ -1,0 +1,110 @@
+services:
+  cloudexplorer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cloudexplorer-lite
+    ports:
+      # Expose Gateway port (9000 internal) to host port 40057 for web UI access
+      - "40057:9000"
+      # Also expose Eureka and Management Center for internal service communication
+      - "8761:8761"
+      - "9010:9010"
+    environment:
+      # Database Configuration
+      - CE_MYSQL_HOST=mysql
+      - CE_MYSQL_PORT=3306
+      - CE_MYSQL_DB=cloudexplorer
+      - CE_MYSQL_USER=root
+      - CE_MYSQL_PASSWORD=rootpassword
+
+      # Quartz Database Configuration
+      - CE_QUARTZ_MYSQL_HOST=mysql
+      - CE_QUARTZ_MYSQL_PORT=3306
+      - CE_QUARTZ_MYSQL_DB=cloudexplorer_quartz
+      - CE_QUARTZ_MYSQL_USER=root
+      - CE_QUARTZ_MYSQL_PASSWORD=rootpassword
+
+      # Redis Configuration
+      - CE_REDIS_HOST=redis
+      - CE_REDIS_PORT=6379
+      - CE_REDIS_PASSWORD=
+
+      # JWT Configuration
+      - CE_JWT_EXPIRE_MINUTES=100
+
+      # Base Directory
+      - CE_BASE=/opt/cloudexplorer
+
+      # Eureka Configuration
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka:8761/eureka/
+
+    volumes:
+      # Volume mount for security scanning
+      - ./target.jar:/app/target.jar
+      # Log directory
+      - cloudexplorer-logs:/opt/cloudexplorer/logs
+      # Configuration directory
+      - cloudexplorer-conf:/opt/cloudexplorer/conf
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+    networks:
+      - cloudexplorer-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: cloudexplorer-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=cloudexplorer
+      - MYSQL_USER=cloudexplorer
+      - MYSQL_PASSWORD=cloudexplorer
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cloudexplorer-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: cloudexplorer-redis
+    command: redis-server --requirepass redispassword
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redispassword", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cloudexplorer-network
+
+volumes:
+  mysql-data:
+    driver: local
+  redis-data:
+    driver: local
+  cloudexplorer-logs:
+    driver: local
+  cloudexplorer-conf:
+    driver: local
+
+networks:
+  cloudexplorer-network:
+    driver: bridge
