@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  pyspider:
+    build: .
+    ports:
+      - "40119:5000"
+    environment:
+      - TASKDB=sqlite+taskdb:///data/task.db
+      - PROJECTDB=sqlite+projectdb:///data/project.db
+      - RESULTDB=sqlite+resultdb:///data/result.db
+      - WEBUI_USERNAME=admin
+      - WEBUI_PASSWORD=admin
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
