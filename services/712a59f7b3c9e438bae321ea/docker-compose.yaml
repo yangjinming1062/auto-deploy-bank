@@ -1,0 +1,71 @@
+services:
+  vespa:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vespa-platform
+    hostname: vespa-platform
+
+    # Resource limits to prevent single service from consuming all system resources
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+    # Environment configuration
+    environment:
+      - VESPA_USER=vespa
+      - VESPA_HOSTNAME=localhost
+      - VESPA_PORT_BASE=19000
+      - VESPA_WEB_SERVICE_PORT=8080
+      - VESPA_CONFIGSERVER_RPC_PORT=19070
+      - VESPA_CONFIGSERVER_HTTP_PORT=19071
+      - VESPA_CONFIGSERVER_MULTITENANT=false
+      - VESPA_CONFIGSERVERS=localhost
+      - VESPA_CONFIGSERVER_ZOOKEEPER_JUTE_MAX_BUFFER=104857600
+      - VESPA_ENVIRONMENT=docker
+      - VESPA_REGION=local
+      - VESPA_SYSTEM=docker-system
+      - VESPA_LOG_LEVEL=all -debug -spam
+      - VESPA_LOG_TARGET=fd:2
+
+    # Port mapping: expose only the main service port to host
+    # Host port 40823 maps to container internal port 8080
+    ports:
+      - "40823:8080"
+
+    # Health check configuration
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/ApplicationStatus"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Volume mounts for configurations
+    volumes:
+      - vespa-data:/opt/vespa/var
+      - vespa-logs:/opt/vespa/logs
+      # Volume mount for security scanning - JAR file for scanning
+      - ./target.jar:/app/target.jar
+
+    # Network mode
+    networks:
+      - vespa-network
+
+networks:
+  vespa-network:
+    driver: bridge
+
+volumes:
+  vespa-data:
+    driver: local
+  vespa-logs:
+    driver: local
