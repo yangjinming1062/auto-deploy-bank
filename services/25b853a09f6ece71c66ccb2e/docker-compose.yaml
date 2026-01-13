@@ -1,0 +1,31 @@
+services:
+  jabref:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jabref-server
+    ports:
+      - "40217:23119"
+    environment:
+      - JAVA_OPTS=-Xms512m -Xmx2g
+      # Override DEFAULT_JVM_OPTS to remove unsupported experimental options
+      - DEFAULT_JVM_OPTS=-Xms512m -Xmx2g
+      # Configure server to listen on all interfaces
+      - JABSRV_HOST=0.0.0.0
+    volumes:
+      - ./target.jar:/app/target.jar:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:23119/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
