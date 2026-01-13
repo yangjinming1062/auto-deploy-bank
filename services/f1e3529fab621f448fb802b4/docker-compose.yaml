@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  addax:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: addax-server
+    ports:
+      - "40204:10601"
+    volumes:
+      # Mount configuration files for customization
+      - ./conf:/opt/addax/conf:ro
+      # Mount server JAR for security scanning
+      - ./target.jar:/app/target.jar:ro
+      # Security scanning: JAR will be extracted to host after first build
+      # For security scanning, run: docker build -t addax:latest . && \
+      #   docker create --name temp addax:latest && \
+      #   docker cp temp:/app/target.jar ./target/addax-server.jar && \
+      #   docker rm temp && \
+      #   docker-compose up -d
+    environment:
+      - addax.home=/opt/addax
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "sh", "-c", "curl -s -o /dev/null -w '%{http_code}' http://localhost:10601/api/status?taskId=test | grep -q '404'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
