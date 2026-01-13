@@ -1,0 +1,171 @@
+services:
+  # MySQL Database Service (Internal)
+  mysql:
+    image: mysql:8.0
+    container_name: y9-mysql
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:-111111}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-y9_public}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - y9-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_PASSWORD:-111111}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Redis Service (Internal)
+  redis:
+    image: redis:6.2-alpine
+    container_name: y9-redis
+    command: redis-server --requirepass ${REDIS_PASSWORD:-111111}
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-111111}
+    volumes:
+      - redis-data:/data
+    networks:
+      - y9-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-111111}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+  # Platform Service (Main Application)
+  platform:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: y9-platform
+    ports:
+      - "40103:8080"
+    environment:
+      # Database Configuration
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-y9_public}
+      MYSQL_USERNAME: ${MYSQL_USERNAME:-root}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-111111}
+
+      # Redis Configuration
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-111111}
+      REDIS_DATABASE: ${REDIS_DATABASE:-8}
+
+      # Kafka Configuration (optional)
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:-kafka:9092}
+
+      # Nacos Configuration
+      NACOS_PASSWORD: ${NACOS_PASSWORD:-111111}
+
+      # Application Configuration
+      Y9_USER_DEFAULT_PASSWORD: ${Y9_USER_DEFAULT_PASSWORD:-Risesoft@2024}
+      Y9_SYSTEM_NAME: ${Y9_SYSTEM_NAME:-riseplatform}
+      Y9_SYSTEM_CN_NAME: ${Y9_SYSTEM_CN_NAME:-数字底座}
+
+      # ID Code Configuration
+      IDCODE_API_KEY: ${IDCODE_API_KEY:-9XRMKN90QA8O90SDAAAAAKJ}
+      IDCODE_API_CODE: ${IDCODE_API_CODE:-09DN09QA8X08XRNN9DRMXRXM9DNAK9}
+      IDCODE_MAIN_CODE: ${IDCODE_MAIN_CODE:-MA.156.1003.1629}
+
+      # Spring Profiles
+      SPRING_PROFILES_ACTIVE: local
+
+      # Server Configuration
+      SERVER_ADDRESS: "0.0.0.0"
+
+      # Disable Nacos in local environment
+      SPRING_CLOUD_NACOS_CONFIG_ENABLED: "false"
+      SPRING_CLOUD_NACOS_DISCOVERY_ENABLED: "false"
+
+      # Disable OAuth2 and Security for API access
+      Y9_FEATURE_OAUTH2_RESOURCE_ENABLED: "false"
+      Y9_FEATURE_SECURITY_ENABLED: "false"
+      Y9_FEATURE_SECURITY_CORS_ENABLED: "false"
+      Y9_FEATURE_SECURITY_CSRF_ENABLED: "false"
+      Y9_FEATURE_SECURITY_XSS_ENABLED: "false"
+      Y9_FEATURE_LOG_ENABLED: "false"
+      Y9_FEATURE_PERMISSION_ENABLED: "false"
+      Y9_FEATURE_MULTI_TENANT_ENABLED: "false"
+
+      # Enable smart-doc for API documentation
+      SMART_DOC_ENABLED: "true"
+
+    volumes:
+      - ./target.jar:/app/target.jar
+
+    networks:
+      - y9-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/server-platform/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # Frontend Service (Vue 3 Application) - Internal only, no port exposure
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: y9-frontend
+    networks:
+      - y9-network
+    depends_on:
+      platform:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+networks:
+  y9-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+    driver: local
+  redis-data:
+    driver: local
