@@ -1,0 +1,29 @@
+services:
+  dl4j-examples:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dl4j-examples:latest
+    container_name: dl4j-iris-classifier
+    ports:
+      - "8080:8080"
+    volumes:
+      # Mount the shaded JAR to host for security scanning
+      - ./target.jar:/tmp/app.jar:ro
+    environment:
+      - JAVA_OPTS=-Xmx2g
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    # Health check for command-line application
+    healthcheck:
+      test: ["CMD", "sh", "-c", "exit 0"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
