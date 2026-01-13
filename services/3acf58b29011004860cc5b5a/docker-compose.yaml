@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    ports:
+      - "40242:6185"
+    environment:
+      - DASHBOARD_USERNAME=astrbot
+      - DASHBOARD_PASSWORD=77b90590a8945a7d36c963981a307dc9
+    volumes:
+      - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:6185"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
