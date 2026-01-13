@@ -1,0 +1,33 @@
+services:
+  gradio-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "40082:7860"
+    environment:
+      - GRADIO_SERVER_PORT=7860
+      - GRADIO_SERVER_NAME=0.0.0.0
+      - GRADIO_NUM_PORTS=100
+      - GRADIO_ANALYTICS_ENABLED=False
+      - GRADIO_CACHE_MODE=eager
+      - GRADIO_EXAMPLES_CACHE=~/.gradio/cached_examples
+      - GRADIO_TEMP_DIR=~/.gradio/tmp
+      - GRADIO_FLAGGING_MODE=manual
+      - GRADIO_HOT_RELOAD=false
+      - GRADIO_SSR_MODE=false
+      - HF_HUB_DISABLE_TELEMETRY=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
