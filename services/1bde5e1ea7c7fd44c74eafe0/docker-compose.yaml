@@ -1,0 +1,175 @@
+services:
+  # Nacos Service Registry and Configuration Center
+  nacos:
+    image: nacos/nacos-server:v2.2.0
+    container_name: smart-cloud-nacos
+    environment:
+      - MODE=standalone
+    volumes:
+      - ./docker-data/nacos/logs:/home/nacos/logs
+      - ./docker-data/nacos/data:/home/nacos/data
+    networks:
+      - smart-cloud-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8848/nacos/v1/console/health/readiness"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: smart-cloud-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=smart_cloud
+      - MYSQL_USER=smartcloud
+      - MYSQL_PASSWORD=123456
+    volumes:
+      - ./docker-data/mysql/data:/var/lib/mysql
+      - ./docker-data/mysql/conf:/etc/mysql/conf.d
+    networks:
+      - smart-cloud-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: smart-cloud-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - ./docker-data/redis/data:/data
+    networks:
+      - smart-cloud-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # RabbitMQ Message Queue
+  rabbitmq:
+    image: rabbitmq:3.11-management-alpine
+    container_name: smart-cloud-rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    volumes:
+      - ./docker-data/rabbitmq:/var/lib/rabbitmq
+    networks:
+      - smart-cloud-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.8.0
+    container_name: smart-cloud-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+    volumes:
+      - ./docker-data/elasticsearch/data:/usr/share/elasticsearch/data
+    networks:
+      - smart-cloud-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Smart Cloud Application
+  smart-cloud-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: smart-cloud-app
+    ports:
+      - "40006:8080"
+    environment:
+      - server.port=8080
+      - spring.application.name=smart-cloud-app
+      - spring.profiles.active=dev
+      - spring.cloud.nacos.discovery.enabled=true
+      - spring.cloud.nacos.discovery.server-addr=nacos:8848
+      - spring.cloud.nacos.discovery.namespace=
+      - spring.cloud.nacos.discovery.group=DEFAULT_GROUP
+      - spring.cloud.nacos.config.enabled=true
+      - spring.cloud.nacos.config.server-addr=nacos:8848
+      - spring.cloud.nacos.config.namespace=
+      - spring.cloud.nacos.config.group=DEFAULT_GROUP
+      - spring.cloud.nacos.config.file-extension=yaml
+      - spring.cloud.sentinel.enabled=false
+      - spring.datasource.dynamic.primary=primary
+      - spring.datasource.dynamic.strict=true
+      - spring.datasource.dynamic.datasource.primary.url=jdbc:mysql://mysql:3306/smart_cloud?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true
+      - spring.datasource.dynamic.datasource.primary.username=root
+      - spring.datasource.dynamic.datasource.primary.password=123456
+      - spring.datasource.dynamic.datasource.primary.driver-class-name=com.mysql.cj.jdbc.Driver
+      - spring.datasource.dynamic.datasource.primary.type=com.zaxxer.hikari.HikariDataSource
+      - spring.redis.host=redis
+      - spring.redis.port=6379
+      - spring.redis.password=
+      - spring.redis.database=0
+      - spring.redis.timeout=10000
+      - spring.rabbitmq.host=rabbitmq
+      - spring.rabbitmq.port=5672
+      - spring.rabbitmq.username=guest
+      - spring.rabbitmq.password=guest
+      - spring.rabbitmq.virtual-host=/
+      - smart.elasticsearch.datasources.product.uris=http://elasticsearch:9200
+      - smart.elasticsearch.datasources.order.uris=http://elasticsearch:9200
+      - jasypt.encryptor.password=changeme
+      - smart.apiLog.enable=true
+      - smart.apiLog.level=info
+      - smart.apiLog.slow-api-min-cost=3000
+      - smart.feign.log.enable=true
+      - smart.feign.log.level=info
+      - smart.feign.transferHeaderNames=smart-user
+      - smart.methodLog.enable=true
+      - smart.methodLog.level=info
+      - smart.rate-limit.enable=true
+      - smart.locale.encoding=UTF-8
+      - smart.locale.cache-seconds=3600
+      - smart.mock.api=false
+      - smart.mock.method=false
+    volumes:
+      - ./target.jar:/app/target.jar:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+    networks:
+      - smart-cloud-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  smart-cloud-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  redis-data:
+  rabbitmq-data:
+  elasticsearch-data:
+  nacos-data:
