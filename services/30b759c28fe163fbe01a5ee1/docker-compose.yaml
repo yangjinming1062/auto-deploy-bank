@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  discord4j-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: discord4j-bot
+    environment:
+      - token=${DISCORD_BOT_TOKEN:-your_discord_bot_token_here}
+    ports:
+      - "40205:40158"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:40158/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+    volumes:
+      - ./app/build/libs/discord4j-app-1.0.0-all.jar:/app/target.jar
+    networks:
+      - discord4j-network
+
+networks:
+  discord4j-network:
+    driver: bridge
