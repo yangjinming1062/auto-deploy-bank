@@ -1,0 +1,36 @@
+services:
+  jaaz-app:
+    build: .
+    ports:
+      - "40269:57988"
+    environment:
+      - UI_DIST_DIR=/home/ubuntu/deploy-projects/518a526d94d84a1352013d17/react/dist
+      - DEFAULT_PORT=57988
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/home/ubuntu/deploy-projects/518a526d94d84a1352013d17/server:$PYTHONPATH
+      - USER_DATA_DIR=/home/ubuntu/deploy-projects/518a526d94d84a1352013d17/server/user_data
+      - CONFIG_PATH=/home/ubuntu/deploy-projects/518a526d94d84a1352013d17/server/user_data/config.toml
+      - SETTINGS_PATH=/home/ubuntu/deploy-projects/518a526d94d84a1352013d17/server/user_data/settings.json
+      - BASE_API_URL=https://jaaz.app
+      - OLLAMA_HOST=http://localhost:11434
+      - no_proxy=127.0.0.1,localhost,::1
+      - NO_PROXY=127.0.0.1,localhost,::1
+    volumes:
+      - jaaz_user_data:/home/ubuntu/deploy-projects/518a526d94d84a1352013d17/server/user_data
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:57988/"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  jaaz_user_data:
