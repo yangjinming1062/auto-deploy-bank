@@ -1,0 +1,24 @@
+services:
+  django-cms:
+    build: .
+    ports:
+      - "40316:8000"
+    environment:
+      - DATABASE_URL=sqlite://localhost/local.sqlite
+      - DJANGO_SUPERUSER_USERNAME=admin
+      - DJANGO_SUPERUSER_EMAIL=none@nowhere.com
+      - DJANGO_LIVE_TEST_SERVER_ADDRESS=localhost:8000-9000
+      - DJANGO_TESTS=
+      - DJANGO_SETTINGS_MODULE=
+      - DEBUG=True
+      - SECRET_KEY=Welcome to django CMS
+      - ALLOWED_HOSTS=*
+    volumes:
+      - .:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/en/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
