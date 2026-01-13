@@ -1,0 +1,41 @@
+services:
+  supersonic:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: supersonic
+    environment:
+      S2_DB_TYPE: h2
+      S2_DB_DATABASE: supersonic
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.h2.Driver
+      SPRING_DATASOURCE_URL: jdbc:h2:mem:semantic;DATABASE_TO_UPPER=false;QUERY_TIMEOUT=30
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: semantic
+      SPRING_SQL_INIT_MODE: always
+      SPRING_SQL_INIT_SCHEMA_LOCATIONS: classpath:db/schema-h2.sql,classpath:db/schema-h2-demo.sql
+      SPRING_SQL_INIT_DATA_LOCATIONS: classpath:db/data-h2.sql,classpath:db/data-h2-demo.sql
+    ports:
+      - "40448:9080"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9080/"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+    networks:
+      - supersonic_network
+    volumes:
+      - ./target.jar:/app/target.jar
+    restart: unless-stopped
+
+networks:
+  supersonic_network:
+    driver: bridge
