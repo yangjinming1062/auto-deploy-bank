@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  # Main Flask RAG Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rag_financial_app
+    ports:
+      - "40230:5002"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - CHROMA_DB_HOST=chromadb
+      - CHROMA_DB_PORT=8000
+    depends_on:
+      - chromadb
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5002/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - rag_network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # ChromaDB Vector Database (Internal Service)
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: chromadb_service
+    ports:
+      - "8001:8000"  # For development/debugging if needed
+    environment:
+      - CHROMA_SERVER_HOST=0.0.0.0
+      - CHROMA_SERVER_HTTP_PORT=8000
+      - ANONYMIZED_TELEMETRY=false
+    networks:
+      - rag_network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+networks:
+  rag_network:
+    driver: bridge
