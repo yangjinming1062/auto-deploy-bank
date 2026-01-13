@@ -1,0 +1,30 @@
+services:
+  locker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: locker
+    ports:
+      - "40271:8042"
+    volumes:
+      - ./Me:/app/Me
+      - ./Logs:/app/Logs
+      - ./Config:/app/Config
+    environment:
+      - NODE_ENV=production
+      - HOSTNAME=locker
+      - NODE_PATH=/app/Common/node
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8042/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
