@@ -1,0 +1,42 @@
+services:
+  ignite:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: apache-ignite
+    ports:
+      # HTTP REST API port
+      - "40629:8080"
+      # Communication port (default SPI)
+      - "11211:11211"
+      # Discovery port (TCP SPI)
+      - "47100:47100"
+      # Discovery port (TCP Docker Swarm)
+      - "47500:47500"
+    environment:
+      - IGNITE_HOME=/opt/ignite
+      # - CONFIG=/opt/ignite/config/ignite-rest.xml
+      - JVM_OPTS=-Xms512m -Xmx512m -server -XX:MaxMetaspaceSize=256m
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/ignite?cmd=version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    volumes:
+      - ignite-work:/opt/ignite/work
+      - ./config/ignite-rest.xml:/opt/ignite/config/ignite-rest.xml:ro
+      - ./target.jar:/app/target.jar
+
+volumes:
+  ignite-work:
+    driver: local
