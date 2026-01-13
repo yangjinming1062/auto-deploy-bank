@@ -1,0 +1,132 @@
+services:
+  # Zookeeper for service registry (internal only)
+  zookeeper:
+    image: zookeeper:3.7.0
+    container_name: lts-zookeeper
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=0.0.0.0:2888:3888;2181
+    volumes:
+      - zookeeper-data:/data
+      - zookeeper-datalog:/datalog
+    healthcheck:
+      test: ["CMD", "echo", "ruok", "|", "nc", "localhost", "2181", "|", "imok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # MySQL for data storage (internal only)
+  mysql:
+    image: mysql:5.7.41
+    container_name: lts-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: lts
+      MYSQL_USER: lts
+      MYSQL_PASSWORD: root
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./create_admin_account.sh:/docker-entrypoint-initdb.d/create_admin_account.sh
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # Redis for registry (optional, can use zookeeper instead) - internal only
+  redis:
+    image: redis:7.0.11-alpine
+    container_name: lts-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # MongoDB for task queue (optional, can use MySQL instead) - internal only
+  mongodb:
+    image: mongo:4.4.18
+    container_name: lts-mongodb
+    environment:
+      MONGO_INITDB_DATABASE: lts
+    volumes:
+      - mongodb-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # LTS-Admin Web Application
+  lts-admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lts-admin
+    ports:
+      - "40054:8081"
+    environment:
+      # Registry Configuration
+      - registryAddress=zookeeper://zookeeper:2181
+      - clusterName=test_cluster
+
+      # Admin Configuration
+      - console.username=admin
+      - console.password=admin123
+
+      # ZK Client
+      - configs.zk.client=zkclient
+
+      # Database Configuration
+      - configs.jdbc.url=jdbc:mysql://mysql:3306/lts
+      - configs.jdbc.username=root
+      - configs.jdbc.password=root
+
+      # Database Provider
+      - jdbc.datasource.provider=mysql
+
+      # Job Tracker Configuration (for admin to connect to job tracker)
+      - jobT.job.logger=mysql
+      - jobT.job.queue=mysql
+
+      # MongoDB Configuration (if using mongo for task queue)
+      - jobT.mongo.addresses=mongodb:27017
+      - jobT.mongo.database=lts
+
+      # Monitor Configuration
+      - lts.monitorAgent.enable=true
+
+    volumes:
+      - ./conf/lts-admin.cfg:/app/conf/lts-admin.cfg
+      - ./conf/log4j.properties:/app/conf/log4j.properties
+      - ./target.jar:/app/target.jar
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "sh", "-c", "wget --quiet --tries=1 --spider --server-response http://localhost:8081/ 2>&1 | grep -q 'HTTP/' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+
+volumes:
+  zookeeper-data:
+  zookeeper-datalog:
+  mysql-data:
+  redis-data:
+  mongodb-data:
