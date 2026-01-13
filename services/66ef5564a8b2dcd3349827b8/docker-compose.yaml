@@ -1,0 +1,39 @@
+services:
+  vv-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vv-subtitle-api
+    ports:
+      - "40245:8000"
+    environment:
+      - FLASK_ENV=production
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./subtitle:/app/subtitle
+      - ./Videos:/app/Videos
+      - ./output_frames:/app/output_frames
+      - ./target:/app/target
+      - ./search:/app/search
+      - ./DataProcess:/app/DataProcess
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - vv-network
+
+networks:
+  vv-network:
+    driver: bridge
