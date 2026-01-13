@@ -1,0 +1,61 @@
+
+services:
+  webapp:
+    build: .
+    ports:
+      - "40255:7777"
+    environment:
+      URL: "http://127.0.0.1:40255"
+      NOT_SEND_EMAIL: "true"
+      EMAIL_DOMAIN: "sl.lan"
+      SUPPORT_EMAIL: "support@sl.lan"
+      SUPPORT_NAME: "Son from SimpleLogin"
+      EMAIL_SERVERS_WITH_PRIORITY: "[(10, \"email.hostname.\")]"
+      DB_URI: "postgresql://myuser:mypassword@postgres:5432/simplelogin"
+      FLASK_SECRET: "secret"
+      OPENID_PRIVATE_KEY_PATH: "local_data/jwtRS256.key"
+      OPENID_PUBLIC_KEY_PATH: "local_data/jwtRS256.key.pub"
+      WORDS_FILE_PATH: "local_data/test_words.txt"
+      LOCAL_FILE_UPLOAD: "true"
+      DISABLE_ONBOARDING: "true"
+      ALLOWED_REDIRECT_DOMAINS: "[]"
+      NAMESERVERS: "1.1.1.1"
+      PARTNER_API_TOKEN_SECRET: "changeme"
+      MEM_STORE_URI: "redis://redis:6379/0"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7777/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  postgres:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: simplelogin
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myuser -d simplelogin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:alpine
+    restart: always
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
