@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:3.6
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - lucida_network
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+
+  memcached:
+    image: memcached:1.6-alpine
+    networks:
+      - lucida_network
+    healthcheck:
+      test: ["CMD", "sh", "-c", "echo stats | nc localhost 11211 | grep -q uptime"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  commandcenter:
+    build: .
+    ports:
+      - "40062:3000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      memcached:
+        condition: service_healthy
+    environment:
+      - MONGO_PORT_27017_TCP_ADDR=mongodb
+      - MEMCACHED_PORT_11211_TCP_ADDR=memcached
+      - LD_LIBRARY_PATH=/usr/local/lib
+      - LUCIDAROOT=/app
+      - PYTHONPATH=/app:/app/lucida/commandcenter:/app/lucida/commandcenter/controllers
+    networks:
+      - lucida_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+volumes:
+  mongodb_data:
+
+networks:
+  lucida_network:
+    driver: bridge
