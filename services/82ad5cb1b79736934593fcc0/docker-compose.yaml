@@ -1,0 +1,166 @@
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:11-alpine
+    container_name: jetlinks-postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: jetlinks
+      POSTGRES_DB: jetlinks
+      POSTGRES_USER: postgres
+      TZ: Asia/Shanghai
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d jetlinks"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - jetlinks-network
+
+  # Redis Cache
+  redis:
+    image: redis:5.0.4-alpine
+    container_name: jetlinks-redis
+    command: redis-server --appendonly yes --requirepass "JetLinks@redis"
+    volumes:
+      - redis-data:/data
+    environment:
+      TZ: Asia/Shanghai
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - jetlinks-network
+
+  # Elasticsearch
+  elasticsearch:
+    image: elasticsearch:6.8.11
+    container_name: jetlinks-elasticsearch
+    environment:
+      ES_JAVA_OPTS: -Djava.net.preferIPv4Stack=true -Xms1g -Xmx1g
+      transport.host: 0.0.0.0
+      discovery.type: single-node
+      bootstrap.memory_lock: "true"
+      discovery.zen.minimum_master_nodes: 1
+      discovery.zen.ping.unicast.hosts: elasticsearch
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - jetlinks-network
+
+  # JetLinks Application
+  jetlinks:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jetlinks-app
+    ports:
+      - "40023:8848"  # Main API port - external:internal
+    volumes:
+      - jetlinks-data:/app/data
+      - jetlinks-uploads:/app/static/upload
+      - ./target.jar:/app/target.jar
+    environment:
+      # Java Options
+      - JAVA_OPTS=-Duser.language=zh -XX:+UseG1GC
+
+      # Database Configuration
+      - spring.r2dbc.url=r2dbc:postgresql://postgres:5432/jetlinks
+      - spring.r2dbc.username=postgres
+      - spring.r2dbc.password=jetlinks
+
+      # Redis Configuration
+      - spring.redis.host=redis
+      - spring.redis.port=6379
+      - spring.redis.password=JetLinks@redis
+
+      # Elasticsearch Configuration
+      - spring.elasticsearch.uris=elasticsearch:9200
+
+      # File Upload Configuration
+      - hsweb.file.upload.static-location=http://127.0.0.1:9000/upload
+      - file.manager.storage-base-path=/app/data/files
+
+      # CORS Configuration
+      - hsweb.cors.enable=true
+      - hsweb.cors.configs[0].path=/**
+      - hsweb.cors.configs[0].allowed-credentials=true
+      - hsweb.cors.configs[0].allowed-headers=*
+      - hsweb.cors.configs[0].allowed-origins=*
+      - hsweb.cors.configs[0].allowed-methods[0]=GET
+      - hsweb.cors.configs[0].allowed-methods[1]=POST
+      - hsweb.cors.configs[0].allowed-methods[2]=PUT
+      - hsweb.cors.configs[0].allowed-methods[3]=PATCH
+      - hsweb.cors.configs[0].allowed-methods[4]=DELETE
+      - hsweb.cors.configs[0].allowed-methods[5]=OPTIONS
+
+      # Network Resources
+      - network.resources[0]=0.0.0.0:1883-1890
+      - network.resources[1]=0.0.0.0:8800-8810
+      - network.resources[2]=0.0.0.0:5060-5061
+
+      # Logging
+      - logging.level.org.jetlinks=info
+      - logging.level.rule.engine=info
+
+      # Timezone
+      - TZ=Asia/Shanghai
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8848/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - jetlinks-network
+    restart: unless-stopped
+
+  # JetLinks Frontend UI
+  ui:
+    image: registry.cn-shenzhen.aliyuncs.com/jetlinks/jetlinks-ui-vue:2.3.0-SNAPSHOT
+    container_name: jetlinks-ui
+    ports:
+      - "9000:80"  # Frontend UI port - external:internal
+    environment:
+      - API_BASE_PATH=http://jetlinks:8848/
+    volumes:
+      - jetlinks-ui-data:/usr/share/nginx/html/upload
+    depends_on:
+      - jetlinks
+    networks:
+      - jetlinks-network
+    restart: unless-stopped
+
+networks:
+  jetlinks-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  es-data:
+    driver: local
+  jetlinks-data:
+    driver: local
+  jetlinks-uploads:
+    driver: local
+  jetlinks-ui-data:
+    driver: local
