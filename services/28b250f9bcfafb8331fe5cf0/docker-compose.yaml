@@ -1,0 +1,38 @@
+services:
+  gns3server:
+    build: .
+    hostname: gns3vm
+    stdin_open: true
+    tty: true
+    ports:
+      - "40198:3080"
+    privileged: true
+    environment:
+      GNS3_SERVER_HOST: "0.0.0.0"
+      GNS3_SERVER_PORT: "3080"
+      GNS3_SERVER_SSL: "False"
+      GNS3_IMAGES_PATH: "/home/gns3/GNS3/images"
+      GNS3_PROJECTS_PATH: "/home/gns3/GNS3/projects"
+      GNS3_APPLIANCES_PATH: "/home/gns3/GNS3/appliances"
+      GNS3_SYMBOLS_PATH: "/home/gns3/GNS3/symbols"
+      GNS3_REPORT_ERRORS: "True"
+      GNS3_CONSOLE_START_PORT_RANGE: "5000"
+      GNS3_CONSOLE_END_PORT_RANGE: "10000"
+      GNS3_VNC_CONSOLE_START_PORT_RANGE: "5900"
+      GNS3_VNC_CONSOLE_END_PORT_RANGE: "10000"
+      GNS3_UDP_START_PORT_RANGE: "20000"
+      GNS3_UDP_END_PORT_RANGE: "30000"
+      GNS3_AUTH: "False"
+      GNS3_USER: "gns3"
+      GNS3_PASSWORD: "gns3"
+      GNS3_ALLOWED_INTERFACES: "eth0,eth1,virbr0"
+      GNS3_DEFAULT_NAT_INTERFACE: "vmnet10"
+      GNS3_IOURC_PATH: "/home/gns3/.iourc"
+      GNS3_IOU_LICENSE_CHECK: "True"
+      GNS3_QEMU_ENABLE_KVM: "True"
+      GNS3_QEMU_REQUIRE_KVM: "True"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3080/v2/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
