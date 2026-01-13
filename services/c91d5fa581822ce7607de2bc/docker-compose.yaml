@@ -1,0 +1,10 @@
+services:
+  web:
+    build: .
+    ports:
+      - "40179:35496"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:35496"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
