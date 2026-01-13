@@ -1,0 +1,114 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: agileboot-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 12345
+      MYSQL_DATABASE: agileboot-pure
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./sql:/docker-entrypoint-initdb.d
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p12345"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - agileboot-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  redis:
+    image: redis:7-alpine
+    container_name: agileboot-redis
+    command: redis-server --requirepass 12345
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a 12345 ping | grep -q PONG || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - agileboot-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+  agileboot-admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agileboot-admin
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "40215:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: basic,dev
+      SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_URL: jdbc:mysql://mysql:3306/agileboot-pure?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_USERNAME: root
+      SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_PASSWORD: 12345
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_REDIS_PASSWORD: 12345
+      SPRING_REDIS_DATABASE: 0
+      TOKEN_SECRET: AgileBootSecretKeyForTokenEncryptionDoNotCommitToGit
+      AGILEBOOT_FILE_BASE_DIR: D:\\agileboot
+      AGILEBOOT_API_PREFIX: "/dev-api"
+      AGILEBOOT_DEMO_ENABLED: "false"
+      AGILEBOOT_EMBEDDED_MYSQL: "false"
+      AGILEBOOT_EMBEDDED_REDIS: "false"
+      DRUID_LOGIN_USERNAME: agileboot
+      DRUID_LOGIN_PASSWORD: 123456
+      JWT_HEADER: Authorization
+      JWT_AUTO_REFRESH_TIME: 20
+      SPRING_LOCALE: en_US
+      LOGGING_LEVEL_COM_AGILEBOOT: DEBUG
+      LOGGING_LEVEL_ROOT: INFO
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/dev-api/"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
+    volumes:
+      - ./target.jar:/app/target.jar
+    networks:
+      - agileboot-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+networks:
+  agileboot-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
