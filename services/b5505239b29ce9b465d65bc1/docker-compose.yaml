@@ -1,0 +1,31 @@
+services:
+  tigerbot-web:
+    build: .
+    ports:
+      - "40226:8501"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - TOKENIZERS_PARALLELISM=false
+      - WANDB_DISABLED=true
+      - CUDA_VISIBLE_DEVICES=0
+      - OPENAI_API_KEY=
+      - PerspectiveAPIkey=
+      - HF_MODEL_HUB=
+      - PYTHONPATH=/home/ubuntu/deploy-projects
+    volumes:
+      - ./:/home/ubuntu/deploy-projects
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    command: ["/home/ubuntu/deploy-projects/start.sh"]
