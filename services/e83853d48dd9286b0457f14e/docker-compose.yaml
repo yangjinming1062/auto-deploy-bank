@@ -1,0 +1,29 @@
+services:
+  springbootsidecardemo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: springbootsidecardemo
+    ports:
+      - "40277:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/hello"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
