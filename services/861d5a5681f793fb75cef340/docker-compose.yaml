@@ -1,0 +1,121 @@
+services:
+  # Redis Manager Application
+  redis-manager:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: redis-manager
+    ports:
+      - "40532:8182"  # Map host port 40532 to container port 8182
+    environment:
+      - SERVER_PORT=8182
+      - DATASOURCE_URL=jdbc:mysql://mysql:3306/redis_manager?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8
+      - DATASOURCE_USERNAME=root
+      - DATASOURCE_PASSWORD=${MYSQL_PASSWORD:-redis_manager_password}
+      - DATASOURCE_DATABASE=redis_manager
+      - RM_AUTH_USERNAME=admin
+      - RM_AUTH_PASSWORD=admin
+      - RM_MONITOR_DATA_KEEP_DAYS=15
+      - REDIS_MANAGER_INSTALLATION_CONF_PATH=/data/conf
+      - REDIS_MANAGER_INSTALLATION_MACHINE_PACKAGE_PATH=/data/machine
+      - REDIS_MANAGER_INSTALLATION_CURRENT_HOST=redis-manager
+      - REDIS_MANAGER_AUTH_AVATAR_PATH=/data/avatar
+      # Authorization configuration (disabled but required)
+      - RM_AUTH_AUTHORIZATION_COMPANY_NAME=xxx
+      - RM_AUTH_AUTHORIZATION_SERVER=xxx
+      - RM_AUTH_AUTHORIZATION_SITE_KEY=xxx
+      - RM_AUTH_AUTHORIZATION_SITE_SECRET=xxx
+      # Spring Boot property format for nested configuration
+      - REDIS_MANAGER_AUTH_AUTHORIZATION_COMPANY_NAME=xxx
+      - REDIS_MANAGER_AUTH_AUTHORIZATION_SERVER=xxx
+      - REDIS_MANAGER_AUTH_AUTHORIZATION_SITE_KEY=xxx
+      - REDIS_MANAGER_AUTH_AUTHORIZATION_SITE_SECRET=xxx
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./data:/data  # Mount data directory for persistence
+      - ./target.jar:/app/target.jar  # Mount JAR for security scanning
+    networks:
+      - redis-manager-network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "8182"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: redis-manager-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD:-redis_manager_password}
+      - MYSQL_DATABASE=redis_manager
+      - MYSQL_USER=redis_manager
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-redis_manager_password}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./sql/redis_manager.sql:/docker-entrypoint-initdb.d/redis_manager.sql:ro
+    networks:
+      - redis-manager-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    restart: unless-stopped
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: redis-manager-cache
+    volumes:
+      - redis_data:/data
+    networks:
+      - redis-manager-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    restart: unless-stopped
+
+networks:
+  redis-manager-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
