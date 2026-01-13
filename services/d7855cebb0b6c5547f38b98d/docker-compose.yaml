@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:13-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  web:
+    build: .
+    ports:
+      - "40048:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      APP_SETTINGS: config.ProductionConfig
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/postgres
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  postgres_data:
+
+networks:
+  app-network:
+    driver: bridge
