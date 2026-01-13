@@ -1,0 +1,32 @@
+services:
+  h2o:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: h2o-server
+    ports:
+      - "40093:54321"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    environment:
+      - H2O_HOSTNAME=localhost
+      - H2O_PORT=54321
+      - H2O_WEB_PORT=54321
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:54321/3/Cloud"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    # Volume mount for security scanning (extracts JAR to host)
+    volumes:
+      - ./target.jar:/app/target.jar:ro
+    restart: "no"
+    stdin_open: true
+    tty: true
