@@ -1,0 +1,70 @@
+
+services:
+  web:
+    build: .
+    ports:
+      - "40155:5000"
+    environment:
+      - APP_NAME=Flask-Base
+      - SECRET_KEY=a-very-secret-key
+      - MAIL_SERVER=smtp.sendgrid.net
+      - MAIL_PORT=587
+      - MAIL_USE_TLS=True
+      - MAIL_USE_SSL=False
+      - MAIL_USERNAME=
+      - MAIL_PASSWORD=
+      - MAIL_DEFAULT_SENDER=
+      - GOOGLE_ANALYTICS_ID=
+      - SEGMENT_API_KEY=
+      - ADMIN_PASSWORD=password
+      - ADMIN_EMAIL=flask-base-admin@example.com
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/postgres
+      - REDISTOGO_URL=redis://redis:6379/0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      sh -c "python manage.py recreate_db && gunicorn --bind 0.0.0.0:5000 manage:app"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  worker:
+    build: .
+    command: sh -c "python manage.py run_worker"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/postgres
+      - REDISTOGO_URL=redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:13-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
