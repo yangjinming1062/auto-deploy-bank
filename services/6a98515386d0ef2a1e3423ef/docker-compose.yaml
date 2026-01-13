@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  notion-qa:
+    build: .
+    ports:
+      - "40223:8501"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-sk-dummy-key-for-demo-purposes}
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
