@@ -1,0 +1,13 @@
+{
+  "service_id": "76ca5c48b123f5b81e108be6",
+  "repo_name": "all-in-aigc/gpts-works",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.04MB",
+  "language": "python",
+  "star": 1649,
+  "repo_flag": "PYTHON-LangChain",
+  "uploaded_at": "2026-01-13T21:44:42.283156"
+}

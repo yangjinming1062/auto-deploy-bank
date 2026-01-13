@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-default}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-verceldb}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-default}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    # No ports exposed - internal only for the index service
+
+  index:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Database configuration (pointing to internal postgres service)
+      DATABASE_URL: postgresql://${POSTGRES_USER:-default}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-verceldb}
+
+      # Azure OpenAI configuration
+      AZURE_API_KEY: ${AZURE_API_KEY:-xxx}
+      AZURE_API_BASE: ${AZURE_API_BASE:-https://xxx.openai.azure.com/}
+      AZURE_API_VERSION: ${AZURE_API_VERSION:-2023-07-01-preview}
+      AZURE_LLM_MODEL: ${AZURE_LLM_MODEL:-gpt-35-turbo-16k}
+      AZURE_EMBED_MODEL: ${AZURE_EMBED_MODEL:-text-embedding-ada-002}
+
+      # Zilliz vector store configuration
+      STORE_TYPE: ${STORE_TYPE:-zilliz}
+      STORE_URI: ${STORE_URI:-https://xxx.zillizcloud.com}
+      STORE_TOKEN: ${STORE_TOKEN:-xxx}
+      STORE_DIM: ${STORE_DIM:-1536}
+      STORE_COLLECTION: ${STORE_COLLECTION:-gpts}
+
+      # API key for protecting index endpoints
+      INDEX_API_KEY: ${INDEX_API_KEY:-gsk-xxx}
+    ports:
+      - "40957:8068"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8068/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+volumes:
+  postgres_data:
