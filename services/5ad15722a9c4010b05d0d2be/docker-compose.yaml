@@ -1,0 +1,151 @@
+version: '3.8'
+
+services:
+  # MySQL Database for Gobblin Service
+  mysql:
+    image: mysql:8.0.24
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: gobblin_service
+      MYSQL_USER: gobblin
+      MYSQL_PASSWORD: gobblin_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./gobblin-service/conf/mysql-init:/docker-entrypoint-initdb.d
+    command: --default-authentication-plugin=mysql_native_password
+    networks:
+      - gobblin-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 5
+      interval: 10s
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Zookeeper for Gobblin Service
+  zookeeper:
+    image: zookeeper:3.4.13
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_PORT: 2181
+    volumes:
+      - zookeeper_data:/data
+      - zookeeper_datalog:/datalog
+    networks:
+      - gobblin-network
+    healthcheck:
+      test: ["CMD", "sh", "-c", "echo ruok | nc localhost 2181 | grep imok"]
+      timeout: 5s
+      retries: 5
+      interval: 10s
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # Gobblin Service - Main Application
+  gobblin-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gobblin-service
+    ports:
+      - "40259:8080"
+    volumes:
+      - ./target.jar:/app/target.jar:ro
+      - gobblin_logs:/app/logs
+      - gobblin_work:/tmp/gobblin
+      - gobblin_conf:/app/conf:ro
+    environment:
+      # Service Identity
+      GOBBLIN_SERVICE_NAME: gobblin-service
+      GOBBLIN_SERVICE_ID: gobblin-service-instance-1
+
+      # Database Configuration
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: gobblin_service
+      MYSQL_USER: gobblin
+      MYSQL_PASSWORD: gobblin_password
+
+      # Zookeeper Configuration
+      ZOOKEEPER_CONNECTION_STRING: zookeeper:2181
+
+      # Service Configuration
+      GOBBLIN_SERVICE_PORT: 8080
+      GOBBLIN_SERVICE_WORK_DIR: /tmp/gobblin
+      GOBBLIN_JOB_CONFIG_DIR: /app/conf/jobs
+
+      # Hadoop Configuration (minimal for local mode)
+      HADOOP_USER_NAME: gobblin
+      HADOOP_TOKEN_FILE_LOCATION:
+
+      # Logging
+      LOG_DIRS: /app/logs
+
+      # JVM Settings
+      JAVA_OPTS: "-Xms512m -Xmx2g -XX:+UseG1GC"
+
+      # Classpath
+      HADOOP_CLASSPATH:
+
+      # MySQL JDBC URL
+      MYSQL_JDBC_URL: jdbc:mysql://mysql:3306/gobblin_service?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+      zookeeper:
+        condition: service_healthy
+    networks:
+      - gobblin-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      timeout: 10s
+      retries: 3
+      interval: 30s
+      start_period: 90s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+
+networks:
+  gobblin-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.21.0.0/16
+
+volumes:
+  mysql_data:
+    driver: local
+  zookeeper_data:
+    driver: local
+  zookeeper_datalog:
+    driver: local
+  gobblin_logs:
+    driver: local
+  gobblin_work:
+    driver: local
+  gobblin_conf:
+    driver: local
