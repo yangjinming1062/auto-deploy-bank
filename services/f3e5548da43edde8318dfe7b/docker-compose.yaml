@@ -1,0 +1,32 @@
+services:
+  wx-java-demo:
+    build:
+      context: .
+      dockerfile: demo-app/Dockerfile
+    container_name: wx-java-demo
+    ports:
+      - "40358:40358"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SERVER_PORT=40358
+    networks:
+      - wxjava-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:40358/api/demo/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+networks:
+  wxjava-network:
+    driver: bridge
