@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_DB: app
+      POSTGRES_USER: pguser
+      POSTGRES_PASSWORD: pguserpassword
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pguser -d app"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-net
+
+  openldap:
+    image: osixia/openldap:1.5.0
+    restart: always
+    environment:
+      LDAP_DOMAIN: "example.org"
+      LDAP_ADMIN_PASSWORD: "admin_password"
+    healthcheck:
+      test: ["CMD-SHELL", "ldapwhoami -x -H ldap://localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - app-net
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "40117:8080"
+    environment:
+      PORT: 8080
+      PYTHONUNBUFFERED: 1
+      SECRET_KEY: '\2\1thisismyscretkey\1\2\e\y\y\h'
+      SQLALCHEMY_DATABASE_URI: "postgresql+psycopg2://pguser:pguserpassword@postgres:5432/app"
+      AUTH_TYPE: "2"
+      LDAP_URI: "ldap://openldap:389"
+      LDAP_BASE: "dc=example,dc=org"
+      AUTH_USER_REGISTRATION: "True"
+      AUTH_USER_REGISTRATION_ROLE: "Admin"
+      MAIL_SERVER: "smtp.gmail.com"
+      MAIL_PORT: "587"
+      MAIL_USE_TLS: "True"
+      MAIL_USERNAME: "fabtest10@gmail.com"
+      MAIL_PASSWORD: "Passw0rdqwerty"
+      MAIL_DEFAULT_SENDER: "fabtest10@gmail.com"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      openldap:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - app-net
+
+networks:
+  app-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
