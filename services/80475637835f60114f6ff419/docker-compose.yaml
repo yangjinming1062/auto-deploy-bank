@@ -1,0 +1,36 @@
+
+services:
+  db:
+    image: postgres
+    environment:
+      - POSTGRES_DB=example_json_widget
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=docker
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    command: >
+      sh -c "python example/manage.py makemigrations characters &&
+             python example/manage.py migrate &&
+             python example/manage.py shell -c \"from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', 'admin@example.com', 'password') if not User.objects.filter(username='admin').exists() else print('User already exists')\" &&
+             python example/manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "40244:8000"
+    environment:
+      - PYTHONPATH=/app
+      - POSTGRES_DB=example_json_widget
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=docker
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
