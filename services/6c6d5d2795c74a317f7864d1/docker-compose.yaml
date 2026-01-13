@@ -1,0 +1,29 @@
+services:
+  outlines:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: outlines-service
+    ports:
+      - "41214:41214"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - SETUPTOOLS_SCM_PRETEND_VERSION_FOR_OUTLINES=0.0.0
+      - OUTLINES_CACHE_DIR=/tmp/outlines_cache
+      - XDG_CACHE_HOME=/tmp
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:41214/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
