@@ -1,0 +1,23 @@
+services:
+  babel:
+    build: .
+    ports:
+      - "40297:40081"
+    environment:
+      - NODE_ENV=production
+      - PORT=40081
+      - BABEL_ENV=production
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:40081/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
