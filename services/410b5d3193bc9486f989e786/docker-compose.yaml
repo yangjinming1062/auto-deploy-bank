@@ -1,0 +1,53 @@
+services:
+  grobid:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: grobid/grobid:latest
+    container_name: grobid-service
+
+    # Port mapping: host -> container
+    ports:
+      - "40381:8070"   # Main service port (HTTP API)
+      - "8071:8071"    # Admin port (health checks, metrics)
+
+    # Resource limits to prevent consuming all system resources
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'      # Maximum 2 CPU cores
+          memory: 4G       # Maximum 4GB memory
+        reservations:
+          cpus: '1.0'      # Reserve 1 CPU core
+          memory: 1G       # Reserve 1GB memory
+
+    # Environment variables
+    environment:
+      - GROBID_SERVICE_OPTS=-Djava.library.path=grobid-home/lib/lin-64:grobid-home/lib/lin-64/jep --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/sun.nio.ch=ALL-UNNAMED --add-opens java.base/java.io=ALL-UNNAMED
+      - JAVA_OPTS=-Xmx2g
+
+    # Health check configuration
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8070/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+    # Volume mount for security scanning (extract JAR to host)
+    volumes:
+      - ./target.jar:/app/target.jar:ro
+
+    # Ensure container runs in foreground (not daemon mode)
+    stdin_open: true
+    tty: true
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # Restart policy
+    restart: unless-stopped
