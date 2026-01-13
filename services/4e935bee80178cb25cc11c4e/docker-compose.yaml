@@ -1,0 +1,64 @@
+services:
+  # Zookeeper service for service discovery
+  zookeeper:
+    image: zookeeper:3.5.8
+    container_name: rpc-zookeeper
+    networks:
+      - rpc-network
+    # Zookeeper should not expose ports to host - only internal communication
+    ports: []
+    healthcheck:
+      test: ["CMD", "zkCli.sh", "ls", "/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # Resource limits for Zookeeper
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    environment:
+      - ZOO_MY_ID=1
+
+  # RPC Server - the main service
+  rpc-server:
+    build:
+      context: .
+      dockerfile: example-server/Dockerfile
+    container_name: rpc-server
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    networks:
+      - rpc-network
+    # Expose port 9998 to host port 40593
+    ports:
+      - "40593:9998"
+    environment:
+      - RPC_ZOOKEEPER_ADDRESS=zookeeper:2181
+    # Health check for the RPC server (TCP-based since this is an RPC framework, not HTTP)
+    healthcheck:
+      test: ["CMD", "sh", "-c", "nc -z 0.0.0.0 9998 || nc -z 127.0.0.1 9998"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    # Resource limits for RPC server
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+
+networks:
+  rpc-network:
+    driver: bridge
