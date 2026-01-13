@@ -1,0 +1,30 @@
+services:
+  webgoat:
+    build: .
+    ports:
+      - "40112:8080"
+    environment:
+      WEBGOAT_CONTEXT: "/WebGoat"
+      WEBGOAT_HOST: "0.0.0.0"
+      WEBGOAT_PORT: "8080"
+      WEBGOAT_KEYSTORE_TYPE: "PKCS12"
+      WEBGOAT_KEYSTORE: "classpath:goatkeystore.pkcs12"
+      WEBGOAT_KEYSTORE_PASSWORD: "password"
+      WEBGOAT_KEY_ALIAS: "goat"
+      WEBGOAT_SSLENABLED: "false"
+      EXCLUDE_CATEGORIES: "none,none"
+      EXCLUDE_LESSONS: "none,none"
+      WEBGOAT_OAUTH_CLIENTID: "dummy"
+      WEBGOAT_OAUTH_CLIENTSECRET: "dummy"
+      WEBWOLF_HOST: "127.0.0.1"
+      WEBWOLF_PORT: "9090"
+      WEBWOLF_CONTEXT: "/WebWolf"
+      WEBWOLF_OAUTH_CLIENTID: "dummy"
+      WEBWOLF_OAUTH_CLIENTSECRET: "dummy"
+    volumes:
+      - ./target.jar:/app/target.jar
+    healthcheck:
+      test: ["CMD", "curl", "-f", "-L", "http://localhost:8080/WebGoat"]
+      interval: 30s
+      timeout: 30s
+      retries: 5
