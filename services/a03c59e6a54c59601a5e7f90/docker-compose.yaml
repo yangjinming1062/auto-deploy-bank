@@ -1,0 +1,63 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: bigdl-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 8g --maxmemory-policy allkeys-lru
+    networks:
+      - bigdl-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  bigdl-serving:
+    build: .
+    container_name: bigdl-serving
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    environment:
+      - REDIS_HOME=/usr/local/redis
+      - BIGDL_HOME=/app
+      - REDIS_URL=redis://redis:6379
+      - PYTHONUNBUFFERED=1
+    networks:
+      - bigdl-network
+    ports:
+      - "40885:10020"
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+      - ./servables-conf.yaml:/app/servables-conf.yaml:ro
+      - serving-data:/app/models
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:10020/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+networks:
+  bigdl-network:
+    driver: bridge
+
+volumes:
+  serving-data:
