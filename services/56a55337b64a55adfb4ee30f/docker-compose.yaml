@@ -1,0 +1,25 @@
+services:
+  django-todo-app:
+    build: .
+    container_name: django-todo-app
+    ports:
+      - "40628:8000"
+    environment:
+      - DEBUG=True
+      - DJANGO_SETTINGS_MODULE=todo_project.settings
+      - SECRET_KEY=django-insecure-31@!bxz-__i#0_lt_oy4*$$e0q$$a5h9e32-^yso51gydj^a!v#9
+      - ALLOWED_HOSTS=*
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
