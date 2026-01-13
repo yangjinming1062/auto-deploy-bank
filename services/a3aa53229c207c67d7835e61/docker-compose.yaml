@@ -1,0 +1,57 @@
+services:
+  micrometer-javalin-sample:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: micrometer-javalin-sample
+    ports:
+      - "40075:8080"
+    environment:
+      - OTEL_EXPORTER_OTLP_METRICS_ENDPOINT=${OTEL_EXPORTER_OTLP_METRICS_ENDPOINT:-http://localhost:4318/v1/metrics}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318/v1/metrics}
+      - OTEL_METRIC_EXPORT_INTERVAL=${OTEL_METRIC_EXPORT_INTERVAL:-60000}
+      - OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME:-my-application}
+      - OTEL_RESOURCE_ATTRIBUTES=${OTEL_RESOURCE_ATTRIBUTES:-service.name=my-application,service.version=1.0.0}
+      - OTEL_EXPORTER_OTLP_HEADERS=${OTEL_EXPORTER_OTLP_HEADERS:-authorization=Bearer token}
+      - OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE=${OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE:-CUMULATIVE}
+      - OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION=${OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION:-EXPLICIT_BUCKET_HISTOGRAM}
+      - DD_ENTITY_ID=${DD_ENTITY_ID:-datadog-entity-id}
+      - DD_API_KEY=${DD_API_KEY:-datadog-api-key}
+      - DD_APPLICATION_KEY=${DD_APPLICATION_KEY:-datadog-application-key}
+      - GOOGLE_CLOUD_PROJECT_ID=${GOOGLE_CLOUD_PROJECT_ID:-gcp-project-id}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-aws-access-key-id}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-aws-secret-access-key}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - INFLUXDB_URL=${INFLUXDB_URL:-http://localhost:8086}
+      - INFLUXDB_DATABASE=${INFLUXDB_DATABASE:-mydb}
+      - INFLUXDB_USERNAME=${INFLUXDB_USERNAME:-admin}
+      - INFLUXDB_PASSWORD=${INFLUXDB_PASSWORD:-admin123}
+      - INFLUXDB_ORG=${INFLUXDB_ORG:-my-org}
+      - INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-influxdb-token}
+      - ELASTICSEARCH_HOST=${ELASTICSEARCH_HOST:-http://localhost:9200}
+      - ELASTICSEARCH_USERNAME=${ELASTICSEARCH_USERNAME:-elastic}
+      - ELASTICSEARCH_PASSWORD=${ELASTICSEARCH_PASSWORD:-changeme}
+      - ELASTICSEARCH_API_KEY=${ELASTICSEARCH_API_KEY:-base64-encoded-api-key}
+      - NEW_RELIC_API_KEY=${NEW_RELIC_API_KEY:-newrelic-api-key}
+      - NEW_RELIC_ACCOUNT_ID=${NEW_RELIC_ACCOUNT_ID:-account-id}
+      - WAVEFRONT_URI=${WAVEFRONT_URI:-proxy://localhost:2878}
+      - WAVEFRONT_API_TOKEN=${WAVEFRONT_API_TOKEN:-wavefront-api-token}
+      - WAVEFRONT_SOURCE=${WAVEFRONT_SOURCE:-my-source}
+      - CLOUDWATCH_NAMESPACE=${CLOUDWATCH_NAMESPACE:-MyApplication/Metrics}
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    volumes:
+      - ./target.jar:/app/target.jar
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
