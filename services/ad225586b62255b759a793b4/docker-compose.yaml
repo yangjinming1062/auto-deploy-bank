@@ -1,0 +1,21 @@
+
+services:
+  chuanhu-chatgpt:
+    build: .
+    ports:
+      - "40089:7860"
+    environment:
+      - my_api_key=
+      - USERNAME=
+      - PASSWORD=
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+    restart: unless-stopped
+    volumes:
+      - ./config.json:/app/config.json
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
