@@ -1,0 +1,96 @@
+version: '3.8'
+
+services:
+  memary:
+    build: .
+    container_name: memary-app
+    ports:
+      - "40131:8501"
+    environment:
+      # OpenAI API Configuration
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-your_openai_api_key_here}
+      - OPENAI_KEY=${OPENAI_KEY:-your_openai_api_key_here}
+
+      # Database Configuration (FalkorDB preferred)
+      - FALKORDB_URL=${FALKORDB_URL:-}
+      - NEO4J_PW=${NEO4J_PW:-}
+      - NEO4J_URL=${NEO4J_URL:-}
+
+      # Optional API Keys
+      - PERPLEXITY_API_KEY=${PERPLEXITY_API_KEY:-}
+      - GOOGLEMAPS_API_KEY=${GOOGLEMAPS_API_KEY:-}
+      - ALPHA_VANTAGE_API_KEY=${ALPHA_VANTAGE_API_KEY:-}
+    volumes:
+      - ./streamlit_app/data:/app/streamlit_app/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+
+  # FalkorDB service (optional - only if using FalkorDB)
+  falkordb:
+    image: falkordb/falkordb:latest
+    container_name: memary-falkordb
+    ports:
+      - "6379:6379"
+    volumes:
+      - falkordb_data:/data
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Neo4j service (optional - only if using Neo4j instead of FalkorDB)
+  neo4j:
+    image: neo4j:5.17
+    container_name: memary-neo4j
+    ports:
+      - "7687:7687"
+      - "7474:7474"
+    environment:
+      - NEO4J_AUTH=neo4j/${NEO4J_PW:-password}
+      - NEO4J_dbms_memory_heap_initial__size=512m
+      - NEO4J_dbms_memory_heap_max__size=1G
+    volumes:
+      - neo4j_data:/data
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "${NEO4J_PW:-password}", "RETURN 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  falkordb_data:
+  neo4j_data:
