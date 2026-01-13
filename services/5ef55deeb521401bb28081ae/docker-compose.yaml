@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  spark:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: spark-master
+    ports:
+      - "40462:8080"  # Spark Master Web UI
+      - "7077:7077"   # Spark master port
+      - "18080:18080" # Spark history server
+    environment:
+      - SPARK_HOME=/opt/spark
+      - SPARK_MASTER_HOST=0.0.0.0
+      - SPARK_MASTER_PORT=7077
+      - SPARK_LOG_DIR=/tmp/spark-logs
+      - SPARK_PID_DIR=/tmp/spark-logs
+    volumes:
+      - ./data:/opt/spark/data
+      - ./target.jar:/app/target.jar
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - spark-network
+
+networks:
+  spark-network:
+    driver: bridge
