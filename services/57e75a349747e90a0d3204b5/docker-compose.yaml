@@ -1,0 +1,148 @@
+#####################################################################
+##                                                                 ##
+##  Lowcoder multi-service compose file.                           ##
+##                                                                 ##
+##  To run:                                                        ##
+##     docker compose up -d                                        ##
+##                                                                 ##
+#####################################################################
+
+services:
+
+  ##
+  ## Start MongoDB (internal only, no host port exposure)
+  ##
+  mongodb:
+    image: mongo:7.0
+    container_name: mongodb
+    environment:
+      MONGO_INITDB_DATABASE: lowcoder
+      MONGO_INITDB_ROOT_USERNAME: lowcoder
+      MONGO_INITDB_ROOT_PASSWORD: secret123
+    volumes:
+      - ./lowcoder-stacks/data/mongodb:/data/db
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mongosh",
+          "--quiet",
+          "127.0.0.1/test",
+          "--eval",
+          "'quit(db.runCommand({ ping: 1 }).ok ? 0 : 2)'",
+        ]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 40s
+
+  ##
+  ## Start Redis (internal only, no host port exposure)
+  ##
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 1s
+      timeout: 3s
+      retries: 10
+
+  ##
+  ## Start Lowcoder API Service
+  ##
+  lowcoder-api-service:
+    image: lowcoderorg/lowcoder-ce-api-service:latest
+    container_name: lowcoder-api-service
+    env_file:
+      - path: ./deploy/docker/default.env
+        required: true
+      - path: ./deploy/docker/override.env
+        required: false
+    environment:
+      - LOWCODER_MONGODB_URL=mongodb://lowcoder:secret123@mongodb/lowcoder?authSource=admin
+      - LOWCODER_REDIS_URL=redis://redis:6379
+      - LOWCODER_API_SERVICE_URL=http://lowcoder-api-service:8080
+      - LOWCODER_NODE_SERVICE_URL=http://lowcoder-node-service:6060
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+        restart: true
+      redis:
+        condition: service_healthy
+        restart: true
+    volumes:
+      - ./lowcoder-stacks:/lowcoder-stacks
+      - ./lowcoder-stacks/assets:/lowcoder/assets
+      - ./target.jar:/app/target.jar
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:8080/api/status/health | grep -q '\"status\":\"UP\"' || exit 1"]
+      interval: 3s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  ##
+  ## Start Lowcoder Node Service
+  ##
+  lowcoder-node-service:
+    image: lowcoderorg/lowcoder-ce-node-service:latest
+    container_name: lowcoder-node-service
+    env_file:
+      - path: ./deploy/docker/default.env
+        required: true
+      - path: ./deploy/docker/override.env
+        required: false
+    environment:
+      - LOWCODER_API_SERVICE_URL=http://lowcoder-api-service:8080
+    restart: unless-stopped
+    depends_on:
+      lowcoder-api-service:
+        condition: service_healthy
+        restart: true
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:6060 | grep -q 'up and running' || exit 1"]
+      interval: 3s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  ##
+  ## Start Lowcoder Frontend (ONLY external port exposure)
+  ##
+  lowcoder-frontend:
+    image: lowcoderorg/lowcoder-ce-frontend:latest
+    container_name: lowcoder-frontend
+    ports:
+      - "40309:3000"
+    env_file:
+      - path: ./deploy/docker/default.env
+        required: true
+      - path: ./deploy/docker/override.env
+        required: false
+    environment:
+      - LOWCODER_API_SERVICE_URL=http://lowcoder-api-service:8080
+      - LOWCODER_NODE_SERVICE_URL=http://lowcoder-node-service:6060
+      - LOWCODER_PUBLIC_URL=http://127.0.0.1:40309/
+    restart: unless-stopped
+    depends_on:
+      lowcoder-node-service:
+        condition: service_started
+        restart: true
+      lowcoder-api-service:
+        condition: service_healthy
+        restart: true
+    volumes:
+      - ./lowcoder-stacks/assets:/lowcoder/assets
+      - ./lowcoder-stacks/ssl:/lowcoder-stacks/ssl
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:3000 || exit 1"]
+      interval: 5s
+      retries: 10
+      start_period: 10s
+      timeout: 10s
