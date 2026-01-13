@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  cag-rag-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cag-rag-app:latest
+    container_name: cag-rag-research-app
+    ports:
+      - "40203:5000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PORT=5000
+      - HF_TOKEN=${HF_TOKEN:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - JINA_API_KEY=${JINA_API_KEY:-}
+    volumes:
+      - ./results:/app/results
+      - ./data_cache:/app/data_cache
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+networks:
+  default:
+    name: cag-rag-network
