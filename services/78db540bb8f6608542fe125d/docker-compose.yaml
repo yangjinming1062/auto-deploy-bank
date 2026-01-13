@@ -1,0 +1,52 @@
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "40005:8092"
+    restart: always
+    environment:
+      - JDBC_URL=jdbc:mysql://mysql:3306/roncoo_mini_pay_demo?useUnicode=true&characterEncoding=UTF-8&useSSL=false
+      - JDBC_USERNAME=root
+      - JDBC_PASSWORD=xxxxxxx
+      - MQ_BROKERURL=failover:(tcp://activemq:61616)?randomize=false&initialReconnectDelay=1000&maxReconnectDelay=30000
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/roncoo_mini_pay_demo?useUnicode=true&characterEncoding=UTF-8&useSSL=false
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=xxxxxxx
+      - SPRING_REDIS_HOST=redis
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      activemq:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8092/roncoo-pay-web-gateway"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  mysql:
+    image: mysql:5.7
+    environment:
+      - MYSQL_ROOT_PASSWORD=xxxxxxx
+      - MYSQL_DATABASE=roncoo_mini_pay_demo
+    command: [--character-set-server=utf8mb4, --collation-server=utf8mb4_unicode_ci]
+    volumes:
+      - ./database.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-u", "root", "-pxxxxxxx"]
+      timeout: 20s
+      retries: 10
+
+  redis:
+    image: redis:alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  activemq:
+    image: rmohr/activemq:5.15.9-alpine
