@@ -1,0 +1,46 @@
+accountscommandside:
+  image: java:8
+  working_dir: /app
+  volumes:
+    - ./accounts-command-side-service/build/libs:/app
+  command: java -jar /app/accounts-command-side-service.jar
+  ports:
+    - "8080:8080"
+  environment:
+    EVENTUATE_API_KEY_ID:
+    EVENTUATE_API_KEY_SECRET:
+
+transactionscommandside:
+  image: java:8
+  working_dir: /app
+  volumes:
+    - ./transactions-command-side-service/build/libs:/app
+  command: java -jar /app/transactions-command-side-service.jar
+  ports:
+    - "8082:8080"
+  environment:
+    EVENTUATE_API_KEY_ID:
+    EVENTUATE_API_KEY_SECRET:
+
+
+accountsqueryside:
+  image: java:8
+  working_dir: /app
+  volumes:
+    - ./accounts-query-side-service/build/libs:/app
+  command: java -jar /app/accounts-query-side-service.jar
+  ports:
+    - "8081:8080"
+  links:
+    - mongodb
+  environment:
+    EVENTUATE_API_KEY_ID:
+    EVENTUATE_API_KEY_SECRET:
+    SPRING_DATA_MONGODB_URI: mongodb://mongodb/mydb
+
+mongodb:
+  image: mongo:3.0.4
+  hostname: mongodb
+  command: mongod --smallfiles
+  ports:
+    - "27017:27017"

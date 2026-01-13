@@ -1,0 +1,183 @@
+services:
+  apigateway:
+    build: ../
+    restart: unless-stopped
+    ports:
+      - "40695:8080"
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb/mydb
+      ACCOUNTS_COMMANDSIDE_SERVICE_HOST: accountsservice
+      TRANSFERS_COMMANDSIDE_SERVICE_HOST: transactionsservice
+      ACCOUNTS_QUERYSIDE_SERVICE_HOST: accountsviewservice
+      CUSTOMERS_COMMANDSIDE_SERVICE_HOST: customersservice
+      CUSTOMERS_QUERYSIDE_SERVICE_HOST: customersviewservice
+    volumes:
+      - ../target.jar:/app/target.jar:ro
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      accountsservice:
+        condition: service_healthy
+      transactionsservice:
+        condition: service_healthy
+      accountsviewservice:
+        condition: service_healthy
+      customersservice:
+        condition: service_healthy
+      customersviewservice:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  accountsservice:
+    build: ./accounts-service/
+    restart: unless-stopped
+    environment:
+      EVENTUATE_API_KEY_ID: ${EVENTUATE_API_KEY_ID}
+      EVENTUATE_API_KEY_SECRET: ${EVENTUATE_API_KEY_SECRET}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  transactionsservice:
+    build: ./transactions-service/
+    restart: unless-stopped
+    environment:
+      EVENTUATE_API_KEY_ID: ${EVENTUATE_API_KEY_ID}
+      EVENTUATE_API_KEY_SECRET: ${EVENTUATE_API_KEY_SECRET}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  accountsviewservice:
+    build: ./accounts-view-service/
+    restart: unless-stopped
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb/mydb
+      EVENTUATE_API_KEY_ID: ${EVENTUATE_API_KEY_ID}
+      EVENTUATE_API_KEY_SECRET: ${EVENTUATE_API_KEY_SECRET}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  customersservice:
+    build: ./customers-service/
+    restart: unless-stopped
+    environment:
+      EVENTUATE_API_KEY_ID: ${EVENTUATE_API_KEY_ID}
+      EVENTUATE_API_KEY_SECRET: ${EVENTUATE_API_KEY_SECRET}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  customersviewservice:
+    build: ./customers-view-service/
+    restart: unless-stopped
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb/mydb
+      EVENTUATE_API_KEY_ID: ${EVENTUATE_API_KEY_ID}
+      EVENTUATE_API_KEY_SECRET: ${EVENTUATE_API_KEY_SECRET}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  mongodb:
+    image: mongo:7.0
+    hostname: mongodb
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
