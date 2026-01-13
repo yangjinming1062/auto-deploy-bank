@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  ariang-native:
+    build: .
+    container_name: ariang-native
+    ports:
+      - "40010:40010"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:40010/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    networks:
+      - ariang-network
+
+networks:
+  ariang-network:
+    driver: bridge
