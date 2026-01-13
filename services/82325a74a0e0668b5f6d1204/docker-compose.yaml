@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  armeria-service:
+    build:
+      context: .
+      dockerfile: examples/annotated-http-service/Dockerfile
+    container_name: armeria-annotated-http-service
+    ports:
+      - "40270:8080"  # Map host port 40270 to container port 8080
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/docs"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'      # Maximum 2 CPU cores
+          memory: 4G       # Maximum 4GB memory
+        reservations:
+          cpus: '1.0'      # Reserve 1 CPU cores
+          memory: 1G       # Reserve 1GB memory
+    restart: unless-stopped
+
+    # Environment variables can be added here if needed
+    environment:
+      - JAVA_OPTS=-Xmx2g -Xms512m
+
+    # Volume mount for security scanning (extract JAR to host)
+    # Note: JAR can be extracted using: docker cp armeria-annotated-http-service:/app/target.jar ./target.jar
+    # volumes:
+    #   - ./target.jar:/app/target.jar
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
