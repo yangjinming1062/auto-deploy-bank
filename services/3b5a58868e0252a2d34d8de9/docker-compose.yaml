@@ -1,0 +1,46 @@
+services:
+  mlrun-api:
+    build: .
+    environment:
+      - MLRUN_HTTPDB__HOST=0.0.0.0
+      - MLRUN_HTTPDB__DSN=mysql+pymysql://root:test@db:3306/mlrun_new
+      - MLRUN_HTTPDB__AUTHENTICATION__MODE=none
+      - MLRUN_HTTPDB__AUTHORIZATION__MODE=none
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  ui:
+    image: mlrun/mlrun-ui:unstable
+    ports:
+      - "40141:8090"
+    environment:
+      - MLRUN_API_PROXY_URL=http://mlrun-api:8080/api
+    depends_on:
+      - mlrun-api
+
+  db:
+    image: mysql:8.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=test
+      - MYSQL_DATABASE=mlrun_new
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ptest"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
