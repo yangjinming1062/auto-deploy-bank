@@ -1,0 +1,172 @@
+version: '3.8'
+
+networks:
+  lilishop-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  redis-data:
+  elasticsearch-data:
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:5.7
+    container_name: lilishop-mysql
+    networks:
+      - lilishop-network
+    volumes:
+      - mysql-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: lilishop
+      MYSQL_DATABASE: lilishop
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-plilishop"]
+      timeout: 20s
+      retries: 10
+      interval: 10s
+      start_period: 30s
+
+  # Redis Cache
+  redis:
+    image: redis:6.2-alpine
+    container_name: lilishop-redis
+    networks:
+      - lilishop-network
+    volumes:
+      - redis-data:/data
+    command: redis-server --requirepass lilishop
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "lilishop", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  # Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.9
+    container_name: lilishop-elasticsearch
+    networks:
+      - lilishop-network
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - cluster.name=elasticsearch
+      - xpack.security.enabled=false
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # RocketMQ Name Server
+  rocketmq-nameserver:
+    image: apache/rocketmq:4.9.4
+    container_name: lilishop-rocketmq-nameserver
+    networks:
+      - lilishop-network
+    command: ["sh", "mqnamesrv"]
+    ports:
+      - "9876:9876"
+    environment:
+      - JAVA_OPT_EXT=-server -Xms512M -Xmx512M -Xmn256m
+    healthcheck:
+      test: ["CMD", "sh", "tools.sh", "mqAdmin", "clusterList"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # RocketMQ Broker
+  rocketmq-broker:
+    image: apache/rocketmq:4.9.4
+    container_name: lilishop-rocketmq-broker
+    networks:
+      - lilishop-network
+    depends_on:
+      - rocketmq-nameserver
+    command: ["sh", "mqbroker", "-c", "/home/rocketmq/rocketmq-4.9.4/conf/broker.conf"]
+    environment:
+      - NAMESRV_ADDR=rocketmq-nameserver:9876
+      - JAVA_OPT_EXT=-server -Xms512M -Xmx512M -Xmn256m
+    volumes:
+      - ./rocketmq-broker.conf:/home/rocketmq/rocketmq-4.9.4/conf/broker.conf
+    healthcheck:
+      test: ["CMD", "sh", "tools.sh", "mqAdmin", "clusterList"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # XXL-Job Admin
+  xxl-job-admin:
+    build:
+      context: ./xxl-job
+      dockerfile: Dockerfile
+    container_name: lilishop-xxl-job-admin
+    networks:
+      - lilishop-network
+    environment:
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/lilishop?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: lilishop
+      SPRING_MAIL_HOST: smtp.qq.com
+      SPRING_MAIL_USERNAME: 1814994716@qq.com
+      SPRING_MAIL_PASSWORD: abcdefg123456!@#$%^
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9001/xxl-job-admin"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Spring Boot Admin
+  admin:
+    build:
+      context: .
+      dockerfile: ./admin/Dockerfile
+      args:
+        REVISION: 4.3
+    container_name: lilishop-admin
+    networks:
+      - lilishop-network
+    ports:
+      - "40021:8000"
+    environment:
+      SPRING_APPLICATION_NAME: SpringBootAdmin
+      SERVER_PORT: 8000
+      SPRING_BOOT_ADMIN_CLIENT_URL: http://admin:8000
+      SPRING_SECURITY_USER_NAME: admin
+      SPRING_SECURITY_USER_PASSWORD: admin
+      SPRING_MAIL_HOST: smtp.qq.com
+      SPRING_BOOT_ADMIN_NOTIFY_MAIL_TO: 1814994716@qq.com
+      SPRING_BOOT_ADMIN_NOTIFY_MAIL_FROM: 1814994716@qq.com
+      SPRING_MAIL_USERNAME: 1814994716@qq.com
+      SPRING_MAIL_PASSWORD: abcdefg123456!@#$%^
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_REDIS_PASSWORD: lilishop
+      LILI_DATA_LOGSTASH_SERVER: logstash-service:4560
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    volumes:
+      - ./target.jar:/app/target.jar
