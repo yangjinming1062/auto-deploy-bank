@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  zero-to-nlp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: zero-to-nlp-framework
+    ports:
+      - "40235:7860"  # Map host port 40235 to container port 7860 (Gradio)
+    environment:
+      - PYTHONUNBUFFERED=1
+      - CUDA_VISIBLE_DEVICES=0  # Can be changed based on available GPUs
+    volumes:
+      - ./output_dir:/home/ubuntu/deploy-projects/output_dir
+      - ./cache_data:/home/ubuntu/deploy-projects/cache_data
+      - ./model_result:/home/ubuntu/deploy-projects/model_result
+      - ./data:/home/ubuntu/deploy-projects/data
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'      # Maximum 2 CPU cores
+          memory: 4G       # Maximum 4GB memory
+        reservations:
+          cpus: '1.0'      # Reserve 1 CPU core
+          memory: 1G       # Reserve 1GB memory
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    networks:
+      - nlp-network
+
+networks:
+  nlp-network:
+    driver: bridge
+
+volumes:
+  output_dir:
+  cache_data:
+  model_result:
+  data:
