@@ -1,0 +1,35 @@
+services:
+  lumina-t2x:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lumina-t2x-app
+    ports:
+      - "40102:7860"
+    volumes:
+      # Mount model checkpoint directory
+      - ./models:/models:ro
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - TOKENIZERS_PARALLELISM=false
+    # Resource limits to prevent service from consuming all system resources
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    restart: unless-stopped
+    command: >
+      sh -c "
+        python /app/demo_standalone.py
+      "
