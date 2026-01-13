@@ -1,0 +1,17 @@
+services:
+  httpbin:
+    build: .
+    ports:
+      - "40315:80"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DEBUG=${DEBUG:-}
+      - HTTPBIN_TRACKING=${HTTPBIN_TRACKING:-}
+      - BUGSNAG_API_KEY=${BUGSNAG_API_KEY:-}
+      - BUGSNAG_RELEASE_STAGE=production
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
