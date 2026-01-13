@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  azure-ml-examples:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: azure-ml-examples
+    ports:
+      - "40047:8888"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - AZURE_TENANT_ID=${AZURE_TENANT_ID:-}
+      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID:-}
+      - AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET:-}
+      - SUBSCRIPTION_ID=${SUBSCRIPTION_ID:-}
+      - RESOURCE_GROUP_NAME=${RESOURCE_GROUP_NAME:-}
+      - WORKSPACE_NAME=${WORKSPACE_NAME:-}
+      - LOCATION=${LOCATION:-eastus}
+      - OPENAI_API_TYPE=${OPENAI_API_TYPE:-azure}
+      - OPENAI_API_BASE=${OPENAI_API_BASE:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_API_VERSION=${OPENAI_API_VERSION:-2023-05-15}
+      - CHAT_MODEL_DEPLOYMENT_NAME=${CHAT_MODEL_DEPLOYMENT_NAME:-gpt-35-turbo}
+      - EMBEDDING_MODEL_DEPLOYMENT_NAME=${EMBEDDING_MODEL_DEPLOYMENT_NAME:-text-embedding-ada-002}
+      - PROMPT_TOKEN_LIMIT=${PROMPT_TOKEN_LIMIT:-2000}
+      - MAX_COMPLETION_TOKENS=${MAX_COMPLETION_TOKENS:-256}
+      - VERBOSE=${VERBOSE:-True}
+    volumes:
+      - ./.azureml:/root/.azureml
+      - ./sdk/python/notebooks_config.ini:/workspace/sdk/python/notebooks_config.ini:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/lab"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+networks:
+  default:
+    name: azure-ml-examples-network
