@@ -1,0 +1,13 @@
+{
+  "service_id": "529a5f21b2e1a05ff67ab460",
+  "repo_name": "liferay/liferay-portal",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "600.77MB",
+  "language": "java",
+  "star": 2210,
+  "repo_flag": "JAVA-OpenNLP",
+  "uploaded_at": "2026-01-13T15:49:02.189320"
+}

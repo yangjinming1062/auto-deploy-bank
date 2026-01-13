@@ -1,0 +1,107 @@
+services:
+  # PostgreSQL Database Service
+  database:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: lportal
+      POSTGRES_USER: lportal
+      POSTGRES_PASSWORD: lportal
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - liferay-network
+    # Internal service - no port exposure to host
+    # Only accessible to other Docker services
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lportal -d lportal"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Liferay Portal Service
+  liferay:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Use the specified host port 40750 for HTTP
+    ports:
+      - "40750:8080"
+    environment:
+      # Database configuration - LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_* format
+      LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_URL: jdbc:postgresql://database:5432/lportal?useUnicode=true&characterEncoding=UTF-8&useFastDateParsing=false
+      LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_USERNAME: lportal
+      LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_PASSWORD: lportal
+      LIFERAY_JDBC_PERIOD_DEFAULT_PERIOD_DRIVER_CLASS_NAME: org.postgresql.Driver
+
+      # Enable setup wizard to create default company
+      LIFERAY_SETUP_WIZARD_PERIOD_ENABLED_PERIOD: "true"
+
+      # Liferay environment variables
+      LIFERAY_HOME: /opt/liferay
+      PORTAL_URL: http://localhost:40750
+      ADMIN_EMAIL: test@liferay.com
+      ADMIN_PASSWORD: test
+      COMPANY_ID: 20097
+      LOCALE: en_US
+
+      # Company default settings
+      COMPANY_DEFAULT_NAME: Liferay
+      COMPANY_DEFAULT_WEB_ID: liferay.com
+
+      # Disable Elasticsearch sidecar (use embedded for dev)
+      LIFERAY_ELASTICSEARCH_PERIOD_SIDECAR_PERIOD_ENABLED: "false"
+      LIFERAY_SEARCH_PERIOD_ENGINE_PERIOD_CONFIGURATION_PERIOD_ELASTICSEARCH_PERIOD_REST_PERIOD_CLIENT_PERIOD_ENDPOINT_ADDRESSES: ""
+
+      # DNS membership service for Kubernetes
+      DNS_MEMBERSHIP_SERVICE_NAME: liferay-default-headless
+
+    depends_on:
+      database:
+        condition: service_healthy
+    volumes:
+      # Volume mount for security scanning (JAR file extraction)
+      - ./target.jar:/app/target.jar
+      # Liferay data volume (document library, etc.)
+      - liferay-data:/mnt/liferay/data
+      # Liferay logs volume
+      - liferay-logs:/opt/liferay/logs
+    networks:
+      - liferay-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:8080 || exit 1"]
+      interval: 30s
+      timeout: 30s
+      retries: 10
+      start_period: 300s
+    # Resource limits to prevent OOM kills (6G needed for Liferay + Elasticsearch sidecar)
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 6G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+    # Ensure container runs in foreground (no daemon mode)
+    restart: unless-stopped
+
+networks:
+  liferay-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  liferay-data:
+    driver: local
+  liferay-logs:
+    driver: local
