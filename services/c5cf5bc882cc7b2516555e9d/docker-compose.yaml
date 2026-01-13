@@ -1,0 +1,25 @@
+services:
+  fastrtc:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "40371:8000"
+    environment:
+      - GRADIO_SSR_MODE=false
+      - MODE=UI
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
