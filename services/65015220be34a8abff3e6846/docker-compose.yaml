@@ -1,0 +1,271 @@
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: mall-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: mall_tiny
+      MYSQL_USER: mall
+      MYSQL_PASSWORD: mall
+    command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - mysql-config:/etc/mysql/conf.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - mall-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: mall-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - mall-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # Elasticsearch
+  elasticsearch:
+    build:
+      context: .
+      dockerfile: elasticsearch.Dockerfile
+    container_name: mall-elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - mall-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # MongoDB
+  mongodb:
+    image: mongo:6.0
+    container_name: mall-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: mall-port
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - mall-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3.11-management-alpine
+    container_name: mall-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_VHOST: /mall
+      RABBITMQ_DEFAULT_USER: mall
+      RABBITMQ_DEFAULT_PASS: mall
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics ping
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - mall-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # MinIO Object Storage
+  minio:
+    image: minio/minio:latest
+    container_name: mall-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - mall-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # Main Application
+  mall-tiny:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mall-tiny-app
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    ports:
+      - "40654:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/mall_tiny?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_REDIS_DATABASE: 0
+      SPRING_REDIS_PASSWORD: ""
+      SPRING_DATA_MONGODB_HOST: mongodb
+      SPRING_DATA_MONGODB_PORT: 27017
+      SPRING_DATA_MONGODB_DATABASE: mall-port
+      SPRING_ELASTICSEARCH_URIS: http://elasticsearch:9200
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_VIRTUAL_HOST: /mall
+      SPRING_RABBITMQ_USERNAME: mall
+      SPRING_RABBITMQ_PASSWORD: mall
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_BUCKET_NAME: mall
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      JWT_SECRET: mySecret
+      JWT_EXPIRATION: "604800"
+      JWT_TOKEN_HEADER: Authorization
+      JWT_TOKEN_HEAD: "Bearer "
+      SERVER_PORT: "8080"
+      SPRING_PROFILES_ACTIVE: prod
+    volumes:
+      - ./target.jar:/target.jar
+      - app-logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    networks:
+      - mall-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+# Define volumes
+volumes:
+  mysql-data:
+    driver: local
+  mysql-config:
+    driver: local
+  redis-data:
+    driver: local
+  es-data:
+    driver: local
+  mongo-data:
+    driver: local
+  rabbitmq-data:
+    driver: local
+  minio-data:
+    driver: local
+  app-logs:
+    driver: local
+
+# Define network
+networks:
+  mall-network:
+    driver: bridge
