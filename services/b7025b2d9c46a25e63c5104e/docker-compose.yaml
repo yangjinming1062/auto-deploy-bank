@@ -1,0 +1,33 @@
+services:
+  softlearning:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: softlearning
+    init: true
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MJKEY_PATH=/root/.mujoco/mjkey.txt
+    volumes:
+      - ./ray_results:/app/ray_results
+      - ~/.mujoco/mjkey.txt:/root/.mujoco/mjkey.txt:ro
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    ports:
+      - "40274:6006"  # TensorBoard port
+      - "40182:40182"  # Web dashboard port
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "bash", "-c", "pgrep -f 'softlearning run_example_local' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    stdin_open: true
+    tty: true
