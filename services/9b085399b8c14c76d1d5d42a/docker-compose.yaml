@@ -1,0 +1,76 @@
+services:
+  sonarqube:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sonarqube
+    ports:
+      - "40804:9000"
+    environment:
+      # Embedded H2 Database Configuration (default)
+      - SONAR_JDBC_URL=jdbc:h2:tcp://localhost:9092/sonar
+      - SONAR_JDBC_USERNAME=sa
+      - SONAR_JDBC_PASSWORD=
+      - SONAR_JDBC_MAXACTIVE=60
+      - SONAR_JDBC_MINIDLE=10
+      - SONAR_JDBC_MAXWAIT=8000
+      - SONAR_EMBEDDEDDATABASE_PORT=9092
+
+      # Web Server Configuration
+      - SONAR_WEB_HOST=0.0.0.0
+      - SONAR_WEB_PORT=9000
+      - SONAR_WEB_CONTEXT=
+      - SONAR_WEB_HTTP_MAXTHREADS=50
+      - SONAR_WEB_HTTP_MINTHREADS=5
+      - SONAR_WEB_HTTP_ACCEPTCOUNT=25
+      - SONAR_WEB_HTTP_KEEPALIVETIMEOUT=60000
+      - SONAR_WEB_SESSIONTIMEOUTINMINUTES=4320
+
+      # Elasticsearch Configuration
+      - SONAR_SEARCH_PORT=9001
+      - SONAR_SEARCH_HOST=
+
+      # Logging Configuration
+      - SONAR_LOG_LEVEL=INFO
+      - SONAR_LOG_LEVEL_APP=INFO
+      - SONAR_LOG_LEVEL_WEB=INFO
+      - SONAR_LOG_LEVEL_CE=INFO
+      - SONAR_LOG_LEVEL_ES=INFO
+      - SONAR_LOG_ROLLINGPOLICY=time:yyyy-MM-dd
+      - SONAR_LOG_MAXFILES=7
+      - SONAR_WEB_ACCESSLOGS_ENABLE=true
+      - SONAR_WEB_ACCESSLOGS_PATTERN=%h %l %u [%t] "%r" %s %b "%i{Referer}" "%i{User-Agent}" "%reqAttribute{ID}" %D
+
+      # Additional Settings
+      - SONAR_FORCEAUTHENTICATION=false
+      - SONAR_TELEMETRY_ENABLE=true
+      - SONAR_UPDATECENTER_ACTIVATE=true
+      - SONAR_NOTIFICATIONS_DELAY=60
+
+      # Data and Temp Paths
+      - SONAR_PATH_DATA=data
+      - SONAR_PATH_TEMP=temp
+      - SONAR_PATH_LOGS=logs
+
+    # Resource limits to prevent consuming all system resources
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/api/system/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+    restart: unless-stopped
+
+networks:
+  default:
+    name: sonarqube_network
