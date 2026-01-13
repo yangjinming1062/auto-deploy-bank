@@ -1,0 +1,18 @@
+version: '3.8'
+services:
+  timetagger:
+    build: .
+    ports:
+      - "40125:80"
+    environment:
+      - TIMETAGGER_BIND=0.0.0.0:80
+      - TIMETAGGER_DATADIR=/data
+    volumes:
+      - timetagger_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+volumes:
+  timetagger_data:
