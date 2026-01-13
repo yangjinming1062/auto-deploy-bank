@@ -1,0 +1,82 @@
+version: "3.8"
+
+services:
+  seata-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: seata-server:local
+    container_name: seata-server
+    hostname: seata-server
+    ports:
+      - "40875:7091"  # Console port mapping
+    environment:
+      # Server Configuration
+      - SEATA_ENV=production
+      - SEATA_IP=127.0.0.1
+      - SEATA_PORT=8091
+      - SERVER_NODE=1
+      - STORE_MODE=file
+      - LOCK_STORE_MODE=file
+      - SESSION_STORE_MODE=file
+
+      # Transport Configuration - Use NIO instead of EPOLL to avoid native dependency issues
+      - TRANSPORT_SERVER=NIO
+
+      # Netty Configuration - Disable native transport explicitly
+      - io.netty.noNative=true
+      - io.netty.noEpoll=true
+
+      # Application Configuration
+      - spring.application.name=seata-server
+      - server.port=7091
+      - seata.server.service-port=8091
+
+      # Seata Configuration
+      - seata.config.type=file
+      - seata.registry.type=file
+      - seata.store.mode=file
+
+      # Security Configuration
+      - seata.security.secretKey=SeataSecretKey0c382ef121d778043159209298fd40bf3850a017
+      - seata.security.tokenValidityInMilliseconds=1800000
+
+      # Console User
+      - console.user.username=seata
+      - console.user.password=seata
+
+      # Logging Configuration
+      - logging.config=classpath:logback-spring.xml
+      - logging.file.path=/app/logs
+
+      # Timezone
+      - TZ=Asia/Shanghai
+
+    volumes:
+      # Security scanning volume mount
+      - ./server/target/seata-server-1.8.0.jar:/app/target.jar:ro
+      - ./all/target/seata-all-1.8.0.jar:/app/seata-all-1.8.0.jar:ro
+      - ./seata-spring-autoconfigure/seata-spring-autoconfigure-core/target/seata-spring-autoconfigure-core-1.8.0.jar:/app/seata-spring-autoconfigure-core-1.8.0.jar:ro
+      - ./seata-spring-autoconfigure/seata-spring-autoconfigure-server/target/seata-spring-autoconfigure-server-1.8.0.jar:/app/seata-spring-autoconfigure-server-1.8.0.jar:ro
+      # Log persistence (optional)
+      - seata-logs:/app/logs
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7091/api/v1/heartbeat"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+    restart: unless-stopped
+
+    networks:
+      - seata-network
+
+volumes:
+  seata-logs:
+    driver: local
+
+networks:
+  seata-network:
+    driver: bridge
