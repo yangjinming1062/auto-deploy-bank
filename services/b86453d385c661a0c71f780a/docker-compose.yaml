@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  web:
+    build: .
+    ports:
+      - "40202:8080"
+    volumes:
+      - ./data:/data
+    command: sqlite_web /data/db_filename.db --host 0.0.0.0 --port 8080
+    environment:
+      - SQLITE_WEB_PASSWORD=
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
