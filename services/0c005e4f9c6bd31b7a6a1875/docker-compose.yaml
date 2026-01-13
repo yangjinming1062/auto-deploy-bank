@@ -1,0 +1,66 @@
+services:
+  metagpt-app:
+    build: .
+    container_name: metagpt-app
+    restart: on-failure
+    ports:
+      - "40076:8080"
+    environment:
+      - OPENAI_API_KEY=YOUR_API_KEY
+      - OPENAI_BASE_URL=YOUR_BASE_URL
+      - METAGPT_PROXY=
+      - GOOGLE_API_KEY=YOUR_GOOGLE_API_KEY
+      - GOOGLE_CSE_ID=YOUR_GOOGLE_CSE_ID
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=
+      - MEILI_HOST=http://meilisearch:7700
+      - QDRANT_URL=http://qdrant:6333
+      - S3_ACCESS_KEY=YOUR_S3_ACCESS_KEY
+      - S3_SECRET_KEY=YOUR_S3_SECRET_KEY
+      - S3_ENDPOINT=YOUR_S3_ENDPOINT
+      - AZURE_TTS_SUBSCRIPTION_KEY=YOUR_AZURE_TTS_SUBSCRIPTION_KEY
+      - AZURE_TTS_REGION=eastus
+      - IFLYTEK_API_ID=YOUR_IFLYTEK_APP_ID
+      - IFLYTEK_API_KEY=YOUR_IFLYTEK_API_KEY
+      - IFLYTEK_API_SECRET=YOUR_IFLYTEK_API_SECRET
+      - METAGPT_TTI_URL=YOUR_MODEL_URL
+    depends_on:
+      - redis
+      - meilisearch
+      - qdrant
+    networks:
+      - metagpt-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: always
+    networks:
+      - metagpt-net
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.3
+    container_name: meilisearch
+    restart: always
+    environment:
+      - MEILI_MASTER_KEY=MASTER_KEY
+    networks:
+      - metagpt-net
+
+  qdrant:
+    image: qdrant/qdrant:v1.7.4
+    container_name: qdrant
+    restart: always
+    networks:
+      - metagpt-net
+
+networks:
+  metagpt-net:
+    driver: bridge
