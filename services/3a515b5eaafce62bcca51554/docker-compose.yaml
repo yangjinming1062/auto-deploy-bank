@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  wagtail:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "40044:8000"
+    environment:
+      - SECRET_KEY=django-insecure-change-me
+      - DEBUG=true
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+      - DATABASE_ENGINE=django.db.backends.sqlite3
+      - DATABASE_NAME=/app/wagtail/test/db.sqlite3
+      - DATABASE_USER=
+      - DATABASE_PASSWORD=
+      - DATABASE_HOST=
+      - DATABASE_PORT=
+      - ELASTICSEARCH_URL=
+      - ELASTICSEARCH_VERSION=
+      - WAGTAILADMIN_BASE_URL=http://localhost:40044
+      - DJANGO_SUPERUSER_USERNAME=admin
+      - DJANGO_SUPERUSER_EMAIL=admin@example.com
+      - DJANGO_SUPERUSER_PASSWORD=changeme
+      - USE_EMAIL_USER_MODEL=
+      - DISABLE_TIMEZONE=
+    volumes:
+      - ./wagtail/test/db.sqlite3:/app/wagtail/test/db.sqlite3
+      - ./wagtail/test/media:/app/wagtail/test/media
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
