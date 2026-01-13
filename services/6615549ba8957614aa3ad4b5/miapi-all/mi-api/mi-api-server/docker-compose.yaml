@@ -1,0 +1,210 @@
+version: '3.8'
+
+services:
+  # mi-api-server (Main application)
+  mi-api-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mi-api-server
+    ports:
+      - "40154:8999"
+    environment:
+      # Database Configuration (MySQL)
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/miapi?characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-password}
+
+      # Redis Configuration
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: "6379"
+      REDIS_PASSWORD: ""
+      REDIS_TIMEOUT: "30000"
+      REDIS_MAX_TOTAL: "30"
+      REDIS_MAX_IDLE: "10"
+
+      # Nacos Configuration
+      NACOS_CONFIG_ADDRS: nacos:8848
+      NACOS_CONFIG_DATA_ID: mi_api_config
+
+      # Application Configuration
+      SERVER_PORT: "8999"
+      LOG_PATH: /home/home/ubuntu/deploy-projects/log
+
+      # Dubbo Configuration
+      DUBBO_REGISTRY_ADDRESS: nacos://nacos:8848
+      DUBBO_GROUP: staging
+      DUBBO_PROVIDER_GROUP: staging
+
+      # Service References
+      REF_HERMES_SERVICE_GROUP: staging
+      REF_GWDASH_SERVICE_GROUP: intranet
+
+      # Mode Configuration
+      IS_ONLINE: "false"
+      DEV_MODE: "false"
+      INNER_AUTH: "false"
+
+      # Security
+      AEGIS_SDK_MONE_PUBLIC_KEY: demokey
+      TOKEN_PARSE_URL: http://localhost:8080/mtop/tesla/login/token/parse
+
+      # Mock Server
+      MI_API_MOCK_ADDR: http://mock-server:8080
+
+      # Mail Configuration (optional)
+      SPRING_MAIL_HOST: smtp.qq.com
+      SPRING_MAIL_PORT: "465"
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_SSL_ENABLE: "true"
+
+    volumes:
+      # Volume mount for security scanning
+      - ./target.jar:/home/home/ubuntu/deploy-projects/target.jar
+      # Log volume
+      - mi-api-logs:/home/home/ubuntu/deploy-projects/log
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nacos:
+        condition: service_healthy
+    networks:
+      - miapi-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8999/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+
+  # MySQL Database (internal only)
+  mysql:
+    image: mysql:8.0
+    container_name: miapi-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:-password}
+      MYSQL_DATABASE: miapi
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./src/main/resources/sql:/docker-entrypoint-initdb.d
+    networks:
+      - miapi-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_PASSWORD:-password}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    restart: unless-stopped
+
+  # Redis (internal only)
+  redis:
+    image: redis:7-alpine
+    container_name: miapi-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    networks:
+      - miapi-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    restart: unless-stopped
+
+  # Nacos Service Discovery (internal only)
+  nacos:
+    image: nacos/nacos-server:v2.2.3
+    container_name: miapi-nacos
+    environment:
+      MODE: standalone
+      SPRING_DATASOURCE_PLATFORM: mysql
+      MYSQL_SERVICE_DB_NAME: nacos_config
+      MYSQL_SERVICE_PORT: "3306"
+      MYSQL_SERVICE_USER: root
+      MYSQL_SERVICE_PASSWORD: ${MYSQL_PASSWORD:-password}
+    volumes:
+      - nacos-data:/home/home/ubuntu/deploy-projects/data
+      - nacos-logs:/home/home/ubuntu/deploy-projects/logs
+    networks:
+      - miapi-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8848/nacos/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    restart: unless-stopped
+
+  # Mock Server (internal only)
+  mock-server:
+    build:
+      context: ../../../mock-server/mock-server-server
+      dockerfile: ../../../mock-server/Dockerfile
+    container_name: miapi-mock-server
+    environment:
+      SERVER_PORT: "8080"
+    networks:
+      - miapi-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    restart: unless-stopped
+
+networks:
+  miapi-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  redis-data:
+  nacos-data:
+  nacos-logs:
+  mi-api-logs:
