@@ -1,0 +1,78 @@
+services:
+  moon-dev-trading:
+    build: .
+    container_name: moon-dev-ai-trading
+    ports:
+      - "40705:8002"
+    environment:
+      # Trading API Keys
+      - BIRDEYE_API_KEY=${BIRDEYE_API_KEY}
+      - MOONDEV_API_KEY=${MOONDEV_API_KEY}
+      - COINGECKO_API_KEY=${COINGECKO_API_KEY}
+      - RPC_ENDPOINT=${RPC_ENDPOINT}
+      - SOLANA_PRIVATE_KEY=${SOLANA_PRIVATE_KEY}
+      - HYPER_LIQUID_KEY=${HYPER_LIQUID_KEY}
+      - HYPER_LIQUID_ETH_PRIVATE_KEY=${HYPER_LIQUID_ETH_PRIVATE_KEY}
+      - USE_TESTNET=${USE_TESTNET}
+
+      # AI Service Keys
+      - ANTHROPIC_KEY=${ANTHROPIC_KEY}
+      - OPENAI_KEY=${OPENAI_KEY}
+      - DEEPSEEK_KEY=${DEEPSEEK_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - GEMINI_KEY=${GEMINI_KEY}
+      - GROK_API_KEY=${GROK_API_KEY}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+
+      # Trading Platform Keys
+      - ASTER_API_KEY=${ASTER_API_KEY}
+      - ASTER_API_SECRET=${ASTER_API_SECRET}
+      - X10_API_KEY=${X10_API_KEY}
+      - X10_PRIVATE_KEY=${X10_PRIVATE_KEY}
+      - X10_VAULT_ID=${X10_VAULT_ID}
+      - X10_PUBLIC_KEY=${X10_PUBLIC_KEY}
+
+      # Content Creation APIs
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY}
+      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
+      - RESTREAM_CLIENT_ID=${RESTREAM_CLIENT_ID}
+      - RESTREAM_CLIENT_SECRET=${RESTREAM_CLIENT_SECRET}
+      - RESTREAM_EMBED_TOKEN=${RESTREAM_EMBED_TOKEN}
+
+      # Social Media APIs
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
+      - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER}
+      - TWITTER_USERNAME=${TWITTER_USERNAME}
+      - TWITTER_EMAIL=${TWITTER_EMAIL}
+      - TWITTER_PASSWORD=${TWITTER_PASSWORD}
+
+      # Other Services
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+    # Keep container running
+    restart: unless-stopped
+
+    # Volume for persistent data (optional)
+    volumes:
+      - ./src/data:/app/src/data
+
+networks:
+  default:
+    name: moon-dev-network
