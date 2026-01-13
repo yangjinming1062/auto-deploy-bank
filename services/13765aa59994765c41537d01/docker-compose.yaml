@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  torchtnt:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "40418:40418"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    environment:
+      - MASTER_PORT=40418
+      - MASTER_ADDR=127.0.0.1
+      - WORLD_SIZE=1
+      - RANK=0
+      - LOCAL_RANK=0
+      - LOCAL_WORLD_SIZE=1
+      - PYTHONHASHSEED=0
+      - TORCH_HOME=/tmp
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:40418/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
