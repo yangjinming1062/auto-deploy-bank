@@ -1,0 +1,114 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  db01:
+    image: mysql:8.0
+    container_name: vprofile-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: accounts
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin123
+    volumes:
+      - ./src/main/resources/db_backup.sql:/docker-entrypoint-initdb.d/db_backup.sql:ro
+    networks:
+      - vprofile-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # No external port - internal only
+
+  # Memcached
+  mc01:
+    image: memcached:1.6-alpine
+    container_name: vprofile-memcached
+    networks:
+      - vprofile-network
+    healthcheck:
+      test: ["CMD", "sh", "-c", "echo stats | nc localhost 11211"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    # No external port - internal only
+
+  # RabbitMQ
+  rmq01:
+    image: rabbitmq:3.8-management-alpine
+    container_name: vprofile-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: test
+      RABBITMQ_DEFAULT_PASS: test
+    networks:
+      - vprofile-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # No external port - internal only
+
+  # ElasticSearch
+  es01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.4
+    container_name: vprofile-elasticsearch
+    environment:
+      - cluster.name=vprofile
+      - node.name=vprofilenode
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    networks:
+      - vprofile-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 60s
+    # No external ports - internal communication only
+
+  # Web Application (Tomcat with Spring MVC WAR)
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vprofile-webapp
+    depends_on:
+      db01:
+        condition: service_healthy
+      mc01:
+        condition: service_healthy
+      rmq01:
+        condition: service_healthy
+      es01:
+        condition: service_healthy
+    networks:
+      - vprofile-network
+    ports:
+      - "40019:8080"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    volumes:
+      - ./target.jar:/app/target.jar
+
+networks:
+  vprofile-network:
+    driver: bridge
+
+volumes:
+  esdata:
+    driver: local
