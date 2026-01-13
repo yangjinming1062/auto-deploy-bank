@@ -1,0 +1,27 @@
+services:
+  butterknife:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: butterknife-library
+    ports:
+      - "40018:40018"
+    environment:
+      - PORT=40018
+    volumes:
+      - ./target.jar:/app/target.jar
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:40018/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
