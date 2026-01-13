@@ -1,0 +1,61 @@
+services:
+  doris-fe:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: doris-frontend
+    entrypoint: ["/usr/local/bin/init_fe.sh"]
+    command: []
+    ports:
+      # HTTP port (FE web UI) - mapped to host port 40601
+      - "40601:8030"
+    # Internal ports (NOT exposed to host - only for Docker network)
+    # These allow communication with BE nodes and other FE nodes
+    environment:
+      # Single node FE in ASSIGN mode - this FE is both master and current
+      - FE_MASTER_IP=127.0.0.1
+      - FE_MASTER_PORT=9010
+      - FE_CURRENT_IP=127.0.0.1
+      - FE_CURRENT_PORT=9010
+      - DORIS_HOME=/opt/apache-doris
+      - LOG_DIR=/opt/apache-doris/fe/log
+      - DORIS_LOG_TO_STDERR=1
+      # Java 17 environment for Doris FE (using symlink path)
+      - JAVA_HOME=/usr/lib/jvm/java
+    volumes:
+      # Mount JAR file for security scanning
+      - ./target.jar:/app/target.jar:ro
+      # Mount log directory for persistence (optional)
+      - doris-fe-logs:/opt/apache-doris/fe/log
+      # Mount metadata directory for persistence
+      - doris-meta:/opt/apache-doris/fe/doris-meta
+    networks:
+      - doris-network
+    # Resource limits as per requirements
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    # Health check - Doris FE HTTP port (web UI)
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8030/"]
+      interval: 30s
+      timeout: 15s
+      retries: 5
+      start_period: 120s
+    # Restart policy
+    restart: unless-stopped
+
+volumes:
+  doris-fe-logs:
+    driver: local
+  doris-meta:
+    driver: local
+
+networks:
+  doris-network:
+    driver: bridge
