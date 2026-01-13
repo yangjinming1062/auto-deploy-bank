@@ -1,0 +1,40 @@
+services:
+  paper2poster:
+    build: .
+    container_name: paper2poster-web
+    ports:
+      - "40858:7860"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_SEARCH_API_KEY=${GOOGLE_SEARCH_API_KEY}
+      - GOOGLE_SEARCH_ENGINE_ID=${GOOGLE_SEARCH_ENGINE_ID}
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - paper2poster-data:/data
+      - paper2poster-runs:/runs
+      - paper2poster-logos:/app/logo_store
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+volumes:
+  paper2poster-data:
+    driver: local
+  paper2poster-runs:
+    driver: local
+  paper2poster-logos:
+    driver: local
