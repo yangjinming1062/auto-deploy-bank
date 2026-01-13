@@ -1,0 +1,160 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:5.7
+    container_name: cf-mysql
+    command: --sql-mode="" --default-time-zone="+08:00"
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: caifeng
+      MYSQL_USER: caifeng
+      MYSQL_PASSWORD: caifeng123
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./caifeng.sql:/docker-entrypoint-initdb.d/caifeng.sql
+    networks:
+      - cf-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: cf-redis
+    command: redis-server --requirepass redis123
+    volumes:
+      - redis_data:/data
+    networks:
+      - cf-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redis123", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # MongoDB (for non-critical data)
+  mongo:
+    image: mongo:5.0
+    container_name: cf-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: caifeng
+      MONGO_INITDB_ROOT_PASSWORD: caifEng666
+      MONGO_INITDB_DATABASE: caifeng
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - cf-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Zookeeper (Service Registry)
+  zookeeper:
+    image: zookeeper:3.7
+    container_name: cf-zookeeper
+    volumes:
+      - zookeeper_data:/data
+      - zookeeper_logs:/datalog
+      - ./zoo.cfg:/conf/zoo.cfg:ro
+    networks:
+      - cf-network
+    environment:
+      ZOO_MY_ID: 1
+    healthcheck:
+      disable: true
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: cf-nginx
+    ports:
+      - "40034:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      cf-parking-system:
+        condition: service_healthy
+    networks:
+      - cf-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Main Application (Parking Management System)
+  cf-parking-system:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cf-parking-system
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      zookeeper:
+        condition: service_started
+    networks:
+      - cf-network
+    volumes:
+      - ./target.jar:/app/target.jar
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USERNAME: caifeng
+      MYSQL_PASSWORD: caifeng123
+      MYSQL_DATABASE: caifeng
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: redis123
+      MONGODB_URI: mongodb://caifeng:caifEng666@mongo:27017/caifeng?authSource=caifeng
+      MONGODB_HOST: mongo
+      MONGODB_PORT: 27017
+      MONGODB_USERNAME: caifeng
+      MONGODB_PASSWORD: caifEng666
+      MONGODB_DATABASE: caifeng
+      MONGODB_AUTH_DATABASE: caifeng
+      ZOOKEEPER_HOST: zookeeper
+      OAUTH2_CLIENT_ID: csmall_web
+      OAUTH2_CLIENT_SECRET: "secret"
+      JWT_TOKEN_VALIDITY_SECONDS: "1200"
+      JWT_SECRET: "MySecretKeyForJWTTokenGenerationAndValidation"
+      COOKIE_DOMAIN: xuecheng.com
+      COOKIE_MAX_AGE: "-1"
+      KEYSTORE_LOCATION: classpath:/xc.keystore
+      KEYSTORE_SECRET: xuechengkeystore
+      KEYSTORE_ALIAS: xckey
+      KEYSTORE_PASSWORD: xuecheng
+      IP_GET_URL: https://park.cfeng.wang/ip
+      TMS_URL: ""
+      SPRING_PROFILES_ACTIVE: dev
+      MYSQL_URL: jdbc:mysql://mysql:3306/caifeng?characterEncoding=utf-8&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC&useSSL=false
+
+    command: ["sh", "-c", "echo 'Waiting for dependencies...' && sleep 120 && cp /app/xc-auth.keystore /app/xc.keystore && echo 'Starting main service...' && java -Dserver.address=0.0.0.0 -Xms256m -Xmx512m -Dmysql数据库地址=mysql -Dredis数据库地址=redis -DJWT_SECRET='MySecretKeyForJWTTokenGenerationAndValidation' -Dmysql数据库密码=caifeng123 -Dredis数据库密码=redis123 -jar cf-ucenter-api.jar > /app/log/cf-ucenter-api.log 2>&1 & echo 'Started User Center API on port 8080' && tail -f /dev/null"]
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+  mongo_data:
+    driver: local
+  zookeeper_data:
+    driver: local
+  zookeeper_logs:
+    driver: local
+
+networks:
+  cf-network:
+    driver: bridge
