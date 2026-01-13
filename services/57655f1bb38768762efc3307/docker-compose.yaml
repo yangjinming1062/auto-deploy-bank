@@ -1,0 +1,22 @@
+services:
+  crawler4j-web:
+    build: .
+    ports:
+      - "40370:40326"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:40326/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    volumes:
+      - ./target.jar:/app/target.jar:ro
+    restart: unless-stopped
