@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "40012:8000"
+    environment:
+      - DEBUG=True
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+      - DATABASE_ENGINE=django.db.backends.sqlite3
+      - DATABASE_NAME=sandbox/db.sqlite
+      - DATABASE_USER=
+      - DATABASE_PASSWORD=
+      - DATABASE_HOST=
+      - DATABASE_PORT=
+      - SECRET_KEY=UajFCuyjDKmWHe29neauXzHi9eZoRXr6RMbT5JyAdPiACBP6Cra2
+      - THUMBNAIL_KVSTORE=sorl.thumbnail.kvstores.cached_db_kvstore.KVStore
+      - THUMBNAIL_REDIS_URL=
+      - SECURE_SSL_REDIRECT=False
+      - SECURE_HSTS_SECONDS=0
+    command: >
+      sh -c "python sandbox/manage.py migrate &&
+             python create_user.py &&
+             python sandbox/manage.py runserver 0.0.0.0:8000"
