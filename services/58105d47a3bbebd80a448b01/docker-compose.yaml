@@ -1,0 +1,32 @@
+version: '3.8'
+services:
+  powerjob-server:
+    build: .
+    ports:
+      - "40064:7700"
+    volumes:
+      - ./target.jar:/app/app.jar
+    environment:
+      - SPRING_DATASOURCE_CORE_JDBC_URL=jdbc:mysql://powerjob-mysql:3306/powerjob-daily?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+      - SPRING_DATASOURCE_CORE_USERNAME=root
+      - SPRING_DATASOURCE_CORE_PASSWORD=No1Bug2Please3!
+    depends_on:
+      powerjob-mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:7700/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  powerjob-mysql:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: No1Bug2Please3!
+      MYSQL_DATABASE: powerjob-daily
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-u", "root", "-pNo1Bug2Please3!"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
