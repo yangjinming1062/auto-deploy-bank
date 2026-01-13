@@ -1,0 +1,47 @@
+services:
+  # Zookeeper service for service registry
+  zookeeper:
+    image: zookeeper:3.8
+    container_name: dubbo-zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      - TZ=UTC
+    healthcheck:
+      test: ["CMD", "zkCli.sh", "version"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    networks:
+      - dubbo-network
+
+  # Apache Dubbo Demo API Provider
+  dubbo-provider:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dubbo-provider
+    ports:
+      - "40161:20880"
+    environment:
+      - TZ=UTC
+      - DUBBO_REGISTRY_ADDRESS=zookeeper://172.18.0.2:2181
+    volumes:
+      - ./target.jar:/app/target.jar:ro
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:22222/qos/getSessionList"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 150s
+    networks:
+      - dubbo-network
+    restart: unless-stopped
+
+networks:
+  dubbo-network:
+    driver: bridge
