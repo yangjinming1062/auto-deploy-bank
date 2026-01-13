@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  web:
+    build: .
+    ports:
+      - "40222:8001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
