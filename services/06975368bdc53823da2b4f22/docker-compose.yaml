@@ -1,0 +1,214 @@
+services:
+  # MySQL Database
+  mysql:
+    container_name: mysql
+    restart: always
+    image: mysql:8.0.35
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: agentscope
+      MYSQL_USER: agentscope
+      MYSQL_PASSWORD: agentscope
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./spring-ai-alibaba-studio/spring-ai-alibaba-studio-server/docker/middleware/init/mysql:/docker-entrypoint-initdb.d/
+    networks:
+      - studio-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # Redis Cache
+  redis:
+    container_name: redis
+    restart: always
+    image: redis:7.2.5
+    networks:
+      - studio-network
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.2
+    container_name: elasticsearch
+    restart: always
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - studio-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # Kibana (optional UI for Elasticsearch)
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.17.2
+    container_name: kibana
+    restart: always
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - monitoring.ui.container.elasticsearch.enabled=true
+    networks:
+      - studio-network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  # RocketMQ Name Server
+  rmq_namesrv:
+    image: apache/rocketmq:5.3.2
+    container_name: rmq_namesrv
+    restart: always
+    environment:
+      - JAVA_OPT_EXT=-server -Xms128M -Xmx256M -Xmn128M
+    networks:
+      - studio-network
+    command: sh mqnamesrv
+    healthcheck:
+      test: ["CMD", "sh", "-c", "ps aux | grep mqnamesrv | grep -v grep || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # RocketMQ Broker
+  rmq_broker:
+    image: apache/rocketmq:5.3.2
+    container_name: rmq_broker
+    restart: always
+    environment:
+      - NAMESRV_ADDR=rmq_namesrv:9876
+      - JAVA_OPT_EXT=-server -Xms256M -Xmx512M -Xmn256M -XX:MaxDirectMemorySize=128M
+    networks:
+      - studio-network
+    volumes:
+      - ./spring-ai-alibaba-studio/spring-ai-alibaba-studio-server/docker/middleware/conf/rocketmq/broker.conf:/home/rocketmq/broker.conf:ro
+    depends_on:
+      rmq_namesrv:
+        condition: service_healthy
+    command: sh mqbroker -c /home/rocketmq/broker.conf
+    healthcheck:
+      test: ["CMD", "sh", "-c", "ps aux | grep mqbroker | grep -v grep || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # RocketMQ Proxy
+  rmq_proxy:
+    image: apache/rocketmq:5.3.2
+    container_name: rmq_proxy
+    restart: always
+    environment:
+      - NAMESRV_ADDR=rmq_namesrv:9876
+      - JAVA_OPT_EXT=-server -Xms128M -Xmx256M -Xmn128M
+      - PROXY_CONFIG_JSON_PATH=/home/rocketmq/rmq-proxy.json
+    networks:
+      - studio-network
+    volumes:
+      - ./spring-ai-alibaba-studio/spring-ai-alibaba-studio-server/docker/middleware/conf/rocketmq/rmq-proxy.json:/home/rocketmq/rmq-proxy.json:ro
+    depends_on:
+      rmq_broker:
+        condition: service_healthy
+      rmq_namesrv:
+        condition: service_healthy
+    command: sh mqproxy -pm CLUSTER -pc /home/rocketmq/rmq-proxy.json
+    healthcheck:
+      test: ["CMD", "sh", "-c", "ps aux | grep mqproxy | grep -v grep || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # Main Studio Application
+  studio-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: studio-app
+    restart: always
+    ports:
+      - "40003:8080"
+    environment:
+      # Database Configuration
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/agentscope?useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+      - SPRING_DATASOURCE_USERNAME=agentscope
+      - SPRING_DATASOURCE_PASSWORD=agentscope
+
+      # Redis Configuration
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - SPRING_DATA_REDIS_DATABASE=0
+
+      # Elasticsearch Configuration
+      - SPRING_ELASTICSEARCH_URIS=http://elasticsearch:9200
+
+      # JWT Configuration
+      - JWT_ACCESS-TOKEN-EXPIRATION=7200
+      - JWT_REFRESH-TOKEN-EXPIRATION=2592000
+
+      # OAuth2 Configuration (optional)
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
+
+      # AI Configuration (optional)
+      - AI_DASHSCOPE_API_KEY=${AI_DASHSCOPE_API_KEY:-}
+
+      # Nacos Configuration (optional)
+      - NACOS_AUTH_TOKEN=${NACOS_AUTH_TOKEN:-}
+      - NACOS_AUTH_IDENTITY_KEY=${NACOS_AUTH_IDENTITY_KEY:-}
+      - NACOS_AUTH_IDENTITY_VALUE=${NACOS_AUTH_IDENTITY_VALUE:-}
+
+      # OSS Configuration (optional)
+      - OSS_ACCESS_KEY_ID=${OSS_ACCESS_KEY_ID:-}
+      - OSS_ACCESS_KEY_SECRET=${OSS_ACCESS_KEY_SECRET:-}
+
+    networks:
+      - studio-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      rmq_namesrv:
+        condition: service_healthy
+      rmq_broker:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+networks:
+  studio-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
