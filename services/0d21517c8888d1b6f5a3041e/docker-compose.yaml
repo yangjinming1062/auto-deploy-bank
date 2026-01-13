@@ -1,0 +1,170 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: ruoyi-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ruoyi-ai
+      MYSQL_USER: ruoyi
+      MYSQL_PASSWORD: root
+      TZ: Asia/Shanghai
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./script/sql/ruoyi-ai.sql:/docker-entrypoint-initdb.d/ruoyi-ai.sql
+    command: --default-authentication-plugin=mysql_native_password
+              --character-set-server=utf8mb4
+              --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: ruoyi-redis
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # RuoYi AI Application
+  ruoyi-admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ruoyi-admin
+    restart: unless-stopped
+    ports:
+      - "40683:6039"
+    environment:
+      TZ: Asia/Shanghai
+      SERVER_PORT: 6039
+      SPRING_PROFILES_ACTIVE: dev
+      LOGGING_LEVEL: debug
+
+      # Database Configuration
+      DB_URL: jdbc:mysql://mysql:3306/ruoyi-ai?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8&autoReconnect=true&rewriteBatchedStatements=true
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      DB_POOL_MAX_SIZE: 20
+      DB_POOL_MIN_IDLE: 10
+      DB_POOL_TIMEOUT: 30000
+
+      # Redis Configuration
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DATABASE: 0
+      REDIS_PASSWORD: ""
+      REDIS_TIMEOUT: 10s
+      REDIS_SSL: "false"
+
+      # Sa-Token Configuration
+      SA_TOKEN_JWT_SECRET_KEY: abcdefghijklmnopqrstuvwxyz
+      SA_TOKEN_TIMEOUT: 604800
+      SA_TOKEN_ACTIVITY_TIMEOUT: 604800
+
+      # OpenAI Configuration
+      SPRING_AI_OPENAI_API_KEY: sk-xx
+      SPRING_AI_OPENAI_BASE_URL: https://api.pandarobot.chat/
+
+      # DashScope Configuration
+      DASHSCOPE_KEY: sk-xxxx
+      DASHSCOPE_MODEL: qvq-max
+
+      # MCP Client Configuration
+      SPRING_AI_MCP_CLIENT_ENABLED: "false"
+      SPRING_AI_MCP_CLIENT_SSE_SERVER_URL: http://127.0.0.1:8081
+      SPRING_AI_MCP_CLIENT_REQUEST_TIMEOUT: 300s
+
+      # SMS Configuration
+      SMS_ENABLED: "false"
+      SMS_ENDPOINT: dysmsapi.aliyuncs.com
+      SMS_ACCESS_KEY_ID: xxxxxxx
+      SMS_ACCESS_KEY_SECRET: xxxxxx
+      SMS_SIGN_NAME: 测试
+      SMS_SDK_APP_ID: ""
+
+      # PDF Processing Configuration
+      PDF_EXTRACT_SERVICE_URL: http://localhost:8080
+      PDF_AI_API_URL: https://api.pandarobot.chat/v1/chat/completions
+      PDF_AI_API_KEY: sk-xxxx
+      PDF_ENABLE_MINERU: "true"
+      PDF_MINERU_CONDA_ENV_PATH: F:\ProgramData\Computer\Anaconda\envs\mineru
+      PDF_ENABLE_OCR: "true"
+
+      # Weaviate Configuration
+      WEAVIATE_HTTP_PORT: 8080
+      WEAVIATE_GRPC_PORT: 50051
+      WEAVIATE_QUERY_LIMIT: 25
+      WEAVIATE_ANONYMOUS_ACCESS: "true"
+      WEAVIATE_DATA_PATH: /var/lib/weaviate
+      WEAVIATE_VECTORIZER_MODULE: none
+      WEAVIATE_MODULES: text2vec-cohere,text2vec-huggingface,text2vec-palm,text2vec-openai,generative-openai,generative-cohere,generative-palm,ref2vec-centroid,reranker-cohere,qna-openai
+      WEAVIATE_CLUSTER_HOSTNAME: node1
+      WEAVIATE_PROTOCOL: http
+      WEAVIATE_HOST: weaviate:8080
+      WEAVIATE_CLASSNAME: LocalKnowledge
+
+      # Other Configurations
+      TENANT_ENABLE: "false"
+      XSS_ENABLED: "true"
+      CAPTCHA_ENABLE: "false"
+      CAPTCHA_TYPE: MATH
+      CAPTCHA_CATEGORY: CIRCLE
+      WEBSOCKET_ENABLED: "true"
+      WEBSOCKET_PATH: /resource/websocket
+      WEBSOCKET_ALLOWED_ORIGINS: "*"
+
+      # Spring Boot Admin Configuration
+      SPRING_BOOT_ADMIN_CLIENT_ENABLED: "false"
+      SPRING_BOOT_ADMIN_CLIENT_URL: http://localhost:9090/admin
+      SPRING_BOOT_ADMIN_CLIENT_USERNAME: ruoyi
+      SPRING_BOOT_ADMIN_CLIENT_PASSWORD: 123456
+
+      # Thread Pool Configuration
+      THREAD_POOL_ENABLED: "false"
+      THREAD_POOL_QUEUE_CAPACITY: 128
+      THREAD_POOL_KEEP_ALIVE_SECONDS: 300
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./target.jar:/app/target.jar
+    healthcheck:
+      test: ["CMD", "sh", "-c", "curl -f http://localhost:6039/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
