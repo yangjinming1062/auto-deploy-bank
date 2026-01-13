@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: zenml-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-zenml_root_password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-zenml}
+      MYSQL_USER: ${MYSQL_USER:-zenml}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-zenml_password}
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+      interval: 10s
+      start_period: 30s
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - zenml-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    # MySQL should NOT be exposed to the host - internal communication only
+
+  zenml:
+    build: .
+    container_name: zenml-server
+    ports:
+      - "40826:8000"
+    environment:
+      ZENML_STORE_URL: "mysql://${MYSQL_USER:-zenml}:${MYSQL_PASSWORD:-zenml_password}@mysql:3306/${MYSQL_DATABASE:-zenml}"
+      ZENML_DEBUG: "true"
+      ZENML_LOGGING_VERBOSITY: "INFO"
+      ZENML_ANALYTICS_OPT_IN: "false"
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-zenml}
+      MYSQL_USER: ${MYSQL_USER:-zenml}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-zenml_password}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      timeout: 10s
+      retries: 3
+      interval: 30s
+      start_period: 40s
+    networks:
+      - zenml-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+networks:
+  zenml-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local
