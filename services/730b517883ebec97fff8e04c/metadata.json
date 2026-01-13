@@ -1,0 +1,13 @@
+{
+  "service_id": "730b517883ebec97fff8e04c",
+  "repo_name": "hapifhir/hapi-fhir",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "190.08MB",
+  "language": "java",
+  "star": 2239,
+  "repo_flag": "JAVA-Logback",
+  "uploaded_at": "2026-01-13T13:34:07.125721"
+}
