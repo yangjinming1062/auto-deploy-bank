@@ -1,0 +1,32 @@
+services:
+  iot-mqtt:
+    build:
+      context: .
+      dockerfile: IOT-Guide-MQTT/Dockerfile
+    container_name: iot-mqtt-broker
+    ports:
+      - "40411:9876"
+    environment:
+      - SERVER_BIND_PORT=9876
+      - SERVER_BIND_ADDRESS=0.0.0.0
+      - SERVER_NETTY_BOSS_GROUP_THREAD_COUNT=1
+      - SERVER_NETTY_WORKER_GROUP_THREAD_COUNT=12
+      - SERVER_NETTY_LEAK_DETECTOR_LEVEL=DISABLED
+      - SERVER_NETTY_MAX_PAYLOAD_SIZE=65536
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    volumes:
+      - ./target.jar:/app/target.jar
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9876/actuator/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
