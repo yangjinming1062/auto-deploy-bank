@@ -1,0 +1,53 @@
+# Docker Compose configuration for Spring Initializr Service
+
+services:
+  initializr-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: initializr-service
+    ports:
+      - "40710:8080"
+    # Volume mount for security scanning - JAR will be copied to host at ./target.jar
+    volumes:
+      - ./target.jar:/app/target.jar
+    environment:
+      - spring.application.name=initializr
+      - initializr.env.artifactRepository=https://repo.spring.io/release/
+      - initializr.env.springBootMetadataUrl=https://api.spring.io/projects/spring-boot/releases
+      - initializr.env.googleAnalyticsTrackingCode=
+      - initializr.env.forceSsl=false
+      - initializr.env.fallbackApplicationName=Application
+      - initializr.env.kotlin.defaultVersion=
+      - initializr.env.gradle.dependencyManagementPluginVersion=1.0.0.RELEASE
+      - initializr.maven.parent.groupId=
+      - initializr.maven.parent.artifactId=
+      - initializr.maven.parent.version=
+      - initializr.maven.parent.includeSpringBootBom=false
+      - initializr.stats.elasticsearch.uri=
+      - initializr.stats.elasticsearch.username=
+      - initializr.stats.elasticsearch.password=
+      - initializr.stats.elasticsearch.indexName=initializr
+      - initializr.stats.elasticsearch.maxAttempts=3
+      - server.port=8080
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+    networks:
+      - initializr-network
+
+networks:
+  initializr-network:
+    driver: bridge
