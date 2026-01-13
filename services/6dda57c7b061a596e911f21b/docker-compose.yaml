@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  openagi:
+    build: .
+    container_name: openagi-web-service
+    ports:
+      - "40128:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - HOST=0.0.0.0
+      - PORT=8000
+      # API Keys (set these in your environment or .env file)
+      - RAPID_API_KEY=${RAPID_API_KEY:-}
+      - WOLFRAM_ALPHA_APPID=${WOLFRAM_ALPHA_APPID:-}
+      - GPLACES_API_KEY=${GPLACES_API_KEY:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - GOOGLE_CSE_ID=${GOOGLE_CSE_ID:-}
+      - HF_AUTH_TOKENS=${HF_AUTH_TOKENS:-}
+      - BING_SUBSCRIPTION_KEY=${BING_SUBSCRIPTION_KEY:-}
+    volumes:
+      - ./logs:/home/ubuntu/deploy-projects/6dda57c7b061a596e911f21b/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    networks:
+      - openagi-network
+
+networks:
+  openagi-network:
+    driver: bridge
+
+volumes:
+  logs:
+    driver: local
