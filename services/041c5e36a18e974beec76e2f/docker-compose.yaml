@@ -1,0 +1,81 @@
+services:
+  # FIND3 Combined Server (Main + AI + Docs) - Go/Gin HTTP server + Python/Flask ML service + Documentation
+  find3:
+    build:
+      context: .
+      target: runtime
+    container_name: find3-server
+    restart: unless-stopped
+    ports:
+      - "40574:8003"  # Expose main server on port 40574
+    environment:
+      - FIND3_PORT=8003
+      - FIND3_AI_PORT=8002
+      - FIND3_DATA_DIR=/app/data
+      - FIND3_DEBUG=false
+      - MQTT_ADMIN=admin
+      - MQTT_PASS=1234
+      - MQTT_SERVER=mosquitto:1883
+      - MQTT_EXTERNAL=
+      - MQTT_PORT=1883
+      - FIND3_MQTT_DIR=/mosquitto/config
+      - FLASK_APP=server.py
+      - FLASK_DEBUG=0
+      - LC_ALL=C.UTF-8
+      - LANG=C.UTF-8
+      - PYTHONPATH=/app/ai/src
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    volumes:
+      - ./mosquitto_config:/mosquitto/config
+      - find3-data:/app/data
+    networks:
+      - find3-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'      # Maximum 2 CPU cores
+          memory: 4G       # Maximum 4GB memory
+        reservations:
+          cpus: '1.0'      # Reserve 1 CPU cores
+          memory: 1G       # Reserve 1GB memory
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+
+  # Mosquitto MQTT Broker - Internal only (no external port)
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: find3-mosquitto
+    restart: unless-stopped
+    volumes:
+      - ./mosquitto_config:/mosquitto/config
+      - mosquitto-data:/mosquitto/data
+    networks:
+      - find3-network
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 1883"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'      # Maximum 0.5 CPU cores
+          memory: 512M     # Maximum 512MB memory
+        reservations:
+          cpus: '0.1'      # Reserve 0.1 CPU cores
+          memory: 128M     # Reserve 128MB memory
+
+networks:
+  find3-network:
+    driver: bridge
+
+volumes:
+  find3-data:
+  mosquitto-data:
