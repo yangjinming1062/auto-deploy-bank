@@ -1,0 +1,81 @@
+#
+# Copyright 2024 Apollo Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+services:
+  apollo-assembly:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: apollo-assembly:latest
+    container_name: apollo-assembly
+    restart: unless-stopped
+
+    # Environment variables
+    environment:
+      # Spring profiles - use github profile for database config, auth for simple authentication
+      - apollo_profile=github,auth
+      # Hostname for service registration
+      - hostname=apollo-assembly
+      # Use H2 in-memory database for easy containerization
+      - spring.config-datasource.url=jdbc:h2:mem:~/apollo-config-db;mode=mysql;DB_CLOSE_ON_EXIT=FALSE;DB_CLOSE_DELAY=-1;BUILTIN_ALIAS_OVERRIDE=TRUE;DATABASE_TO_UPPER=FALSE
+      - spring.config-datasource.username=
+      - spring.config-datasource.password=
+      - spring.portal-datasource.url=jdbc:h2:mem:~/apollo-portal-db;mode=mysql;DB_CLOSE_ON_EXIT=FALSE;DB_CLOSE_DELAY=-1;BUILTIN_ALIAS_OVERRIDE=TRUE;DATABASE_TO_UPPER=FALSE
+      - spring.portal-datasource.username=
+      - spring.portal-datasource.password=
+      # Java options
+      - JAVA_OPTS=-Xms256m -Xmx512m -XX:+UseG1GC
+      # Logging
+      - logging.file.name=/opt/logs/apollo-assembly.log
+
+    # Only expose the portal UI port (8070) externally on port 40025
+    # The configservice (8080) and adminservice (8090) remain internal
+    ports:
+      - "40025:8070"
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8070/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+    # Volumes for JAR extraction and logs
+    volumes:
+      - ./target.jar:/app/target.jar:ro
+      - apollo-logs:/opt/logs
+
+    # Network
+    networks:
+      - apollo-network
+
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # Stop gracefully
+    stop_grace_period: 30s
+
+networks:
+  apollo-network:
+    driver: bridge
+
+volumes:
+  apollo-logs:
