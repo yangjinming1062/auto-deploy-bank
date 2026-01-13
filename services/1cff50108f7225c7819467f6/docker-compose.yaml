@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  douzero:
+    build: .
+    container_name: douzero-cardgame
+    ports:
+      - "40293:40293"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - GIT_PYTHON_REFRESH=quiet
+      - KMP_DUPLICATE_LIB_OK=True
+      - CUDA_VISIBLE_DEVICES=0
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:40293/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
