@@ -1,0 +1,31 @@
+services:
+  web:
+    build: .
+    ports:
+      - "40178:11235"
+    # Shared memory size is important for Playwright
+    shm_size: '1g'
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+      OPENAI_API_KEY: "sk-..." # This should be managed via secrets in a real environment
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      # The CLAUDE.md file mentions a playground, which is a good endpoint to check.
+      test: ["CMD", "curl", "-f", "http://localhost:11235/playground"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  redis:
+    image: redis:alpine
+    # No ports exposed to the host, as per instructions
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
