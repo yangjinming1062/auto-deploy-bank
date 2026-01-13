@@ -1,0 +1,44 @@
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: "jumpserver"
+      POSTGRES_USER: "jumpserver"
+      POSTGRES_PASSWORD: "password"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jumpserver -d jumpserver"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - jumpserver-net
+
+  redis:
+    image: redis:6-alpine
+    networks:
+      - jumpserver-net
+
+  web:
+    build: .
+    ports:
+      - "40011:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - jumpserver-net
+
+networks:
+  jumpserver-net:
+
+volumes:
+  postgres_data:
