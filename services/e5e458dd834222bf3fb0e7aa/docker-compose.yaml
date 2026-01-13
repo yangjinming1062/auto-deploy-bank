@@ -1,0 +1,41 @@
+services:
+  initializr-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "40122:8080"
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_PROFILES_ACTIVE=
+      - initializr.env.artifactRepository=https://repo.spring.io/release/
+      - initializr.env.springBootMetadataUrl=https://api.spring.io/projects/spring-boot/releases
+      - initializr.env.googleAnalyticsTrackingCode=
+      - initializr.env.fallbackApplicationName=Application
+      - initializr.env.forceSsl=false
+      - initializr.env.kotlin.defaultVersion=1.9.22
+      - initializr.groupId.value=com.example
+      - initializr.name.value=demo
+      - initializr.description.value=Demo project for Spring Boot
+      - initializr.version.value=0.0.1-SNAPSHOT
+      - initializr.stats.elastic.uri=
+      - initializr.stats.elastic.username=
+      - initializr.stats.elastic.password=
+      - initializr.stats.elastic.indexName=initializr
+      - initializr.stats.elastic.maxAttempts=3
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    command: >
+      /bin/sh -c "
+        (while true; do
+          if [ -f /scans/target.jar ] && [ -s /scans/target.jar ]; then
+            break
+          fi
+          sleep 1
+        done) &
+        java -jar /app/app.jar
+      "
