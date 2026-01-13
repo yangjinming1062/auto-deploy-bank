@@ -1,0 +1,45 @@
+services:
+  deepke:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: deepke-api
+    ports:
+      - "40181:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - CUDA_VISIBLE_DEVICES=0
+      - CUDA_DEVICE_ORDER=PCI_BUS_ID
+      - TOKENIZERS_PARALLELISM=false
+      - WANDB_DISABLED=true
+      - WANDB_API_KEY=
+      - MASTER_PORT=29500
+      - DEEPKE_PATH=/app
+      - CONDA_PY=
+      - CONDA_EE_PY=
+    volumes:
+      - ./data:/app/data
+      - ./pretrained:/app/pretrained
+      - ./logs:/app/logs
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - deepke-network
+
+networks:
+  deepke-network:
+    driver: bridge
