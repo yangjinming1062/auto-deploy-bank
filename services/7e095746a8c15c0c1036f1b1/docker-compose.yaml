@@ -1,0 +1,183 @@
+version: '3.8'
+
+services:
+  # Main toolset service - orchestrates all benchmark tests
+  toolset:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        USER_ID: ${USER_ID:-1000}
+        GROUP_ID: ${GROUP_ID:-1000}
+    container_name: tfb-toolset
+    restart: unless-stopped
+    environment:
+      - FWROOT=/FrameworkBenchmarks
+      - USER_ID=${USER_ID:-1000}
+      - PYTHONPATH=/FrameworkBenchmarks
+      - PYTHONUNBUFFERED=1
+      # Database configuration for the toolset
+      - PGUSER=${PGUSER:-benchmarkdbuser}
+      - PGPASS=${PGPASS:-benchmarkdbpass}
+      - DATABASE_URL=${DATABASE_URL}
+      - WORKER_COUNT=${WORKER_COUNT}
+      - MAX_POOL_SIZE=${MAX_POOL_SIZE}
+      - MIN_POOL_SIZE=${MIN_POOL_SIZE}
+      - CONNECTION=${CONNECTION:-ORM}
+      - USE_ORJSON=${USE_ORJSON:-0}
+      - DJANGO_DB=${DJANGO_DB}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - .:/FrameworkBenchmarks:ro
+      - tfb-results:/results
+    networks:
+      - tfb-network
+    # Toolset doesn't expose ports - it orchestrates via Docker API
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    # Override entrypoint to bypass entrypoint.sh script
+    entrypoint: ["sh", "-c"]
+    # Keep container running with infinite sleep (can exec into it to run tests)
+    command: ["tail -f /dev/null"]
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # PostgreSQL database service
+  postgres:
+    image: postgres:15-alpine
+    container_name: tfb-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${PGUSER:-benchmarkdbuser}
+      - POSTGRES_PASSWORD=${PGPASS:-benchmarkdbpass}
+      - POSTGRES_DB=hello_world
+    volumes:
+      - tfb-postgres-data:/var/lib/postgresql/data
+      - ./deployment/database/postgres:/docker-entrypoint-initdb.d
+    networks:
+      - tfb-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PGUSER:-benchmarkdbuser} -d hello_world"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # MySQL database service
+  mysql:
+    image: mysql:8.0
+    container_name: tfb-mysql
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=${PGPASS:-benchmarkdbpass}
+      - MYSQL_DATABASE=hello_world
+      - MYSQL_USER=${PGUSER:-benchmarkdbuser}
+      - MYSQL_PASSWORD=${PGPASS:-benchmarkdbpass}
+    volumes:
+      - tfb-mysql-data:/var/lib/mysql
+      - ./deployment/database/mysql:/docker-entrypoint-initdb.d
+    networks:
+      - tfb-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${PGUSER:-benchmarkdbuser}", "-p${PGPASS:-benchmarkdbpass}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # MongoDB database service
+  mongodb:
+    image: mongo:7.0
+    container_name: tfb-mongodb
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${PGUSER:-benchmarkdbuser}
+      - MONGO_INITDB_ROOT_PASSWORD=${PGPASS:-benchmarkdbpass}
+      - MONGO_INITDB_DATABASE=hello_world
+    volumes:
+      - tfb-mongodb-data:/data/db
+      - ./deployment/database/mongodb:/docker-entrypoint-initdb.d
+    networks:
+      - tfb-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Simple status service - provides a health endpoint on port 40092
+  status:
+    image: python:3.11-slim
+    container_name: tfb-status
+    restart: unless-stopped
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - .:/workspace:ro
+    working_dir: /workspace
+    networks:
+      - tfb-network
+    ports:
+      - "40092:8080"
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    command: ["bash", "-c", "pip install --no-cache-dir flask && python3 status_app.py"]
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+networks:
+  tfb-network:
+    driver: bridge
+    name: tfb-network
+
+volumes:
+  tfb-postgres-data:
+    name: tfb-postgres-data
+  tfb-mysql-data:
+    name: tfb-mysql-data
+  tfb-mongodb-data:
+    name: tfb-mongodb-data
+  tfb-results:
+    name: tfb-results
