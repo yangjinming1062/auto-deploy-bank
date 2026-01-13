@@ -1,0 +1,28 @@
+services:
+  itext-build:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: itext-core-community
+    ports:
+      - "40052:40133"
+    environment:
+      - ITEXT_GS_EXEC=gs
+      - ITEXT_MAGICK_COMPARE_EXEC=magick compare
+      - JAVA_OPTS=-Xmx1024m
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "ps"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    volumes:
+      - ./target.jar:/app/target.jar
