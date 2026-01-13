@@ -1,0 +1,22 @@
+services:
+  web:
+    restart: always
+    build: ./
+    ports:
+      - "40009:8000"
+    environment:
+      - SECRET_KEY=houdini
+      - MAIL_USERNAME=flask.boilerplate
+      - MAIL_PASSWORD=flaskboilerplate123
+      - MAIL_SERVER=smtp.googlemail.com
+      - MAIL_PORT=465
+      - MAIL_USE_SSL=True
+      - SQLALCHEMY_DATABASE_URI=sqlite:///app.db
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD=pa$$word
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
