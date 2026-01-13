@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  # Ray Serve Application Service
+  ray-serve:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ray-serve-app
+    ports:
+      # Expose Ray Serve on host port 51418, internal port 8000
+      - "51418:8000"
+      # Dashboard is accessible internally but not exposed to host
+      - "8265:8265"
+    environment:
+      - RAY_ADDRESS=auto
+      - RAY_REDIS_ADDRESS=redis:6379
+      - RAY_LOG_TO_DRIVER=true
+      - RAY_LOGGER_LEVEL=info
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - ray-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    # Increase shared memory for Ray object store performance
+    shm_size: 1.24gb
+    restart: unless-stopped
+
+  # Redis Service (Internal Dependency)
+  redis:
+    image: redis:7-alpine
+    container_name: ray-redis
+    # Redis is internal-only, not exposed to host
+    ports: []
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - ray-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    restart: unless-stopped
+
+# Named volumes for data persistence
+volumes:
+  redis-data:
+    driver: local
+
+# Custom network for internal communication
+networks:
+  ray-network:
+    driver: bridge
+    name: ray-serve-network
