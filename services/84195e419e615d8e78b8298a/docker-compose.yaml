@@ -1,0 +1,116 @@
+version: '3.8'
+
+services:
+  # MySQL Database Service
+  mysql:
+    image: mysql:5.7
+    container_name: flycms-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: flycms
+      MYSQL_USER: flycms
+      MYSQL_PASSWORD: flycms123
+      LANG: C.UTF-8
+    command: >
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./doc/flycms_date.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - flycms-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # MySQL is internal only - no ports exposed to host
+
+  # Solr Search Service
+  solr:
+    image: solr:7.7
+    container_name: flycms-solr
+    volumes:
+      - solr_data:/opt/solr/server/solr
+      - ./src/main/resources/IKAnalyzer.cfg.xml:/opt/solr/server/solr/info/IKAnalyzer.cfg.xml:ro
+    networks:
+      - flycms-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8983/solr/info/select || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    command: >
+      sh -c "
+        solr-precreate info &&
+        sleep 10 &&
+        curl -X POST 'http://localhost:8983/solr/info/schema' -H 'Content-type:application/json' -d '{
+          \"add-field\":{
+            \"name\":\"title\",
+            \"type\":\"text_ik\",
+            \"indexed\":true,
+            \"stored\":true
+          }
+        }' &&
+        curl -X POST 'http://localhost:8983/solr/info/schema' -H 'Content-type:application/json' -d '{
+          \"add-field\":{
+            \"name\":\"content\",
+            \"type\":\"text_ik\",
+            \"indexed\":true,
+            \"stored\":true
+          }
+        }' &&
+        solr-foreground
+      "
+    # Solr is internal only - no ports exposed to host
+
+  # FlyCms Application Service
+  flycms:
+    build:
+      context: .
+      target: flycms
+    image: flycms:latest
+    container_name: flycms-app
+    depends_on:
+      mysql:
+        condition: service_healthy
+      solr:
+        condition: service_healthy
+    networks:
+      - flycms-network
+    ports:
+      - "41653:80"
+    environment:
+      # Spring Boot environment variables
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/flycms?useSSL=false&useUnicode=true&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: flycms
+      SPRING_DATASOURCE_PASSWORD: flycms123
+      # Override MySQL host from 127.0.0.1 to mysql service name
+      SOLR_SERVERURL: http://solr:8983/solr/info
+    volumes:
+      # Mount views directory from host
+      - ./views:/app/views
+      # Mount upload directory for persistence
+      - flycms_uploads:/app/uploadfiles
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  mysql_data:
+    driver: local
+  solr_data:
+    driver: local
+  flycms_uploads:
+    driver: local
+  flycms_views:
+    driver: local
+
+networks:
+  flycms-network:
+    driver: bridge
