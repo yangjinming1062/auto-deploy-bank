@@ -1,0 +1,63 @@
+services:
+  h2ogpt:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "40626:7860"
+    volumes:
+      - cache:/workspace/.cache
+    environment:
+      - H2OGPT_PORT=7860
+      - H2OGPT_BASE_MODEL=microsoft/DialoGPT-medium
+      - GRADIO_SERVER_HOST=0.0.0.0
+      - GRADIO_SERVER_PORT=7860
+      - H2OGPT_API_OPEN=True
+      - TOKENIZERS_PARALLELISM=false
+      - NUMEXPR_MAX_THREADS=8
+      - NUMEXPR_NUM_THREADS=8
+      - OMP_NUM_THREADS=8
+      - OPENBLAS_NUM_THREADS=8
+      - DUCKDB_NUM_THREADS=4
+      - RAYON_RS_NUM_CPUS=8
+      - RAYON_NUM_THREADS=8
+      - PYTHONHASHSEED=1236
+      - HF_HUB_ENABLE_HF_TRANSFER=1
+      - HF_HUB_DISABLE_TELEMETRY=1
+      - SCARF_NO_ANALYTICS=true
+      - DO_NOT_TRACK=true
+      - OTEL_SDK_DISABLED=true
+      - BITSANDBYTES_NOWELCOME=1
+      - FIFTYONE_SHOW_PROGRESS_BARS=false
+      - COQUI_TOS_AGREED=1
+      - CUDA_VISIBLE_DEVICES=
+      - LOCAL_RANK=0
+      - RANK=0
+      - WORLD_SIZE=1
+      - NLTK_DATA=./nltk_data
+      - GRADIO_ANALYTICS_ENABLED=False
+      - GRADIO_AUTH_ACCESS=open
+      - GRADIO_PREFIX=http
+      - H2OGPT_OPENAI_API_KEY=EMPTY
+      - H2OGPT_OPENAI_HOST=localhost
+      - H2OGPT_OPENAI_PORT=5000
+      - H2OGPT_OPENAI_BASE_FILE_PATH=./openai_files/
+      - H2OGPT_H2OGPT_API_KEYS=[]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+volumes:
+  cache:
