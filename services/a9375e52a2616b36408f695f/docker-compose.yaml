@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  mygptreader:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "40352:8080"
+    environment:
+      - PORT=8080
+      # Note: Add your real API keys here or via .env file
+      # - OPENAI_API_KEY=your_real_api_key
+      # - SLACK_TOKEN=your_real_slack_token
+      # - SLACK_SIGNING_SECRET=your_real_slack_signing_secret
+      # - SPEECH_KEY=your_real_azure_speech_key
+      # - SPEECH_REGION=your_azure_speech_region
+      # - CF_ACCESS_CLIENT_ID=your_client_id
+      # - CF_ACCESS_CLIENT_SECRET=your_client_secret
+      # - PHANTOMJSCLOUD_API_KEY=your_api_key
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
