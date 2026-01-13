@@ -1,0 +1,53 @@
+services:
+  agent-squad-api:
+    build:
+      context: ./examples/fast-api-streaming
+      dockerfile: Dockerfile
+    container_name: agent-squad-fastapi
+    ports:
+      - "40166:8000"
+    environment:
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - LEX_BOT_ID=${LEX_BOT_ID}
+      - LEX_BOT_ALIAS_ID=${LEX_BOT_ALIAS_ID}
+      - LEX_BOT_LOCALE_ID=${LEX_BOT_LOCALE_ID:-en_US}
+      - BEDROCK_AGENT_ID=${BEDROCK_AGENT_ID}
+      - BEDROCK_AGENT_ALIAS_ID=${BEDROCK_AGENT_ALIAS_ID}
+      - CLAIM_AGENT_ID=${CLAIM_AGENT_ID}
+      - CLAIM_AGENT_ALIAS_ID=${CLAIM_AGENT_ALIAS_ID}
+      - AIRLINES_BOT_ID=${AIRLINES_BOT_ID}
+      - AIRLINES_BOT_ALIAS_ID=${AIRLINES_BOT_ALIAS_ID}
+      - DYNAMODB_CHAT_HISTORY_TABLE_NAME=${DYNAMODB_CHAT_HISTORY_TABLE_NAME}
+      - HISTORY_TABLE_NAME=${HISTORY_TABLE_NAME}
+      - HISTORY_TABLE_TTL_KEY_NAME=${HISTORY_TABLE_TTL_KEY_NAME}
+      - HISTORY_TABLE_TTL_DURATION=${HISTORY_TABLE_TTL_DURATION:-3600}
+      - KNOWLEDGE_BASE_ID=${KNOWLEDGE_BASE_ID}
+      - LAMBDA_AGENTS=${LAMBDA_AGENTS}
+      - LEX_AGENT_CONFIG=${LEX_AGENT_CONFIG}
+      - QUEUE_URL=${QUEUE_URL}
+      - APPSYNC_API_URL=${APPSYNC_API_URL}
+      - DB_URL=${DB_URL:-file:local.db}
+      - TURSO_DB_URL=${TURSO_DB_URL}
+      - TURSO_DB_AUTH_TOKEN=${TURSO_DB_AUTH_TOKEN}
+      - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
+      - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
+      - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
