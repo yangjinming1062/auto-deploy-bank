@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  susi-cms:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: susi-cms
+    ports:
+      - "40963:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
