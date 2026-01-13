@@ -1,0 +1,98 @@
+services:
+  # MySQL Database Service
+  mysql:
+    image: mysql:8.0
+    container_name: redis-manager-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: redis_manager
+      MYSQL_USER: redis_user
+      MYSQL_PASSWORD: redis_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - redis-manager-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Redis Service (for the platform to manage)
+  redis:
+    image: redis:7.0-alpine
+    container_name: redis-manager-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - redis-manager-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # Redis Manager Application
+  redis-manager:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: redis-manager-app
+    ports:
+      - "40538:8182"
+    environment:
+      SERVER_PORT: 8182
+      DATASOURCE_DATABASE: redis_manager
+      DATASOURCE_URL: jdbc:mysql://mysql:3306/redis_manager?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8
+      DATASOURCE_USERNAME: root
+      DATASOURCE_PASSWORD: rootpassword
+      RM_AUTH_USERNAME: admin
+      RM_AUTH_PASSWORD: admin
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - redis-manager-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8182/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    volumes:
+      - ./target.jar:/app/target.jar
+
+networks:
+  redis-manager-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
