@@ -1,0 +1,32 @@
+services:
+  victory-docs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: victory-docs
+    ports:
+      - "40659:5855"  # Map internal port 5855 to host port 40659
+    environment:
+      - NODE_ENV=production
+      - PORT=5855
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "5855"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'      # Maximum 2 CPU cores
+          memory: 4G       # Maximum 4GB memory
+        reservations:
+          cpus: '1.0'      # Reserve 1 CPU core
+          memory: 1G       # Reserve 1GB memory
+    restart: unless-stopped
+    networks:
+      - victory-network
+
+networks:
+  victory-network:
+    driver: bridge
