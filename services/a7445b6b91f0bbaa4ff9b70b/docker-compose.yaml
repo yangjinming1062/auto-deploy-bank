@@ -1,0 +1,183 @@
+services:
+  # Nacos Server - Service Discovery and Configuration (using embedded DB)
+  nacos:
+    image: nacos/nacos-server:v2.2.1
+    container_name: nacos
+    environment:
+      - MODE=standalone
+      - NACOS_AUTH_IDENTITY_KEY=securityIdentityKey
+      - NACOS_AUTH_IDENTITY_VALUE=2C6966736E61636F7323333244393832312C4F3A4D7735795A5A4D6B5A5A4E5C7B4A
+      - NACOS_AUTH_TOKEN_EXPIRE_SECONDS=18000
+      - NACOS_AUTH_TOKEN_ENABLE=true
+      - NACOS_AUTH_SYSTEM_TYPE=nacos
+      - NACOS_AUTH_TOKEN=SecretKey012345678901234567890123456789012345678901234567890123456789
+    volumes:
+      - ./nacos-logs:/home/nacos/logs
+      - ./nacos-data:/home/nacos/data
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+    networks:
+      - mss-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8848/nacos/v1/console/health/readiness"]
+      interval: 10s
+      timeout: 5s
+      retries: 50
+      start_period: 30s
+
+  # MySQL Database
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    command: --sql-mode=""
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=zuul-auth
+    volumes:
+      - ./other/db/zuul-auth.sql:/docker-entrypoint-initdb.d/zuul-auth.sql:ro
+      - mysql-data:/var/lib/mysql
+    networks:
+      - mss-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 50
+      start_period: 30s
+
+  # Redis Server
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    command: redis-server --requirepass 123456
+    volumes:
+      - redis-data:/data
+    networks:
+      - mss-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 50
+      start_period: 10s
+
+  # Authentication Service (mss-oauth)
+  mss-oauth:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_MODULE: mss-oauth
+    container_name: mss-oauth
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+      - SPRING_REDIS_PASSWORD=123456
+      - SERVER_PORT=9060
+    networks:
+      - mss-network
+    depends_on:
+      nacos:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9060/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 50
+      start_period: 60s
+
+  # User Permission Management Service (mss-upms)
+  mss-upms:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_MODULE: mss-upms
+    container_name: mss-upms
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/zuul-auth?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT%2B8
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=123456
+      - SERVER_PORT=9021
+    networks:
+      - mss-network
+    depends_on:
+      nacos:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9021/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 50
+      start_period: 60s
+
+  # Monitor Service (mss-monitor)
+  mss-monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_MODULE: mss-monitor
+    container_name: mss-monitor
+    environment:
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+      - SERVER_PORT=9050
+    networks:
+      - mss-network
+    depends_on:
+      nacos:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9050/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 50
+      start_period: 60s
+
+  # API Gateway (mss-gateway) - Main Entry Point
+  mss-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_MODULE: mss-gateway
+    container_name: mss-gateway
+    environment:
+      - SPRING_CLOUD_NACOS_CONFIG_SERVER_ADDR=nacos:8848
+      - SPRING_CLOUD_NACOS_DISCOVERY_SERVER_ADDR=nacos:8848
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+      - SPRING_REDIS_PASSWORD=123456
+      - SERVER_PORT=9030
+    networks:
+      - mss-network
+    depends_on:
+      nacos:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "40030:9030"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9030/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 50
+      start_period: 90s
+
+networks:
+  mss-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  redis-data:
+  nacos-data:
+  nacos-logs:
