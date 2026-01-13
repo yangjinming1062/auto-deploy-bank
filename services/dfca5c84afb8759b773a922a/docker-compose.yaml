@@ -1,0 +1,148 @@
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.4
+    container_name: camunda-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+      - http.port=9200
+      - transport.port=9300
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch-data:/usr/share/opensearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -k -s http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - camunda-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  postgresql:
+    image: postgres:15-alpine
+    container_name: camunda-postgresql
+    environment:
+      - POSTGRES_DB=camunda
+      - POSTGRES_USER=camunda
+      - POSTGRES_PASSWORD=demo
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgresql-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U camunda -d camunda"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - camunda-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  camunda:
+    build:
+      context: .
+      dockerfile: camunda.Dockerfile
+      target: app
+      args:
+        DISTBALL: dist/target/camunda-zeebe-8.9.0-SNAPSHOT.tar.gz
+    container_name: camunda
+    ports:
+      - "40212:8080"
+      - "9600:9600"
+    environment:
+      - ZEEBE_BROKER_GATEWAY_ENABLE=true
+      - ZEEBE_BROKER_GATEWAY_NETWORK_PORT=26500
+      - ZEEBE_BROKER_GATEWAY_SECURITY_ENABLED=false
+      - ZEEBE_BROKER_DATA_DIRECTORY=data
+      - ZEEBE_BROKER_DATA_LOGSEGMENTSIZE=128MB
+      - ZEEBE_BROKER_DATA_SNAPSHOTPERIOD=15m
+      - ZEEBE_BROKER_CLUSTER_CLUSTERSIZE=1
+      - ZEEBE_BROKER_CLUSTER_REPLICATIONFACTOR=1
+      - ZEEBE_BROKER_CLUSTER_PARTITIONSCOUNT=1
+      - ZEEBE_BROKER_THREADS_CPUTHREADCOUNT=2
+      - ZEEBE_BROKER_THREADS_IOTHREADCOUNT=2
+      - ZEEBE_GATEWAY_NETWORK_HOST=0.0.0.0
+      - ZEEBE_GATEWAY_NETWORK_PORT=26500
+      - ZEEBE_GATEWAY_CLUSTER_INITIALCONTACTPOINTS=127.0.0.1:26502
+      - ZEEBE_GATEWAY_CLUSTER_REQUESTTIMEOUT=15s
+      - ZEEBE_GATEWAY_CLUSTER_CLUSTERNAME=zeebe-cluster
+      - ZEEBE_GATEWAY_CLUSTER_MEMBERID=gateway
+      - ZEEBE_GATEWAY_CLUSTER_HOST=0.0.0.0
+      - ZEEBE_GATEWAY_CLUSTER_PORT=26502
+      - ZEEBE_GATEWAY_CLUSTER_SECURITY_ENABLED=false
+      - ZEEBE_GATEWAY_SECURITY_ENABLED=false
+      - ZEEBE_GATEWAY_THREADS_MANAGEMENTTHREADS=1
+      - ZEEBE_GATEWAY_MULTITENANCY_ENABLED=false
+      - CAMUNDA_REST_ENABLED=true
+      - CAMUNDA_SECURITY_AUTHENTICATION_METHOD=basic
+      - CAMUNDA_SECURITY_AUTHENTICATION_UNPROTECTEDAPI=true
+      - CAMUNDA_SECURITY_AUTHORIZATIONS_ENABLED=true
+      - CAMUNDA_SECURITY_MULTITENANCY_CHECKSENABLED=false
+      - CAMUNDA_SECURITY_MULTITENANCY_APIENABLED=true
+      - CAMUNDA_DATABASE_TYPE=rdbms
+      - SPRING_PROFILES_ACTIVE=broker,identity,operate,tasklist,consolidated-auth,dev,insecure
+      - server.port=8080
+      - management.server.port=9600
+    volumes:
+      - camunda-data:/usr/local/camunda/data
+      - camunda-logs:/usr/local/camunda/logs
+      - ./application-config.yaml:/usr/local/camunda/config/application.yaml:ro
+      - ./target.jar:/app/target.jar:ro
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+      postgresql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9600/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
+    networks:
+      - camunda-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+volumes:
+  elasticsearch-data:
+    driver: local
+  postgresql-data:
+    driver: local
+  camunda-data:
+    driver: local
+  camunda-logs:
+    driver: local
+
+networks:
+  camunda-network:
+    driver: bridge
