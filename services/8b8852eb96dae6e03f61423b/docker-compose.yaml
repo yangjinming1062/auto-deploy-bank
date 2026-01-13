@@ -1,0 +1,45 @@
+services:
+  postgres:
+    image: postgres:10
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=misago
+      - POSTGRES_PASSWORD=misago
+      - POSTGRES_DB=misago
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U misago"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  redis:
+    image: redis:5
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  misago:
+    build: .
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=misago
+      - POSTGRES_PASSWORD=misago
+      - POSTGRES_DB=misago
+      - POSTGRES_HOST=postgres
+      - SUPERUSER_USERNAME=Admin
+      - SUPERUSER_EMAIL=admin@example.com
+      - SUPERUSER_PASSWORD=password
+      - MISAGO_DEVSERVER_PORT=8000
+    ports:
+      - "40188:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:8000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
