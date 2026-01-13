@@ -1,0 +1,39 @@
+services:
+  androidx-build:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: androidx-build-service
+    ports:
+      - "40799:40799"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:40799"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 8G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+    restart: unless-stopped
+    environment:
+      - ANDROID_SDK_ROOT=/opt/android-sdk
+      - JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+      - ANDROIDX_JDK21=/usr/lib/jvm/java-21-openjdk-amd64
+    volumes:
+      - androidx-cache:/root/.gradle
+      - ./out:/build/out
+      - ./target.jar:/app/target.jar
+
+volumes:
+  androidx-cache:
+    driver: local
+
+networks:
+  default:
+    name: androidx-network
