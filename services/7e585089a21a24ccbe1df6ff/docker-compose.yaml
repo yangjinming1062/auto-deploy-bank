@@ -1,0 +1,45 @@
+services:
+  genkit-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: genkit-service
+    ports:
+      - "40253:4000"
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+      - GENKIT_ENV=prod
+      - GENKIT_TELEMETRY_SERVER=
+      - GENKIT_RUNTIME_ID=
+      - GEMINI_API_KEY=
+      - GOOGLE_API_KEY=
+      - GOOGLE_GENAI_API_KEY=
+      - MONOSPACE_ENV=
+      - GCLOUD_SERVICE_ACCOUNT_CREDS=
+      - GCLOUD_PROJECT=
+      - GCLOUD_LOCATION=us-central1
+      - FIREBASE_CONFIG=
+      - VERTEX_API_KEY=
+      - ENABLE_FIREBASE_MONITORING=
+      - PROJECT_ID=
+      - LOCATION=
+      - LOCAL_DIR=
+      - VECTOR_SEARCH_PUBLIC_DOMAIN_NAME=
+      - VECTOR_SEARCH_INDEX_ENDPOINT_ID=
+      - VECTOR_SEARCH_INDEX_ID=
+      - VECTOR_SEARCH_DEPLOYED_INDEX_ID=
+      - BIGQUERY_DATASET=
+      - BIGQUERY_TABLE=
+      - FIRESTORE_COLLECTION=
+      - FIREBASE_DEBUG_MODE=
+      - FIREBASE_DEBUG_FEATURES=
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
