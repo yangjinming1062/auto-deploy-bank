@@ -1,0 +1,56 @@
+services:
+  api-platform:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: api-platform
+    ports:
+      - "40020:8089"
+    environment:
+      # Database Configuration
+      - DB_HOST=localhost
+      - DB_PORT=3306
+      - DB_NAME=face-search
+      - DB_USER=root
+      - DB_PWD=Aq1sw2de
+
+      # Redis Configuration
+      - REDIS_HOST=127.0.0.1
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - REDIS_PWD=
+
+      # Model Configuration
+      - model.modelPath=/home/models/
+      - model.device=cpu
+      - model.poolSize=2
+      - model.loadMode=lazy
+
+      # Face Detection Models
+      - face.det=/path/to/detection/model.onnx
+      - face.feature=/path/to/feature/model.onnx
+
+      # Spring Profile
+      - spring.profiles.active=linux
+
+      # API Base URL for frontend
+      - VUE_APP_BASE_API=http://127.0.0.1:8089
+
+      # RSA Private Key
+      - rsa.private_key=MIIBUwIBADANBgkqhkiG9w0BAQEFAASCAT0wggE5AgEAAkEA0vfvyTdGJkdbHkB8mp0f3FE0GYP3AYPaJF7jUd1M0XxFSE2ceK3k2kw20YvQ09NJKk+OMjWQl9WitG9pB6tSCQIDAQABAkA2SimBrWC2/wvauBuYqjCFwLvYiRYqZKThUS3MZlebXJiLB+Ue/gUifAAKIg1avttUZsHBHrop4qfJCwAI0+YRAiEA+W3NK/RaXtnRqmoUUkb59zsZUBLpvZgQPfj1MhyHDz0CIQDYhsAhPJ3mgS64NbUZmGWuuNKp5coY2GIj/zYDMJp6vQIgUueLFXv/eZ1ekgz2Oi67MNCk5jeTF2BurZqNLR3MSmUCIFT3Q6uHMtsB9Eha4u7hS31tj1UWE+D+ADzp59MGnoftAiBeHT7gDMuqeJHPL4b+kC+gzV4FGTfhR9q3tTbklZkD2A==
+
+    # Volume mount for application JAR and models
+    volumes:
+      - ./target.jar:/app/target.jar
+      - ./models:/home/models
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8089/v2/api-docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+    # Restart policy
+    restart: unless-stopped
