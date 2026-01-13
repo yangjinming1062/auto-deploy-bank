@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    ports:
+      - "40107:8080"
+    volumes:
+      - .:/host_cwd
+    command: sh -c "rm -rf /host_cwd/target.jar && cp /app/app.jar /host_cwd/target.jar && exec java -jar /app/app.jar"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
