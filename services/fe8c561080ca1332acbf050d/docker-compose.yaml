@@ -1,0 +1,106 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: renren-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: renren_security
+      MYSQL_USER: renren
+      MYSQL_PASSWORD: 123456
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./renren-admin/db/mysql.sql:/docker-entrypoint-initdb.d/mysql.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - renren-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: renren-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - renren-network
+    restart: unless-stopped
+
+  frontend:
+    image: nginx:alpine
+    container_name: renren-frontend
+    ports:
+      - "40042:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/html:/usr/share/nginx/html:ro
+    networks:
+      - renren-network
+    restart: unless-stopped
+    depends_on:
+      - renren-admin
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  renren-admin:
+    build:
+      context: .
+      dockerfile: renren-admin/Dockerfile
+    image: renren-admin:latest
+    container_name: renren-admin
+    ports:
+      - "40308:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8080
+      SPRING_DATASOURCE_DRUID_DRIVER-CLASS-NAME: com.mysql.cj.jdbc.Driver
+      SPRING_DATASOURCE_DRUID_URL: jdbc:mysql://mysql:3306/renren_security?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&nullCatalogMeansCurrent=true
+      SPRING_DATASOURCE_DRUID_USERNAME: renren
+      SPRING_DATASOURCE_DRUID_PASSWORD: 123456
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_REDIS_PASSWORD:
+      SPRING_REDIS_DATABASE: 0
+      RENREN_REDIS_OPEN: false
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/renren-admin/doc.html"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 90s
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - renren-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+networks:
+  renren-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  redis-data:
