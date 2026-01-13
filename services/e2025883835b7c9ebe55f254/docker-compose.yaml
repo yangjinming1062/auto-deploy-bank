@@ -1,0 +1,113 @@
+services:
+  db:
+    image: postgres:10.1-alpine
+    environment:
+      - POSTGRES_DB=archerysec
+      - POSTGRES_PASSWORD=archerysec
+      - POSTGRES_USER=archerysec
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U archerysec -d archerysec"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - archerysec-net
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  archerysec:
+    build: .
+    ports:
+      - "40152:8000"
+    expose:
+      - "8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DB_PASSWORD=archerysec
+      - DB_USER=archerysec
+      - DB_NAME=archerysec
+      - DB_HOST=db
+      - DJANGO_SETTINGS_MODULE=archerysecurity.settings.base
+      - DJANGO_SECRET_KEY=SETME
+      - DJANGO_DEBUG=1
+      - DJANGO_ADMIN_EMAIL=admin@example.com
+      - EMAIL_HOST=mailhog
+      - EMAIL_PORT=1025
+      - ALLOWED_HOSTS=*
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - archerysec-net
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  archerysec-worker:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DB_PASSWORD=archerysec
+      - DB_USER=archerysec
+      - DB_NAME=archerysec
+      - DB_HOST=db
+      - DJANGO_SETTINGS_MODULE=archerysecurity.settings.base
+      - DJANGO_SECRET_KEY=SETME
+      - DJANGO_DEBUG=1
+      - EMAIL_HOST=mailhog
+      - EMAIL_PORT=1025
+      - ARCHERY_WORKER=True
+    healthcheck:
+      test: ["CMD", "ps", "aux", "|", "grep", "process_tasks", "grep", "-v", "grep"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - archerysec-net
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  mailhog:
+    image: mailhog/mailhog
+    expose:
+      - "1025"
+      - "8025"
+    networks:
+      - archerysec-net
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+networks:
+  archerysec-net:
+    driver: bridge
