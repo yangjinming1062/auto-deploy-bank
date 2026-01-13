@@ -1,0 +1,331 @@
+version: '3.8'
+
+services:
+  # Service Discovery & Configuration
+  nacos:
+    image: nacos/nacos-server:v2.3.0
+    container_name: nacos
+    environment:
+      - MODE=standalone
+      - SPRING_DATASOURCE_PLATFORM=mysql
+      - MYSQL_SERVICE_HOST=mysql
+      - MYSQL_SERVICE_DB_NAME=nacos
+      - MYSQL_SERVICE_PORT=3306
+      - MYSQL_SERVICE_USER=root
+      - MYSQL_SERVICE_PASSWORD=1q2w3e4r
+      - MYSQL_SERVICE_DB_PARAM=characterEncoding=utf8&connectTimeout=1000&socketTimeout=3000&autoReconnect=true&allowMultiQueries=true
+    volumes:
+      - ./zlt-config/src/main/resources/nacos/logs:/home/nacos/logs
+      - ./zlt-config/src/main/resources/nacos/data:/home/nacos/data
+    ports:
+      - "8848"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - microservices
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8848/nacos/v1/console/health/readiness"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Authentication Service
+  uaa:
+    build:
+      context: ./zlt-uaa
+      dockerfile: Dockerfile
+    container_name: uaa
+    environment:
+      - spring.cloud.nacos.server-addr=nacos:8848
+      - zlt.datasource.ip=mysql
+      - zlt.datasource.username=root
+      - zlt.datasource.password=1q2w3e4r
+      - zlt.lock.lockerType=LOCAL
+    networks:
+      - microservices
+    depends_on:
+      nacos:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # API Gateway
+  gateway:
+    build:
+      context: ./zlt-gateway
+      dockerfile: Dockerfile
+    container_name: gateway
+    environment:
+      - spring.cloud.nacos.server-addr=nacos:8848
+      - zlt.lock.lockerType=LOCAL
+    ports:
+      - "40835:9900"
+    networks:
+      - microservices
+    depends_on:
+      nacos:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9900/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Business Services
+  user-center:
+    build:
+      context: ./zlt-business/user-center
+      dockerfile: Dockerfile
+    container_name: user-center
+    environment:
+      - spring.cloud.nacos.server-addr=nacos:8848
+      - zlt.datasource.ip=mysql
+      - zlt.datasource.username=root
+      - zlt.datasource.password=1q2w3e4r
+      - spring.redis.redisson.config=file:/app/config/redisson-config.json
+    volumes:
+      - ./redisson-config.json:/app/config/redisson-config.json:ro
+    networks:
+      - microservices
+    depends_on:
+      nacos:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7000/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  file-center:
+    build:
+      context: ./zlt-business/file-center
+      dockerfile: Dockerfile
+    container_name: file-center
+    environment:
+      - spring.cloud.nacos.server-addr=nacos:8848
+      - zlt.datasource.ip=mysql
+      - zlt.datasource.username=root
+      - zlt.datasource.password=1q2w3e4r
+      - zlt.s3.access-key=minioadmin
+      - zlt.s3.accessKeySecret=minioadmin
+      - zlt.s3.endpoint=http://minio:9000
+      - zlt.s3.bucketName=test
+      - spring.redis.redisson.config=file:/app/config/redisson-config.json
+    volumes:
+      - ./redisson-config.json:/app/config/redisson-config.json:ro
+    networks:
+      - microservices
+    depends_on:
+      nacos:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  search-center:
+    build:
+      context: ./zlt-business/search-center
+      dockerfile: Dockerfile
+    container_name: search-center
+    environment:
+      - spring.cloud.nacos.server-addr=nacos:8848
+      - zlt.elasticsearch.uris=http://elasticsearch:9200
+      - zlt.elasticsearch.username=elastic
+      - zlt.elasticsearch.password=qEnNfKNujqNrOPD9q5kb
+      - spring.redis.redisson.config=file:/app/config/redisson-config.json
+    volumes:
+      - ./redisson-config.json:/app/config/redisson-config.json:ro
+    networks:
+      - microservices
+    depends_on:
+      nacos:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7100/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Monitoring Services
+  log-center:
+    build:
+      context: ./zlt-monitor/log-center
+      dockerfile: Dockerfile
+    container_name: log-center
+    environment:
+      - spring.cloud.nacos.server-addr=nacos:8848
+      - zlt.elasticsearch.uris=http://elasticsearch:9200
+      - zlt.elasticsearch.username=elastic
+      - zlt.elasticsearch.password=qEnNfKNujqNrOPD9q5kb
+      - spring.redis.redisson.config=file:/app/config/redisson-config.json
+    volumes:
+      - ./redisson-config.json:/app/config/redisson-config.json:ro
+    networks:
+      - microservices
+    depends_on:
+      nacos:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7200/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  sc-admin:
+    build:
+      context: ./zlt-monitor/sc-admin
+      dockerfile: Dockerfile
+    container_name: sc-admin
+    environment:
+      - spring.cloud.nacos.server-addr=nacos:8848
+      - spring.security.user.name=admin
+      - spring.security.user.password=admin
+    ports:
+      - "16500:6500"
+    networks:
+      - microservices
+    depends_on:
+      nacos:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6500/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Frontend
+  layui-web:
+    build:
+      context: ./zlt-web
+      dockerfile: Dockerfile
+    container_name: layui-web
+    environment:
+      - spring.cloud.nacos.server-addr=nacos:8848
+    ports:
+      - "40835:8066"
+    networks:
+      - microservices
+    depends_on:
+      nacos:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8066/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Infrastructure Services (Internal Only)
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=1q2w3e4r
+      - MYSQL_DATABASE=oauth-center
+      - MYSQL_USER=nacos
+      - MYSQL_PASSWORD=nacos
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d
+    networks:
+      - microservices
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p1q2w3e4r"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    command: redis-server
+    volumes:
+      - redis-data:/data
+    networks:
+      - microservices
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.13.4
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - microservices
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  zookeeper:
+    image: zookeeper:3.8
+    container_name: zookeeper
+    volumes:
+      - zookeeper-data:/data
+      - zookeeper-logs:/datalog
+    networks:
+      - microservices
+    healthcheck:
+      test: ["CMD", "zkServer.sh", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+    networks:
+      - microservices
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+networks:
+  microservices:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  redis-data:
+  elasticsearch-data:
+  zookeeper-data:
+  zookeeper-logs:
+  minio-data:
