@@ -1,0 +1,17 @@
+services:
+  jupyterhub:
+    command: >
+      jupyterhub
+      --JupyterHub.authenticator_class=dummy
+      --DummyAuthenticator.password=password
+    build: .
+    ports:
+      - "40058:8000"
+    environment:
+      - CONFIGPROXY_AUTH_TOKEN=super-secret-token
+      - DATABASE_URL=sqlite:///jupyterhub.sqlite
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/hub/api"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
