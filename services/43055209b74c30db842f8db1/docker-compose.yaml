@@ -1,0 +1,164 @@
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: fangjia
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - fangjia-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:6-alpine
+    container_name: redis
+    networks:
+      - fangjia-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Eureka Service Discovery
+  # Commented out as it's not needed for this deployment
+  # eureka:
+  #   build:
+  #     context: .
+  #     dockerfile: eureka.Dockerfile
+  #   container_name: eureka
+  #   environment:
+  #     SPRING_PROFILES_ACTIVE: dev
+  #     EUREKA_CLIENT_SHOULD_REGISTER_WITH_EUREKA: "false"
+  #     EUREKA_CLIENT_FETCH_REGISTRY: "false"
+  #   ports:
+  #     - "8761:8761"
+  #   networks:
+  #     - fangjia-network
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8761/eureka/apps || exit 1"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+  # RabbitMQ Message Queue
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - fangjia-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Zookeeper Configuration Service
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - fangjia-network
+    healthcheck:
+      test: ["CMD", "echo", "ruok", "|", "nc", "localhost", "2181", "|", "grep", "imok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Main API Gateway Service
+  fangjia-fsh-api:
+    build:
+      context: ./Spring-Cloud-Book-Code-1/fangjia-fsh-api
+      dockerfile: Dockerfile
+    image: fangjia-fsh-api:latest
+    container_name: fangjia-fsh-api
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SERVER_PORT: 8080
+      EUREKA_DEFAULT_ZONE: http://eureka:8761/eureka/
+      SPRING_DATASOURCE_DRUID_URL: jdbc:mysql://mysql:3306/fangjia?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+      SPRING_DATASOURCE_DRUID_USERNAME: root
+      SPRING_DATASOURCE_DRUID_PASSWORD: root
+      SPRING_DATASOURCE_DRUID_DRIVERCLASSNAME: com.mysql.jdbc.Driver
+      SPRING_DATASOURCE_DRUID_INITIALSIZE: 5
+      SPRING_DATASOURCE_DRUID_MINIDLE: 5
+      SPRING_DATASOURCE_DRUID_MAXACTIVE: 20
+      SPRING_DATASOURCE_DRUID_MAXWAIT: 60000
+      SPRING_DATASOURCE_DRUID_TIMEBETWEENEVICTIONRUNSMILLIS: 60000
+      SPRING_DATASOURCE_DRUID_MINEVICTABLEIDLETIMEMILLIS: 300000
+      SPRING_DATASOURCE_DRUID_VALIDATIONQUERY: SELECT 1 FROM DUAL
+      SPRING_DATASOURCE_DRUID_TESTWHILEIDLE: true
+      SPRING_DATASOURCE_DRUID_TESTONBORROW: false
+      SPRING_DATASOURCE_DRUID_TESTONRETURN: false
+      SPRING_DATASOURCE_DRUID_POOLPREPAREDSTATEMENTS: true
+      SPRING_DATASOURCE_DRUID_MAXPOOLPREPAREDSTATEMENTPERCONNECTIONSIZE: 20
+      SPRING_DATASOURCE_DRUID_FILTERS: stat,wall,slf4j
+      SPRING_DATASOURCE_DRUID_CONNECTIONPROPERTIES: druid.stat.mergeSql\\=true;druid.stat.slowSqlMillis\\=5000
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_RABBITMQ_ADDRESSES: amqp://rabbitmq:5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+      ZOOKEEPER_URL: zookeeper:2181
+      RIBBON_CONNECT_TIMEOUT: 500
+      RIBBON_READTIMEOUT: 5000
+      RIBBON_MAXAUTORETRIES: 1
+      RIBBON_MAXAUTORETRIESNEXTSERVER: 3
+      HYSTRIX_COMMAND_DEFAULT_EXECUTION_ISOLATION_THREAD_TIMEOUTINMILLISECONDS: 60000
+      HYSTRIX_THREADPOOL_DEFAULT_CORESIZE: 3
+      HYSTRIX_THREADPOOL_DEFAULT_MAXIMUMSIZE: 30
+      HYSTRIX_THREADPOOL_DEFAULT_MAXQUEUESIZE: 1000
+      HYSTRIX_THREADPOOL_DEFAULT_QUEUESIZEREJECTIONTHRESHOLD: 20
+    ports:
+      - "40078:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      # eureka:
+      #   condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      zookeeper:
+        condition: service_healthy
+    networks:
+      - fangjia-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      start_period: 90s
+      retries: 3
+    volumes:
+      - ./Spring-Cloud-Book-Code-1/fangjia-fsh-api/target.jar:/app/target.jar
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  fangjia-network:
+    driver: bridge

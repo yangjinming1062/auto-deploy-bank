@@ -1,0 +1,31 @@
+services:
+  # Main API Gateway Service (Zuul Gateway)
+  fangjia-fsh-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: fangjia-fsh-api:latest
+    container_name: fangjia-fsh-api
+    ports:
+      - "40078:8080"
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_PROFILES_ACTIVE=dev
+    volumes:
+      # Volume mount for security scanning - extracts JAR to host
+      - ./target.jar:/app/target.jar
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
