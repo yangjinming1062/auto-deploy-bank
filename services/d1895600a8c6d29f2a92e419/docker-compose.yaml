@@ -1,0 +1,25 @@
+services:
+  octobot:
+    image: drakkarsoftware/octobot:stable
+    environment:
+      - ACCEPTED_TERMS=True
+      # TENTACLES_OCTOBOT_ONLINE_URL removed to use OctoBot default
+    # No volumes - let OctoBot manage all directories internally like the standalone container
+    ports:
+      - "40056:5001"
+    restart: always
+    command: >
+      bash -c "
+        if [ ! -f '/octobot/.tentacles_installed' ]; then
+          echo 'Installing tentacles for first run...';
+          /opt/venv/bin/python -m octobot.cli tentacles --install --all;
+          touch /octobot/.tentacles_installed;
+        fi;
+        exec /octobot/docker-entrypoint.sh
+      "
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:5001"]
+      interval: 1m
+      timeout: 30s
+      retries: 3
+      start_period: 40s
