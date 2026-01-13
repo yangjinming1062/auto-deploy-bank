@@ -1,0 +1,20 @@
+services:
+  web:
+    build: .
+    ports:
+      - "40172:8000"
+    environment:
+      - DB_BACKEND=sqlite3
+      - DJANGO_SUPERUSER_USERNAME=admin
+      - DJANGO_SUPERUSER_PASSWORD=password
+      - DJANGO_SUPERUSER_EMAIL=admin@example.com
+    command: >
+      sh -c "rm -f example/db.sqlite3 &&
+             python example/manage.py migrate &&
+             { python example/manage.py createsuperuser --no-input --username=\"$$DJANGO_SUPERUSER_USERNAME\" --email=\"$$DJANGO_SUPERUSER_EMAIL\" || true; } &&
+             python example/manage.py runserver 0.0.0.0:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
