@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  buildbot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "41856:8080"  # Web interface - maps to internal port 8080
+    # Port 9989 (worker protocol) is NOT exposed to host - internal only
+    environment:
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
