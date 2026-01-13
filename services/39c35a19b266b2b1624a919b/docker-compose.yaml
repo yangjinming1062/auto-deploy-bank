@@ -1,0 +1,100 @@
+version: '3.8'
+
+services:
+  postgresdb:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-my_pg_database}
+      POSTGRES_USER: ${POSTGRES_USER:-my_pg_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-my_pg_passwd}
+      PGTZ: UTC
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - shop-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-my_pg_user} -d ${POSTGRES_DB:-my_pg_database}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Internal service - no ports exposed to host
+
+  redishost:
+    image: redis:6-alpine
+    networks:
+      - shop-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Internal service - no ports exposed to host
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    networks:
+      - shop-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Internal service - no ports exposed to host
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "40079:8000"
+    environment:
+      PGOPTIONS: -c timezone=UTC
+      DJANGO_SETTINGS_MODULE: testshop.settings
+      DJANGO_DEBUG: "1"
+      POSTGRES_DB: ${POSTGRES_DB:-my_pg_database}
+      POSTGRES_USER: ${POSTGRES_USER:-my_pg_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-my_pg_passwd}
+      POSTGRES_HOST: postgresdb
+      POSTGRES_PORT: 5432
+      REDIS_LOCATION: redis://redishost:6379/0
+      REDIS_HOST: redishost
+      ELASTICSEARCH_HOST: elasticsearch
+      DJANGO_EMAIL_HOST: ${DJANGO_EMAIL_HOST:-outgoing_smtp_server}
+      DJANGO_EMAIL_PORT: ${DJANGO_EMAIL_PORT:-587}
+      DJANGO_EMAIL_USER: ${DJANGO_EMAIL_USER:-email_user}
+      DJANGO_EMAIL_PASSWORD: ${DJANGO_EMAIL_PASSWORD:-email_password}
+      DJANGO_EMAIL_USE_TLS: ${DJANGO_EMAIL_USE_TLS:-yes}
+      DJANGO_EMAIL_FROM: ${DJANGO_EMAIL_FROM:-no-reply@example.com}
+      DJANGO_EMAIL_REPLY_TO: ${DJANGO_EMAIL_REPLY_TO:-info@example.com}
+      SECRET_KEY: django-insecure-development-key-change-in-production
+      ALLOWED_HOSTS: "*"
+    volumes:
+      - static_volume:/home/ubuntu/deploy-projects/39c35a19b266b2b1624a919b/staticfiles
+      - media_volume:/home/ubuntu/deploy-projects/39c35a19b266b2b1624a919b/media
+    networks:
+      - shop-network
+    depends_on:
+      postgresdb:
+        condition: service_healthy
+      redishost:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
+
+networks:
+  shop-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:
