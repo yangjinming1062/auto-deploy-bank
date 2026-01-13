@@ -1,0 +1,41 @@
+services:
+  stock-analysis:
+    build: .
+    ports:
+      - "40225:5000"
+    environment:
+      # Email credentials
+      - EMAIL_USER=${EMAIL_USER:-your_email@example.com}
+      - EMAIL_PASS=${EMAIL_PASS:-your_email_password}
+      - EMAIL_SENDER=${EMAIL_SENDER:-your_email@example.com}
+      - EMAIL_RECEIVER=${EMAIL_RECEIVER:-recipient@example.com}
+      # Twitter API credentials
+      - TWITTER_CONSUMER_KEY=${TWITTER_CONSUMER_KEY:-your_twitter_consumer_key}
+      - TWITTER_CONSUMER_SECRET=${TWITTER_CONSUMER_SECRET:-your_twitter_consumer_secret}
+      - TWITTER_ACCESS_TOKEN=${TWITTER_ACCESS_TOKEN:-your_twitter_access_token}
+      - TWITTER_ACCESS_TOKEN_SECRET=${TWITTER_ACCESS_TOKEN_SECRET:-your_twitter_access_token_secret}
+      # Reddit API credentials
+      - REDDIT_CLIENT_ID=${REDDIT_CLIENT_ID:-your_reddit_client_id}
+      - REDDIT_CLIENT_SECRET=${REDDIT_CLIENT_SECRET:-your_reddit_client_secret}
+      - REDDIT_USER_AGENT=${REDDIT_USER_AGENT:-python:praw:v1.0}
+      # Alpaca trading API credentials
+      - ALPACA_API_KEY=${ALPACA_API_KEY:-your_alpaca_api_key}
+      - ALPACA_SECRET_KEY=${ALPACA_SECRET_KEY:-your_alpaca_secret_key}
+      # Robinhood credentials
+      - RH_USERNAME=${RH_USERNAME:-your_robinhood_username}
+      - RH_PASSWORD=${RH_PASSWORD:-your_robinhood_password}
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/sms"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
