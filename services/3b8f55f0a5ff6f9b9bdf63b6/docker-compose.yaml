@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  mii-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: deepspeed-mii-service
+    ports:
+      - "40302:50050"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MII_CACHE_PATH=/tmp/mii_cache
+      - MII_HF_CACHE_EXPIRATION=3600
+      - MII_DEBUG_MODE=0
+      - MII_DEBUG_DEPLOY_KEY=
+      - MII_DEBUG_BRANCH=main
+      - WORLD_SIZE=1
+      - LOCAL_RANK=0
+      - RANK=0
+      - MASTER_ADDR=localhost
+      - MASTER_PORT=29500
+      - TRANSFORMERS_CACHE=
+      - HF_HOME=
+      - AZUREML_MODEL_DIR=
+      - SSL_KEYFILE=
+      - SSL_CERTFILE=
+      - HF_AUTH_TOKEN=
+      - CUDA_VISIBLE_DEVICES=
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 8G
+        reservations:
+          cpus: '2.0'
+          memory: 4G
+    healthcheck:
+      test: ["CMD-SHELL", "ps aux | grep -v grep | grep 'mii.serve' || exit 1"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
