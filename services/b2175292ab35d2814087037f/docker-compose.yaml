@@ -1,0 +1,35 @@
+services:
+  geode-pulse:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: geode-pulse
+    ports:
+      - "40108:8080"
+    environment:
+      - JAVA_OPTS=-Xmx512m -Xms256m
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    restart: unless-stopped
+    networks:
+      - geode-network
+    volumes:
+      - ./target.jar:/app/target.jar:ro
+      - ./pulse.properties:/app/pulse-override.properties:ro
+      - ./pulse-users.properties:/app/pulse-users-override.properties:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+networks:
+  geode-network:
+    driver: bridge
