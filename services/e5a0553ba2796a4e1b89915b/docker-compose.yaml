@@ -1,0 +1,120 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: yuzi-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: my_db
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./yuzi-generator-web-backend/sql/create_table.sql:/docker-entrypoint-initdb.d/create_table.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - yuzi-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: yuzi-redis
+    command: redis-server --requirepass 123456
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "123456", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - yuzi-network
+
+  # Elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: yuzi-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - xpack.security.enabled=false
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - yuzi-network
+
+  # XXL-JOB Admin
+  xxl-job-admin:
+    image: xuxueli/xxl-job-admin:2.4.0
+    container_name: yuzi-xxl-job-admin
+    environment:
+      PARAMS: |
+        --spring.datasource.username=root
+        --spring.datasource.password=123456
+        --spring.datasource.url=jdbc:mysql://mysql:3306/my_db?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - yuzi-network
+
+  # Backend Application
+  backend:
+    build:
+      context: ./yuzi-generator-web-backend
+      dockerfile: Dockerfile
+    container_name: yuzi-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/my_db?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 123456
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_REDIS_PASSWORD: 123456
+      SPRING_REDIS_DATABASE: 1
+      COS_ACCESS_KEY: xxx
+      COS_SECRET_KEY: xxx
+      COS_REGION: xxx
+      COS_BUCKET: xxx
+      XXL_JOB_ADMIN_ADDRESSES: http://xxl-job-admin:8080/xxl-job-admin
+      XXL_JOB_ACCESS_TOKEN: default_token
+      SERVER_PORT: 8120
+    ports:
+      - "40008:8120"
+    volumes:
+      - ./target.jar:/app/target.jar:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      xxl-job-admin:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8120/api/doc.html"]
+      interval: 30s
+      timeout: 3s
+      start_period: 60s
+      retries: 3
+    networks:
+      - yuzi-network
+
+networks:
+  yuzi-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  redis-data:
+  es-data:
