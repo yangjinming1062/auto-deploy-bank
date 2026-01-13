@@ -1,0 +1,13 @@
+{
+  "service_id": "1d365e13a139f1f295c365fa",
+  "repo_name": "reactor/reactor-netty",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "2.34MB",
+  "language": "java",
+  "star": 2738,
+  "repo_flag": "JAVA-Logback",
+  "uploaded_at": "2026-01-13T10:16:28.429924"
+}
