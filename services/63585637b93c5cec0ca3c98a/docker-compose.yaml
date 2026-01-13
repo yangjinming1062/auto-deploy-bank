@@ -1,0 +1,39 @@
+services:
+  robolectric:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+    image: robolectric:4.17-SNAPSHOT
+    container_name: robolectric-build
+    ports:
+      - "40267:40267"
+    environment:
+      - ANDROID_HOME=/opt/android-sdk
+      - SKIP_ERRORPRONE=true
+      - SKIP_JAVADOC=true
+      - JAVA_OPTS=-Xmx2g
+    volumes:
+      # Mount gradle cache for faster rebuilds
+      - gradle-cache:/home/gradle/.gradle
+      # Mount for artifact extraction if needed
+      - ./artifacts:/app/artifacts
+      # Mount target.jar for security scanning
+      - ./target.jar:/app/target.jar
+    # Resource limits to prevent system overload
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    # Default command is already specified in Dockerfile
+    # Auto-restart on failure
+    restart: unless-stopped
+
+volumes:
+  gradle-cache:
+    driver: local
