@@ -1,0 +1,46 @@
+services:
+  mujing:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mujing:latest
+    container_name: mujing-app
+    # Desktop application - no traditional web ports needed
+    # This service runs with virtual display for GUI
+    ports:
+      - "40830:8080"  # Health check endpoint
+    environment:
+      - DISPLAY=:99
+      - XDG_RUNTIME_DIR=/tmp/runtime
+      - GITHUB_ACTIONS=false
+    volumes:
+      # Mount JAR file for security scanning
+      - ./target.jar:/target.jar
+      # Mount workspace for build artifacts and resources
+      - ./build:/app/build
+      - ./resources:/app/resources
+      - ./lib:/app/lib
+      - ./dict:/app/dict
+      # Temporary runtime directory
+      - /tmp:/tmp
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    networks:
+      - mujing-network
+
+networks:
+  mujing-network:
+    driver: bridge
