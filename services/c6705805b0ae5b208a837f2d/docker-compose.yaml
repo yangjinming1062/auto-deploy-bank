@@ -1,0 +1,101 @@
+version: '3.8'
+
+services:
+  zookeeper:
+    image: jplock/zookeeper
+    container_name: zookeeper
+    healthcheck:
+      test: ["CMD", "sh", "-c", "echo ruok | nc localhost 2181 | grep imok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    networks:
+      - kafka-network
+
+  kafka:
+    image: wurstmeister/kafka:latest
+    container_name: kafka
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+      - "9094:9094"
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: "PLAINTEXT://:9092,SSL://:9093"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092,SSL://kafka:9093"
+      KAFKA_SSL_KEYSTORE_LOCATION: "/var/private/ssl/certs/server.keystore.jks"
+      KAFKA_SSL_KEYSTORE_PASSWORD: "password"
+      KAFKA_SSL_KEY_PASSWORD: "password"
+      KAFKA_SSL_TRUSTSTORE_LOCATION: "/var/private/ssl/certs/server.truststore.jks"
+      KAFKA_SSL_TRUSTSTORE_PASSWORD: "password"
+      KAFKA_CREATE_TOPICS: "demo-topic:1:1"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./docker/certs:/var/private/ssl/certs
+      - ./docker/sasl:/var/private/sasl
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    networks:
+      - kafka-network
+
+  kafka-node-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kafka-node-service
+    ports:
+      - "40032:3000"
+    depends_on:
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:3000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      KAFKA_HOST: kafka:9092
+      KAFKA_TEST_HOST: kafka
+      DEBUG: kafka-node:*
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    networks:
+      - kafka-network
+
+networks:
+  kafka-network:
+    driver: bridge
