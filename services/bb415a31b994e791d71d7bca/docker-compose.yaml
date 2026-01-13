@@ -1,0 +1,188 @@
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+services:
+  camel-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: apache-camel-app
+    ports:
+      - "40290:8080"  # Map internal port 8080 to host port 40290
+    environment:
+      # Camel Main Configuration
+      - CAMEL_MAIN_NAME=ApacheCamelApp
+
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/hello"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    # Resource limits to prevent container from consuming all system resources
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+    # Volume mount for security scanning
+    volumes:
+      - ./target.jar:/app/target.jar
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # Network configuration
+    networks:
+      - camel-network
+
+  # Internal services (not exposed to host)
+  activemq:
+    image: rmohr/activemq:latest
+    container_name: camel-activemq
+    environment:
+      - ACTIVEMQ_ADMIN_LOGIN=admin
+      - ACTIVEMQ_ADMIN_PASSWORD=admin
+      - ACTIVEMQ_USER_LOGIN=admin
+      - ACTIVEMQ_USER_PASSWORD=admin
+    networks:
+      - camel-network
+    # No ports exposed - internal communication only
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: camel-kafka
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper
+    networks:
+      - camel-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: camel-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - camel-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  redis:
+    image: redis:7-alpine
+    container_name: camel-redis
+    networks:
+      - camel-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+
+  mongodb:
+    image: mongo:7
+    container_name: camel-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+    networks:
+      - camel-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    volumes:
+      - mongodb-data:/data/db
+
+  mysql:
+    image: mysql:8
+    container_name: camel-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: camel
+      MYSQL_USER: camel
+      MYSQL_PASSWORD: camel
+    networks:
+      - camel-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: camel-postgres
+    environment:
+      POSTGRES_DB: camel
+      POSTGRES_USER: camel
+      POSTGRES_PASSWORD: camel
+    networks:
+      - camel-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+networks:
+  camel-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+  mongodb-data:
+  mysql-data:
+  postgres-data:
