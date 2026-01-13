@@ -1,0 +1,117 @@
+services:
+  languagetool:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: languagetool-server
+    ports:
+      - "41195:8081"
+    volumes:
+      - ./target.jar:/app/target.jar:rw
+    environment:
+      - PUBLIC=true
+      - dbDriver=org.mariadb.jdbc.Driver
+      - dbUrl=jdbc:mariadb://mariadb:3306/lt
+      - dbUsername=languagetool
+      - dbPassword=languagetool_password
+      - dbMaxConnections=10
+      - dbTimeoutSeconds=10
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DATABASE=0
+      - REDIS_USE_SSL=false
+      - REDIS_PASSWORD=redis_password_here
+      - MAX_CHECK_THREADS=10
+      - MAX_TEXT_LENGTH=50000
+      - MAX_TEXT_HARD_LENGTH=100000
+      - CACHE_SIZE=1000
+      - CACHE_TTL_SECONDS=300
+      - PIPELINE_CACHING=true
+      - MAX_PIPELINE_POOL_SIZE=10
+      - PIPELINE_EXPIRE_TIME_IN_SECONDS=600
+      - REQUEST_LIMIT=1000
+      - REQUEST_LIMIT_PERIOD_IN_SECONDS=3600
+      - ANONYMOUS_ACCESS_ALLOWED=true
+      - JWT_SECRET=your_jwt_secret_key_here
+      - PROMETHEUS_MONITORING=true
+      - PROMETHEUS_PORT=9301
+      - LT_TEST_ONLY_LANGUAGES=en,de,es,fr
+      - LT_TEST_ONLY_USERS=test_user
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/v2/languages"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+    networks:
+      - languagetool-network
+  mariadb:
+    image: mariadb:10.11
+    container_name: languagetool-mariadb
+    environment:
+      - MARIADB_ROOT_PASSWORD=root_password_here
+      - MARIADB_DATABASE=lt
+      - MARIADB_USER=languagetool
+      - MARIADB_PASSWORD=languagetool_password
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    restart: unless-stopped
+    networks:
+      - languagetool-network
+  redis:
+    image: redis:7-alpine
+    container_name: languagetool-redis
+    command: redis-server --requirepass redis_password_here
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    restart: unless-stopped
+    networks:
+      - languagetool-network
+volumes:
+  mariadb_data:
+    driver: local
+  redis_data:
+    driver: local
+networks:
+  languagetool-network:
+    driver: bridge
