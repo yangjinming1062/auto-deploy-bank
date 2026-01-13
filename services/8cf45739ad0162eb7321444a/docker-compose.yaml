@@ -1,0 +1,24 @@
+services:
+  google-cloud-java-service:
+    build:
+      context: .
+    ports:
+      - "40344:8080"
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials.json
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/translate/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 60s
+    volumes:
+      - ./credentials.json:/app/credentials.json:ro
