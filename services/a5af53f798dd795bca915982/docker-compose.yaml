@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "40060:8080"
+    environment:
+      - PYTHONUNBUFFERED=1
+      # API Keys (fake keys for initialization)
+      - OPENAI_API_KEY=sk-fake-key-for-development
+      - OPENROUTER_API_KEY=sk-or-fake-key-for-development
+      - TYPESENSE_API_KEY=xyz-fake-key
+      - TYPESENSE_HOST=localhost
+      - REDIS_DB_HOST=redis
+      - REDIS_DB_PORT=6379
+      - REDIS_DB_PASSWORD=${REDIS_DB_PASSWORD:-}
+      - SERVICE_ACCOUNT_JSON=${SERVICE_ACCOUNT_JSON:-}
+      - ENCRYPTION_SECRET=${ENCRYPTION_SECRET:-omi_ZwB2ZNqB2HHpMK6wStk7sTpavJiPTFg7gXUHnc4tFABPU6pZ2c2DKgehtfgi4RZv}
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    restart: unless-stopped
+
+volumes:
+  redis_data:
