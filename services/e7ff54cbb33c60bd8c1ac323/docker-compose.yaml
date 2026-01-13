@@ -1,0 +1,50 @@
+services:
+  easyreport:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: easyreport-web
+    ports:
+      - "40307:8080"
+    volumes:
+      - ./target.jar:/app/target.jar
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - SERVER_PORT=8080
+      - EASYTOOLSOFT_EASYREPORT_META_DATASOURCE_URL=jdbc:h2:file:./h2db
+      - EASYTOOLSOFT_EASYREPORT_META_DATASOURCE_USERNAME=sa
+      - EASYTOOLSOFT_EASYREPORT_META_DATASOURCE_PASSWORD=
+      - EASYTOOLSOFT_EASYREPORT_MEMBER_DATASOURCE_URL=jdbc:h2:file:./h2db
+      - EASYTOOLSOFT_EASYREPORT_MEMBER_DATASOURCE_USERNAME=sa
+      - EASYTOOLSOFT_EASYREPORT_MEMBER_DATASOURCE_PASSWORD=
+      - EASYTOOLSOFT_EASYREPORT_COMMON_ITEM1=item1
+      - EASYTOOLSOFT_EASYREPORT_COMMON_ITEM2=item2
+      - EASYTOOLSOFT_EASYREPORT_ENV_NAME=dev
+      - EASYTOOLSOFT_EASYREPORT_ENV_VERSION=2.1
+      - EASYTOOLSOFT_EASYREPORT_SHIRO_FILTERS=authc,membership
+      - LOGGING_CONFIG=classpath:conf/logging/logback-spring.xml
+      - LOGGING_PATH=easyreport-web/target/logs
+      - LOGGING_LEVEL_DEFAULT=INFO
+      - LOGGING_LEVEL_EASYREPORT=DEBUG
+      - LOGGING_LEVEL_MYBATIS=DEBUG
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - easyreport-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+networks:
+  easyreport-network:
+    driver: bridge
