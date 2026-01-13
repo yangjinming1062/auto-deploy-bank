@@ -1,0 +1,29 @@
+services:
+  bluradmin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bluradmin-app
+    ports:
+      - "40661:80"
+    environment:
+      - OPEN_WEATHER_MAP_API_KEY=${OPEN_WEATHER_MAP_API_KEY:-2de143494c0b295cca9337e1e96b00e0}
+      - GOOGLE_MAPS_API_URL=${GOOGLE_MAPS_API_URL:-http://maps.google.com/maps/api/js?sensor=false}
+      - GEO_PLUGIN_API_URL=${GEO_PLUGIN_API_URL:-http://www.geoplugin.net/json.gp}
+      - GOOGLE_TAG_MANAGER_ID=${GOOGLE_TAG_MANAGER_ID:-GTM-K9L237}
+      - API_BASE_URL=${API_BASE_URL:-/api}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
