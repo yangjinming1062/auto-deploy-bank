@@ -1,0 +1,31 @@
+services:
+  app:
+    build: .
+    ports:
+      - "40074:8081"
+    volumes:
+      - ./target.jar:/app/app.jar
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/toLogin"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    depends_on:
+      - db
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/mybatis
+      - SPRING_DATASOURCE_USERNAME=drunkbaby
+      - SPRING_DATASOURCE_PASSWORD=drunkbaby
+  db:
+    image: mysql:5.7
+    environment:
+      - MYSQL_DATABASE=mybatis
+      - MYSQL_USER=drunkbaby
+      - MYSQL_PASSWORD=drunkbaby
+      - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      - db-data:/var/lib/mysql
+      - ./JavaSecurity/Apache/Shiro/shiro/user.sql:/docker-entrypoint-initdb.d/init.sql
+volumes:
+  db-data:
+
