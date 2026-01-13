@@ -1,0 +1,279 @@
+version: "3.8"
+
+services:
+  # Main Budibase Server Service
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: budibase-server
+    restart: unless-stopped
+    ports:
+      - "40095:4001"
+    environment:
+      # Core configuration
+      NODE_ENV: production
+      PORT: 4001
+      SELF_HOSTED: 1
+      BUDIBASE_ENVIRONMENT: PRODUCTION
+      MULTI_TENANCY: "0"
+
+      # Database configuration
+      COUCH_DB_URL: http://budibase:budibase@couchdb-service:5984
+      COUCH_DB_USERNAME: budibase
+      COUCH_DB_PASSWORD: budibase
+
+      # Redis configuration
+      REDIS_URL: redis-service:6379
+      REDIS_PASSWORD: budibase
+
+      # MinIO configuration
+      MINIO_URL: http://minio-service:9000
+      MINIO_ACCESS_KEY: budibase
+      MINIO_SECRET_KEY: budibase
+      MINIO_ENABLED: 1
+
+      # Security
+      API_ENCRYPTION_KEY: testsecret
+      JWT_SECRET: testsecret
+      INTERNAL_API_KEY: budibase
+
+      # Service URLs (internal)
+      WORKER_URL: http://worker-service:4003
+      APPS_URL: http://server:4001
+
+      # Feature flags
+      ENABLE_ANALYTICS: "true"
+      TENANT_FEATURE_FLAGS: "*:SQS"
+
+      # Logging
+      LOG_LEVEL: info
+
+      # Admin user (auto-created on first run)
+      BB_ADMIN_USER_EMAIL: local@budibase.com
+      BB_ADMIN_USER_PASSWORD: cheekychuckles
+
+    depends_on:
+      couchdb-service:
+        condition: service_started
+      redis-service:
+        condition: service_started
+      minio-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # Worker Service (background tasks)
+  worker-service:
+    build:
+      context: .
+      dockerfile: packages/worker/Dockerfile
+      args:
+        BUDIBASE_VERSION: latest
+        GIT_COMMIT_SHA: dev
+    container_name: budibase-worker
+    command: ["/bin/sh", "./docker_run.sh"]
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4003
+      CLUSTER_PORT: 10000
+      SERVICE_TYPE: WORKER
+      SELF_HOSTED: 1
+
+      # Database configuration
+      COUCH_DB_URL: http://budibase:budibase@couchdb-service:5984
+      COUCH_DB_USERNAME: budibase
+      COUCH_DB_PASSWORD: budibase
+
+      # Redis configuration
+      REDIS_URL: redis-service:6379
+      REDIS_PASSWORD: budibase
+
+      # MinIO configuration
+      MINIO_URL: http://minio-service:9000
+      MINIO_ACCESS_KEY: budibase
+      MINIO_SECRET_KEY: budibase
+
+      # Security
+      API_ENCRYPTION_KEY: testsecret
+      JWT_SECRET: testsecret
+      INTERNAL_API_KEY: budibase
+
+      # Service URLs
+      APPS_URL: http://server:4001
+
+      # Feature flags
+      TENANT_FEATURE_FLAGS: "*:SQS"
+
+    depends_on:
+      couchdb-service:
+        condition: service_started
+      redis-service:
+        condition: service_started
+      minio-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # CouchDB Database Service
+  couchdb-service:
+    image: budibase/couchdb:v3.3.3-sqs-v2.1.1
+    container_name: budibase-couchdb
+    restart: unless-stopped
+    environment:
+      COUCHDB_PASSWORD: budibase
+      COUCHDB_USER: budibase
+      TARGETBUILD: docker-compose
+    volumes:
+      - couchdb_data:/opt/couchdb/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5984/"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # Redis Cache Service
+  redis-service:
+    image: redis:7-alpine
+    container_name: budibase-redis
+    restart: unless-stopped
+    command: redis-server --requirepass budibase
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # MinIO Object Storage Service
+  minio-service:
+    image: minio/minio:latest
+    container_name: budibase-minio
+    restart: unless-stopped
+    volumes:
+      - minio_data:/data
+    environment:
+      MINIO_ACCESS_KEY: budibase
+      MINIO_SECRET_KEY: budibase
+      MINIO_BROWSER: "off"
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # LiteLLM Service (AI proxy)
+  litellm-service:
+    image: ghcr.io/berriai/litellm:main-stable
+    container_name: budibase-litellm
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://llmproxy:dbpassword9090@litellm-db:5432/litellm
+      STORE_MODEL_IN_DB: "True"
+    depends_on:
+      litellm-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "http://localhost:4000/health/liveliness"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # LiteLLM PostgreSQL Database
+  litellm-db:
+    image: postgres:16-alpine
+    container_name: budibase-litellm-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: litellm
+      POSTGRES_USER: llmproxy
+      POSTGRES_PASSWORD: dbpassword9090
+    volumes:
+      - litellm_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d litellm -U llmproxy"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+volumes:
+  couchdb_data:
+    driver: local
+  redis_data:
+    driver: local
+  minio_data:
+    driver: local
+  litellm_db_data:
+    driver: local
+
+networks:
+  default:
+    name: budibase-network
