@@ -1,0 +1,16 @@
+services:
+  web:
+    build: .
+    ports:
+      - "40022:5000"
+    environment:
+      PSDASH_BIND_HOST: "0.0.0.0"
+      PSDASH_PORT: "5000"
+      PSDASH_LOGS: "/var/log/syslog"
+      PSDASH_AUTH_USERNAME: "admin"
+      PSDASH_AUTH_PASSWORD: "password"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "-u", "admin:password", "http://127.0.0.1:5000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
