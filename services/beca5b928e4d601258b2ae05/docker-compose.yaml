@@ -1,0 +1,38 @@
+services:
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_DATABASE: 'mis'
+      MYSQL_ROOT_PASSWORD: 'root'
+  web:
+    build: .
+    command: >
+      sh -c "
+        until nc -z -v -w30 db 3306; do
+          echo 'Waiting for MySQL...' && sleep 1;
+        done;
+        echo 'Database is up. Importing SQL dump...' &&
+        mysql -h db -uroot -proot mis < /app/Install/SQL/mis.sql &&
+        echo 'SQL dump imported. Faking initial migrations...' &&
+        python manage.py migrate --fake-initial &&
+        echo 'Migrations faked. Starting server...' &&
+        python manage.py runserver 0.0.0.0:8000
+      "
+    ports:
+      - "40266:8000"
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_NAME=mis
+      - DB_USER=root
+      - DB_PASSWORD=root
+      - SECRET_KEY=_5%1a5zxdjsb-je@85!l34g--ve7!skhc%^c2n)3vqyhq)yq@c
+      - DJANGO_SUPERUSER_USERNAME=admin
+      - DJANGO_SUPERUSER_EMAIL=admin@example.com
+      - DJANGO_SUPERUSER_PASSWORD=password
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
