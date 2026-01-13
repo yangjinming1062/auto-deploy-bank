@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  whylogs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "40553:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - WHYLOGS_NO_ANALYTICS=False
+      # - WHYLABS_API_KEY=your_api_key_here
+      # - WHYLABS_ORG_ID=your_org_id_here
+      # - WHYLABS_DEFAULT_DATASET_ID=your_dataset_id_here
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
