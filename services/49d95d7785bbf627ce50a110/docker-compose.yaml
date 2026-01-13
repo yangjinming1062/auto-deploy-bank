@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  vision-tachometer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vision-tachometer-service
+    ports:
+      - "40109:5000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./2024_projects/1.vision_tachometer/media:/tmp/snap_ref:ro
+    restart: unless-stopped
+    networks:
+      - vision-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  vision-network:
+    driver: bridge
