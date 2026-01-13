@@ -1,0 +1,13 @@
+{
+  "service_id": "51e2544186720696a5d16b3c",
+  "repo_name": "kiegroup/jbpm",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "8.20MB",
+  "language": "java",
+  "star": 1708,
+  "repo_flag": "JAVA-Logback",
+  "uploaded_at": "2026-01-13T21:31:09.575405"
+}
