@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  forest-example:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "40379:8080"
+    volumes:
+      - ./target.jar:/app/target.jar
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/gitee"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+    environment:
+      - JAVA_OPTS=-Xms512m -Xmx1g
