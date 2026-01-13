@@ -1,0 +1,45 @@
+services:
+  # Core Service - Required by Web Client
+  abixen-platform-core:
+    build:
+      context: .
+      dockerfile: abixen-platform-core/Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: docker,standalone
+      SERVER_PORT: 8080
+      EUREKA_CLIENT_ENABLED: "false"
+      SPRING_CLOUD_CONFIG_ENABLED: "false"
+    volumes:
+      - ./demo-data/create.sql:/docker-entrypoint-initdb.d/01-create.sql:ro
+    healthcheck:
+      disable: true
+    restart: unless-stopped
+    networks:
+      - abixen-network
+
+  # Web Client (Main Frontend Service) - Standalone Mode
+  web-client:
+    build:
+      context: .
+      dockerfile: abixen-platform-web-client/src/main/docker/Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SERVER_PORT: 8080
+      EUREKA_CLIENT_ENABLED: "false"
+      SPRING_CLOUD_CONFIG_ENABLED: "false"
+    ports:
+      - "40014:8080"
+    depends_on:
+      - abixen-platform-core
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - abixen-network
+
+networks:
+  abixen-network:
+    driver: bridge
