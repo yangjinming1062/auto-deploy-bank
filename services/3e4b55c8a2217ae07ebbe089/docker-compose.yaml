@@ -1,0 +1,114 @@
+version: '3'
+
+services:
+  # Neo4j database - Internal only
+  neo4j:
+    image: neo4j:3.5.26
+    container_name: neo4j_amundsen
+    environment:
+      - NEO4J_AUTH=neo4j/test
+    ulimits:
+      nofile:
+        soft: 40000
+        hard: 40000
+    volumes:
+      - ./example/docker/neo4j/conf:/var/lib/neo4j/conf
+      - ./.local/neo4j/data:/data
+    networks:
+      - amundsennet
+    healthcheck:
+      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "test", "RETURN 1;"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Elasticsearch - Internal only
+  elasticsearch:
+    image: elasticsearch:7.13.3
+    container_name: es_amundsen
+    networks:
+      - amundsennet
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+      - xpack.ml.enabled=false
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Metadata Service - Internal only
+  amundsenmetadata:
+    build:
+      context: .
+      dockerfile: Dockerfile.metadata.public
+    container_name: amundsenmetadata
+    depends_on:
+      - neo4j
+    networks:
+      - amundsennet
+    environment:
+      - PROXY_HOST=bolt://neo4j_amundsen
+      - PROXY_PORT=7687
+      - PROXY_USER=neo4j
+      - PROXY_PASSWORD=test
+      - PROXY_CLIENT=NEO4J
+
+  # Search Service - Internal only
+  amundsensearch:
+    build:
+      context: .
+      dockerfile: Dockerfile.search.public
+    container_name: amundsensearch
+    depends_on:
+      - elasticsearch
+    networks:
+      - amundsennet
+    environment:
+      - PROXY_ENDPOINT=es_amundsen
+      - PROXY_PORT=9200
+      - CREDENTIALS_PROXY_USER=elastic
+      - CREDENTIALS_PROXY_PASSWORD=elastic
+
+  # Frontend Service - Only service exposed to host
+  amundsenfrontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        METADATASERVICE_BASE: http://amundsenmetadata:5002
+        SEARCHSERVICE_BASE: http://amundsensearch:5001
+    container_name: amundsenfrontend
+    ports:
+      - "40836:5000"
+    depends_on:
+      - amundsenmetadata
+      - amundsensearch
+    networks:
+      - amundsennet
+    environment:
+      - SEARCHSERVICE_BASE=http://amundsensearch:5001
+      - METADATASERVICE_BASE=http://amundsenmetadata:5002
+      - FRONTEND_SVC_CONFIG_MODULE_CLASS=amundsen_application.config.LocalConfig
+      - LOCAL_HOST=0.0.0.0
+      - FRONTEND_PORT=5000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+networks:
+  amundsennet:
+
+volumes:
+  elasticsearch_data:
