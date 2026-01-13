@@ -1,0 +1,16 @@
+services:
+  web:
+    build: .
+    ports:
+      - "40027:8000"
+    environment:
+      - DJANGO_SETTINGS_MODULE=testapp.settings
+      - SECRET_KEY=vcpt&w*g54+rlu(le#@_f#y*8^382ubn4uue*xpwrj#upre5ei
+      - DEBUG=True
+      - ALLOWED_HOSTS=*
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
