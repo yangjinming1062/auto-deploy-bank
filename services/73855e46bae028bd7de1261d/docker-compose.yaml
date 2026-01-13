@@ -1,0 +1,39 @@
+services:
+  shuup:
+    build:
+      context: .
+    ports:
+      - "40154:8000"
+    environment:
+      - SECRET_KEY=Shhhhh
+      - DEBUG=True
+      - ALLOWED_HOSTS=*
+      - SHUUP_WORKBENCH_BASE_DIR=/app
+      - SHUUP_ENABLED_ADDONS_FILE=var/enabled_addons
+      - SHUUP_BROWSER_TESTS=0
+      - SHUUP_TESTS_CI=0
+      - DJANGO_SETTINGS_MODULE=shuup_workbench.settings
+      - EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
+      - DEFAULT_FROM_EMAIL=no-reply@example.com
+      - LOCAL_SETTINGS_FILE=
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - SHUUP_HOME_CURRENCY=EUR
+      - SHUUP_ADDRESS_HOME_COUNTRY=
+      - SHUUP_ENABLE_MULTIPLE_SHOPS=False
+      - SHUUP_ENABLE_MULTIPLE_SUPPLIERS=False
+      - SHUUP_TELEMETRY_ENABLED=True
+      - SHUUP_DEFAULT_CACHE_DURATION=1800
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/sa/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    command: >
+      sh -c "python3 -m shuup_workbench migrate &&
+             python3 -m shuup_workbench shuup_init &&
+             echo 'from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.filter(username=\"admin\").exists() or User.objects.create_superuser(\"admin\", \"admin@shuup.local\", \"admin\")' | python3 -m shuup_workbench shell &&
+             exec python3 -m shuup_workbench runserver 0.0.0.0:8000"
+    restart: unless-stopped
