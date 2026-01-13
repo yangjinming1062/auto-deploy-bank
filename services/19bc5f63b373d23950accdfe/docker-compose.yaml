@@ -1,0 +1,219 @@
+#
+# Copyright © 2016-2025 The Thingsboard Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:14-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: thingsboard
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - thingsboard-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d thingsboard"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    restart: always
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - thingsboard-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Zookeeper (required for Kafka)
+  zookeeper:
+    image: zookeeper:3.8.1
+    restart: always
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=zookeeper:2888:3888;zookeeper:2181
+      ZOO_ADMINSERVER_ENABLED: "false"
+    networks:
+      - thingsboard-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "zkServer.sh", "status"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  # Kafka Message Queue
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    restart: always
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    networks:
+      - thingsboard-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # ThingsBoard Application
+  thingsboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "40712:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    environment:
+      # Database Configuration
+      SPRING_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/thingsboard
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 16
+      DATABASE_TS_TYPE: sql
+      # PostgreSQL client password for entrypoint script
+      PGPASSWORD: postgres
+
+      # Cache Configuration
+      CACHE_TYPE: redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
+      REDIS_CONNECTION_TYPE: standalone
+
+      # Queue Configuration (Kafka)
+      TB_QUEUE_TYPE: kafka
+      TB_KAFKA_SERVERS: kafka:9092
+      TB_QUEUE_KAFKA_REPLICATION_FACTOR: 1
+      ZOOKEEPER_ENABLED: true
+      ZOOKEEPER_URL: zookeeper:2181
+
+      # Server Configuration
+      HTTP_BIND_ADDRESS: 0.0.0.0
+      HTTP_BIND_PORT: 8080
+
+      # Security Configuration
+      JWT_TOKEN_EXPIRATION_TIME: 9000
+      JWT_REFRESH_TOKEN_EXPIRATION_TIME: 604800
+      JWT_TOKEN_ISSUER: thingsboard.io
+      JWT_TOKEN_SIGNING_KEY: thingsboardDefaultSigningKey
+
+      # SSL Configuration (disabled for development)
+      SSL_ENABLED: false
+
+      # JavaScript Executor
+      JS_EVALUATOR: local
+      USE_LOCAL_JS_SANDBOX: true
+      LOCAL_JS_THREAD_POOL_SIZE: 50
+
+      # Monitoring and Audit
+      METRICS_ENABLED: false
+      AUDIT_LOG_ENABLED: true
+
+      # Static file serving configuration
+      SPRING_WEB_RESOURCES_STATIC_LOCATIONS: file:/app/static-ui/,classpath:/static/,classpath:/public/
+    volumes:
+      # Volume mount for security scanning
+      - ./target.jar:/app/target.jar:ro
+      # Data persistence
+      - thingsboard_data:/app/data
+      # Logs
+      - thingsboard_logs:/var/log/thingsboard
+      # Angular UI static files
+      - ./ui-ngx/target/generated-resources/public:/app/static-ui:ro
+    networks:
+      - thingsboard-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 8080 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+networks:
+  thingsboard-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  thingsboard_data:
+  thingsboard_logs:
