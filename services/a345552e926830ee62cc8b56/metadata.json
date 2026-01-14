@@ -1,0 +1,13 @@
+{
+  "service_id": "a345552e926830ee62cc8b56",
+  "repo_name": "payara/Payara",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "40.05MB",
+  "language": "java",
+  "star": 906,
+  "repo_flag": "JAVA-JakartaEE",
+  "uploaded_at": "2026-01-14T18:25:21.509671"
+}

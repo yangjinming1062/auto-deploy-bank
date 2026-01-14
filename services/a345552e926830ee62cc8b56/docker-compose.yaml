@@ -1,0 +1,34 @@
+services:
+  payara:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: payara-server
+    ports:
+      - "40596:8080"
+    environment:
+      - HTTP_LISTENER_PORT=8080
+      - ADMIN_USER=admin
+      - ADMIN_PASSWORD=admin
+      - DOMAIN_NAME=domain1
+    volumes:
+      - ./target.jar:/app/target.jar
+      - payara-config:/opt/payara/appserver/glassfish/domains/domain1/config
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+
+volumes:
+  payara-config:
