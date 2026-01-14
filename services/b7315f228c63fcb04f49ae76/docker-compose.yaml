@@ -1,0 +1,38 @@
+services:
+  masterpassword:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: masterpassword
+    ports:
+      - "40428:8080"
+    environment:
+      - MPW_RCDIR=/home/appuser/.mpw.d
+      - MPW_ALGORITHM=v3
+      - MPW_PORT=8080
+      - MPW_CHECKUPDATES=false
+      - HOME=/home/appuser
+    volumes:
+      - mpw-config:/home/appuser/.mpw.d
+      - ./target.jar:/app/target.jar
+      - ./.mpw.d/config.json:/home/appuser/.mpw.d/config.json:ro
+      - ./.mpw.d/demo.mpsites.json:/home/appuser/.mpw.d/demo.mpsites.json:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  mpw-config:
+    driver: local
