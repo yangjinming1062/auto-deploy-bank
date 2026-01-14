@@ -1,0 +1,84 @@
+services:
+  # Kafka broker - internal only, not exposed to host
+  kafka:
+    image: confluentinc/cp-kafka:5.5.0
+    hostname: kafka
+    container_name: kafka
+    ports:
+      # Kafka not exposed to host - internal communication only via Docker network
+      []
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_NUM_PARTITIONS: 1
+    networks:
+      - streams-network
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z kafka 9092 || exit 1"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+  # Zookeeper - required for Kafka
+  zookeeper:
+    image: confluentinc/cp-zookeeper:5.5.0
+    hostname: zookeeper
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - streams-network
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z zookeeper 2181 || exit 1"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+  # Kafka Streams H2O GBM Machine Learning application
+  h2o-gbm:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: h2o-gbm
+    hostname: h2o-gbm
+    # Expose port 40741 for container monitoring/health checks
+    ports:
+      - "40741:40741"
+    environment:
+      BOOTSTRAP_SERVERS: kafka:9092
+      APPLICATION_ID: streams-starter-app
+      SCHEMA_REGISTRY_URL: http://localhost:8081
+      HTTP_PORT: "40741"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      zookeeper:
+        condition: service_healthy
+    networks:
+      - streams-network
+    volumes:
+      # Volume mount for security scanning - extracts JAR to host
+      - ./target.jar:/app/target.jar:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      # Kafka Streams doesn't have HTTP endpoint - check if java process is running
+      test: ["CMD-SHELL", "ps aux | grep 'java -jar target.jar' | grep -v grep || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  streams-network:
+    driver: bridge
