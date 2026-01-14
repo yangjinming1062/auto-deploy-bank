@@ -1,0 +1,13 @@
+{
+  "service_id": "2f6c5cb3965a47edf6b459a6",
+  "repo_name": "onlyphantom/llm-python",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.76MB",
+  "language": "python",
+  "star": 891,
+  "repo_flag": "PYTHON-langchain",
+  "uploaded_at": "2026-01-14T19:19:13.374076"
+}
