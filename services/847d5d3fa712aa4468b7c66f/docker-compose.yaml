@@ -1,0 +1,20 @@
+services:
+  cws-evaluation:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cws-evaluation:latest
+    container_name: cws-evaluation
+    ports:
+      - "8080:8080"
+    # Mount target.jar for security scanning
+    volumes:
+      - ./target.jar:/app/target.jar
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
