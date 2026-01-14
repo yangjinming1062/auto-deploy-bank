@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  genforce:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: genforce-api
+    ports:
+      - "40647:5000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PORT=5000
+    volumes:
+      - ./checkpoints:/home/ubuntu/deploy-projects/13b8566b939feb4c5f4b2f55/checkpoints
+      - ./work_dirs:/home/ubuntu/deploy-projects/13b8566b939feb4c5f4b2f55/work_dirs
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
