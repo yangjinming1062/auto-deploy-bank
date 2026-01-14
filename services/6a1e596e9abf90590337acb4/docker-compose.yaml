@@ -1,0 +1,26 @@
+services:
+  github-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: github-api:latest
+    # Port exposed for web service accessibility
+    ports:
+      - "40340:8080"
+    volumes:
+      # Volume mount for security scanning - maps host target.jar to container
+      - ./target.jar:/app/target.jar
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "tail", "-f", "/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s

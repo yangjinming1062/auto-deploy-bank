@@ -1,0 +1,13 @@
+{
+  "service_id": "6a1e596e9abf90590337acb4",
+  "repo_name": "hub4j/github-api",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "12.09MB",
+  "language": "java",
+  "star": 1229,
+  "repo_flag": "JAVA-Guava",
+  "uploaded_at": "2026-01-14T06:31:41.515812"
+}
