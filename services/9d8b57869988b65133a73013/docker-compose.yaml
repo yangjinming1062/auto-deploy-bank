@@ -1,0 +1,40 @@
+services:
+  self-identity-wallet:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: self-identity-wallet
+    restart: unless-stopped
+
+    # Port mapping: host 40402 -> container 5173
+    ports:
+      - "40402:5173"
+
+    # Resource limits to prevent resource exhaustion
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+    # Health check to ensure service is running
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5173/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+    # Environment variables
+    environment:
+      - NODE_ENV=production
+      - PORT=5173
+      - ENABLE_DEBUG_LOGS=false
+      - IS_TEST_BUILD=false
+
+    # Keep container running
+    stdin_open: true
+    tty: true
