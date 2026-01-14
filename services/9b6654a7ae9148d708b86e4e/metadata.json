@@ -1,0 +1,13 @@
+{
+  "service_id": "9b6654a7ae9148d708b86e4e",
+  "repo_name": "awslabs/amazon-bedrock-agentcore-samples",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "256.02MB",
+  "language": "python",
+  "star": 1518,
+  "repo_flag": "PYTHON-langgraph",
+  "uploaded_at": "2026-01-14T05:14:11.283445"
+}
