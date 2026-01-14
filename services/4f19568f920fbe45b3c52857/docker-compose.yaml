@@ -1,0 +1,103 @@
+services:
+  aiglass:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aiglass
+    restart: unless-stopped
+
+    # Port mapping
+    ports:
+      - "40577:8081"      # Web service (host:container)
+      - "12345:12345/udp" # IMU UDP
+
+    # Environment variables (from .env file or defaults)
+    environment:
+      # Required environment variables
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY}
+      - BLIND_PATH_MODEL=${BLIND_PATH_MODEL:-model/yolo-seg.pt}
+      - OBSTACLE_MODEL=${OBSTACLE_MODEL:-model/yoloe-11l-seg.pt}
+
+      # Optional DashScope configuration
+      - DASHSCOPE_COMPAT_BASE=${DASHSCOPE_COMPAT_BASE:-https://dashscope.aliyuncs.com/compatible-mode/v1}
+
+      # YOLO-E model path
+      - YOLOE_MODEL_PATH=${YOLOE_MODEL_PATH:-model/yoloe-11l-seg.pt}
+
+      # Computation device for inference (CPU mode for non-GPU environments)
+      - AIGLASS_DEVICE=cpu
+
+      # Automatic Mixed Precision policy (off for CPU)
+      - AIGLASS_AMP=${AIGLASS_AMP:-off}
+
+      # GPU concurrent inference slots (set to 0 for CPU)
+      - AIGLASS_GPU_SLOTS=${AIGLASS_GPU_SLOTS:-0}
+
+      # Detection confidence thresholds
+      - AIGLASS_OBS_CONF=${AIGLASS_OBS_CONF:-0.25}
+      - CROSSWALK_MIN_CONF=${CROSSWALK_MIN_CONF:-0.3}
+      - CROSSWALK_MIN_AREA=${CROSSWALK_MIN_AREA:-5000}
+      - BLIND_MIN_CONF=${BLIND_MIN_CONF:-0.34}
+
+      # Voice interval settings
+      - AIGLASS_STRAIGHT_INTERVAL=${AIGLASS_STRAIGHT_INTERVAL:-4.0}
+      - AIGLASS_DIRECTION_INTERVAL=${AIGLASS_DIRECTION_INTERVAL:-3.0}
+
+      # Detection intervals (in frames)
+      - AIGLASS_OBS_INTERVAL=${AIGLASS_OBS_INTERVAL:-15}
+      - AIGLASS_BLINDPATH_INTERVAL=${AIGLASS_BLINDPATH_INTERVAL:-8}
+      - AIGLASS_CROSSWALK_INTERVAL=${AIGLASS_CROSSWALK_INTERVAL:-4}
+
+      # Voice configuration
+      - VOICE_DIR=${VOICE_DIR:-voice}
+      - QWEN_MODEL=${QWEN_MODEL:-qwen-turbo}
+      - AIGLASS_COMPRESS_AUDIO=${AIGLASS_COMPRESS_AUDIO:-1}
+      - INTERRUPT_KEYWORDS=${INTERRUPT_KEYWORDS:-停下,别说了,停止}
+
+      # Debug settings
+      - ASR_DEBUG_RAW=${ASR_DEBUG_RAW:-0}
+
+      # Logging level
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+
+      # SDL audio driver for headless environments (no physical audio device)
+      - SDL_AUDIODRIVER=dummy
+
+    # Volume mounts
+    volumes:
+      - ./model:/app/model:ro              # Model files (read-only)
+      - ./recordings:/app/recordings       # Recording files
+      - ./music:/app/music:ro              # Audio files (read-only)
+      - ./voice:/app/voice:ro              # Voice files (read-only)
+      - ./static:/app/static:ro            # Static files (read-only)
+      - ./templates:/app/templates:ro      # Template files (read-only)
+
+    # Resource limits (CRITICAL - prevents container from consuming all system resources)
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+    # Network mode
+    network_mode: bridge
+
+# Optional: Data volumes
+# volumes:
+#   recordings-data:
+
+# Optional: Custom networks
+# networks:
+#   aiglass-network:
+#     driver: bridge
