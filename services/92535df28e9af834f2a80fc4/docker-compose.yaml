@@ -1,0 +1,249 @@
+services:
+  # Our custom django application. It includes Geonode.
+  django:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: geonode:latest
+    restart: unless-stopped
+    container_name: geonode
+    ports:
+      - "41021:8000"
+    environment:
+      - IS_CELERY=False
+      - PYTHONUNBUFFERED=1
+      - ALLOWED_HOSTS=['django', '*']
+      - DEBUG=False
+      - GEONODE_CLIENT_LAYER_PREVIEW_LIBRARY=leaflet
+      - SECRET_KEY=myv-y4#7j-d*p-__@j#*3z@!y24fz8%^z2v6atuy4bo9vqr1_a
+      - SITEURL=http://localhost/
+      - DATABASE_URL=postgis://geonode:geonode@db:5432/geonode
+      - GEODATABASE_URL=postgis://geonode_data:geonode_data@db:5432/geonode_data
+      - POSTGRES_USER=geonode
+      - POSTGRES_PASSWORD=geonode
+      - GEONODE_DATABASE=geonode
+      - GEONODE_DATABASE_PASSWORD=geonode
+      - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+      - CELERY_BEAT_SCHEDULER=celery.beat:PersistentScheduler
+      - ASYNC_SIGNALS=True
+      - GEOSERVER_LOCATION=http://geoserver:8080/geoserver/
+      - GEOSERVER_ADMIN_USER=admin
+      - GEOSERVER_ADMIN_PASSWORD=geoserver
+      - EMAIL_ENABLE=False
+      - DJANGO_EMAIL_HOST=localhost
+      - DJANGO_EMAIL_PORT=25
+      - DEFAULT_FROM_EMAIL=no-reply@geonode.org
+      - ACCOUNT_OPEN_SIGNUP=True
+      - ACCOUNT_EMAIL_REQUIRED=True
+      - ACCOUNT_APPROVAL_REQUIRED=False
+      - ACCOUNT_EMAIL_VERIFICATION=none
+      - ACCOUNT_AUTHENTICATION_METHOD=username_email
+      - SOCIALACCOUNT_AUTO_SIGNUP=True
+      - OAUTH2_CLIENT_ID=
+      - OAUTH2_CLIENT_SECRET=
+      - MONITORING_ENABLED=False
+      - USER_ANALYTICS_ENABLED=True
+      - CORS_ALLOW_ALL_ORIGINS=True
+      - SESSION_COOKIE_SECURE=False
+      - CSRF_COOKIE_SECURE=False
+      - LANGUAGE_CODE=en
+      - ADMIN_PASSWORD=admin
+      - DEFAULT_BACKEND_DATA_UPLOAD_DIR=/mnt/uploads
+    volumes:
+      - statics:/mnt/volumes/statics
+      - geoserver-data-dir:/geoserver_data/data
+      - uploads:/mnt/uploads
+    entrypoint: ["/usr/src/geonode/entrypoint.sh"]
+    command: "uwsgi --ini /usr/src/geonode/uwsgi.ini"
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
+    networks:
+      - geonetwork
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # Celery worker that executes celery tasks created by Django.
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: geonode:latest
+    restart: unless-stopped
+    container_name: celery
+    environment:
+      - IS_CELERY=True
+      - PYTHONUNBUFFERED=1
+      - ALLOWED_HOSTS=['django', '*']
+      - DEBUG=False
+      - GEONODE_CLIENT_LAYER_PREVIEW_LIBRARY=leaflet
+      - SECRET_KEY=myv-y4#7j-d*p-__@j#*3z@!y24fz8%^z2v6atuy4bo9vqr1_a
+      - SITEURL=http://localhost/
+      - DATABASE_URL=postgis://geonode:geonode@db:5432/geonode
+      - GEODATABASE_URL=postgis://geonode_data:geonode_data@db:5432/geonode_data
+      - POSTGRES_USER=geonode
+      - POSTGRES_PASSWORD=geonode
+      - GEONODE_DATABASE=geonode
+      - GEONODE_DATABASE_PASSWORD=geonode
+      - BROKER_URL=amqp://guest:guest@rabbitmq:5672/
+      - CELERY_BEAT_SCHEDULER=celery.beat:PersistentScheduler
+      - ASYNC_SIGNALS=True
+      - GEOSERVER_LOCATION=http://geoserver:8080/geoserver/
+      - GEOSERVER_ADMIN_USER=admin
+      - GEOSERVER_ADMIN_PASSWORD=geoserver
+      - EMAIL_ENABLE=False
+      - DJANGO_EMAIL_HOST=localhost
+      - DJANGO_EMAIL_PORT=25
+      - DEFAULT_FROM_EMAIL=no-reply@geonode.org
+      - ACCOUNT_OPEN_SIGNUP=True
+      - ACCOUNT_EMAIL_REQUIRED=True
+      - ACCOUNT_APPROVAL_REQUIRED=False
+      - ACCOUNT_EMAIL_VERIFICATION=none
+      - ACCOUNT_AUTHENTICATION_METHOD=username_email
+      - SOCIALACCOUNT_AUTO_SIGNUP=True
+      - OAUTH2_CLIENT_ID=
+      - OAUTH2_CLIENT_SECRET=
+      - MONITORING_ENABLED=False
+      - USER_ANALYTICS_ENABLED=True
+      - CORS_ALLOW_ALL_ORIGINS=True
+      - SESSION_COOKIE_SECURE=False
+      - CSRF_COOKIE_SECURE=False
+      - LANGUAGE_CODE=en
+      - ADMIN_PASSWORD=admin
+      - DEFAULT_BACKEND_DATA_UPLOAD_DIR=/mnt/uploads
+    volumes:
+      - statics:/mnt/volumes/statics
+      - geoserver-data-dir:/geoserver_data/data
+      - uploads:/mnt/uploads
+    entrypoint: ["/usr/src/geonode/entrypoint.sh"]
+    command: "celery-cmd"
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - geonetwork
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Geoserver backend
+  geoserver:
+    image: kartoza/geoserver:latest
+    restart: unless-stopped
+    container_name: geoserver
+    environment:
+      - GEOSERVER_ADMIN_USER=admin
+      - GEOSERVER_ADMIN_PASSWORD=geoserver
+      - GEOIP_PATH=/mnt/volumes/statics/geoip.db
+    volumes:
+      - statics:/mnt/volumes/statics
+      - geoserver-data-dir:/opt/geoserver/data_dir
+      - uploads:/mnt/uploads
+    ports:
+      - "8001:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/geoserver/"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
+    networks:
+      - geonetwork
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # PostGIS database.
+  db:
+    image: postgis/postgis:13-3.1
+    restart: unless-stopped
+    container_name: db
+    environment:
+      - POSTGRES_USER=geonode
+      - POSTGRES_PASSWORD=geonode
+      - POSTGRES_DB=geonode
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U geonode -d geonode"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - geonetwork
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # RabbitMQ service. This is needed by celery
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    restart: unless-stopped
+    container_name: rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    networks:
+      - geonetwork
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+volumes:
+  statics:
+  geoserver-data-dir:
+  uploads:
+  dbdata:
+  rabbitmq:
+
+networks:
+  geonetwork:
+    driver: bridge

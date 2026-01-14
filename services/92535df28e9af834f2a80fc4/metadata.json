@@ -1,0 +1,13 @@
+{
+  "service_id": "92535df28e9af834f2a80fc4",
+  "repo_name": "GeoNode/geonode",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "30.13MB",
+  "language": "python",
+  "star": 1613,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-01-14T04:00:07.709961"
+}
