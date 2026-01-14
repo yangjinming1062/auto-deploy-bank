@@ -1,0 +1,30 @@
+services:
+  shaka-apktool:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: shaka-apktool:latest
+    container_name: shaka-apktool
+    ports:
+      - "40757:8080"
+    volumes:
+      # JAR file for security scanning - volume mount allows container to write JAR for scanning
+      - ./target.jar:/app/target.jar
+    environment:
+      - JAVA_HOME=/opt/java/openjdk
+      - PATH=${JAVA_HOME}/bin:${PATH}
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: "no"
