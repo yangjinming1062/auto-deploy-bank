@@ -1,0 +1,64 @@
+services:
+  cassandra:
+    image: cassandra:4.1
+    container_name: glowroot-cassandra
+    environment:
+      - CASSANDRA_HEAP_NEWSIZE=128M
+      - CASSANDRA_MAX_HEAP_SIZE=256M
+    volumes:
+      - cassandra-data:/var/lib/cassandra
+    networks:
+      - glowroot-network
+    ports:
+      - "9042:9042"
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "SELECT keyspace_name FROM system_schema.keyspaces LIMIT 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
+
+  glowroot-central:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: glowroot-central
+    environment:
+      - CASSANDRA_CONTACT_POINTS=cassandra
+      - CASSANDRA_PORT=9042
+      - CASSANDRA_USERNAME=
+      - CASSANDRA_PASSWORD=
+      - CASSANDRA_KEYSPACE=glowroot
+      - CASSANDRA_LOCALDATACENTER=datacenter1
+      - CASSANDRA_CONSISTENCY_LEVEL=QUORUM
+      - GRPC_BINDADDRESS=0.0.0.0
+      - GRPC_HTTPPORT=8181
+      - GRPC_HTTPSPORT=none
+      - UI_BINDADDRESS=0.0.0.0
+      - UI_PORT=4000
+      - UI_HTTPS=false
+      - UI_CONTEXTPATH=/
+      - CENTRAL_THREADPOOLMAXSIZE=50
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    ports:
+      - "40123:4000"
+    networks:
+      - glowroot-network
+    volumes:
+      - ./target.jar:/app/target.jar
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+volumes:
+  cassandra-data:
+    driver: local
+
+networks:
+  glowroot-network:
+    driver: bridge

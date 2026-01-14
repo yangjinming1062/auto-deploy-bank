@@ -1,0 +1,97 @@
+services:
+  cassandra:
+    image: cassandra:4.1
+    container_name: glowroot-cassandra
+    environment:
+      - CASSANDRA_HEAP_NEWSIZE=256M
+      - CASSANDRA_MAX_HEAP_SIZE=1G
+    volumes:
+      - cassandra-data:/var/lib/cassandra
+    networks:
+      - glowroot-network
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "SELECT 1 FROM system.local"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    # Cassandra should NOT expose ports to host - it communicates only via Docker network
+    # No ports section means internal only
+
+  glowroot-central:
+    build:
+      context: ..
+      dockerfile: central/Dockerfile
+    container_name: glowroot-central
+    environment:
+      - CASSANDRA_CONTACT_POINTS=cassandra
+      - CASSANDRA_PORT=9042
+      - CASSANDRA_USERNAME=
+      - CASSANDRA_PASSWORD=
+      - CASSANDRA_SSL=
+      - CASSANDRA_KEYSPACE=glowroot
+      - CASSANDRA_LOCALDATACENTER=datacenter1
+      - CASSANDRA_SYMMETRIC_ENCRYPTION_KEY=
+      - CASSANDRA_CONSISTENCY_LEVEL=QUORUM
+      - CASSANDRA_CONFIGURATION_FILE=
+      - CASSANDRA_GCGRACE_SECONDS=14400
+      - GRPC_BINDADDRESS=0.0.0.0
+      - GRPC_HTTPPORT=8181
+      - GRPC_HTTPSPORT=none
+      - UI_BINDADDRESS=0.0.0.0
+      - UI_PORT=4000
+      - UI_HTTPS=false
+      - UI_CONTEXTPATH=/
+      - CENTRAL_THREADPOOLMAXSIZE=50
+      - JGROUPS_CONFIGURATIONFILE=
+      - JGROUPS_LOCALADDRESS=
+      - JGROUPS_LOCALPORT=
+      - JGROUPS_INITIALNODES=
+      - JGROUPS_SYMENCRYPTALGORITHM=
+      - JGROUPS_SYMENCRYPTKEYSTORENAME=
+      - JGROUPS_SYMENCRYPTKEYSTOREPASSWORD=
+      - JGROUPS_SYMENCRYPTKEYALIAS=
+      - JGROUPS_SYMENCRYPTKEYPASSWORD=
+    depends_on:
+      cassandra:
+        condition: service_healthy
+    ports:
+      # UI service exposed on host port 40123
+      - "40123:4000"
+      # gRPC port 8181 is internal only (not exposed to host)
+      # Uncomment the following line if you need to expose gRPC port to host
+      # - "8181:8181"
+    networks:
+      - glowroot-network
+    volumes:
+      - ./target.jar:/app/target.jar
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+volumes:
+  cassandra-data:
+    driver: local
+
+networks:
+  glowroot-network:
+    driver: bridge
