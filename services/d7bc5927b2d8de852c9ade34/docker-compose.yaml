@@ -1,0 +1,153 @@
+services:
+  # MySQL Database - Internal service, no host port exposure
+  mysql:
+    image: mysql:8.0
+    container_name: katib-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: katibpassword
+      MYSQL_DATABASE: katib
+      MYSQL_PASSWORD: katibpassword
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pkatibpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - katib-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # PostgreSQL Database - Internal service, no host port exposure
+  postgres:
+    image: postgres:15
+    container_name: katib-postgres
+    environment:
+      POSTGRES_USER: katib
+      POSTGRES_PASSWORD: katibpassword
+      POSTGRES_DB: katib
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "katib", "-d", "katib"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - katib-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # DB Manager service - gRPC service that manages experiment data
+  # Internal service on port 6789 (not exposed to host)
+  db-manager:
+    build:
+      context: .
+      dockerfile: cmd/db-manager/v1beta1/Dockerfile
+    container_name: katib-db-manager
+    environment:
+      DB_NAME: mysql
+      DB_PASSWORD: katibpassword
+      DB_USER: root
+      KATIB_MYSQL_DB_HOST: katib-mysql
+      KATIB_MYSQL_DB_PORT: "3306"
+      KATIB_MYSQL_DB_DATABASE: katib
+      KATIB_POSTGRESQL_DB_HOST: katib-postgres
+      KATIB_POSTGRESQL_DB_PORT: "5432"
+      KATIB_POSTGRESQL_DB_DATABASE: katib
+      KATIB_POSTGRESQL_SSL_MODE: disable
+      SKIP_DB_INITIALIZATION: "false"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - katib-network
+    restart: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 6789 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Katib UI Web Service
+  # Exposed to host on port 40466
+  katib-ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: katib-ui
+    ports:
+      - "40466:8080"
+    environment:
+      APP_DISABLE_AUTH: "true"
+      USERID_HEADER: "kubeflow-userid"
+      USERID_PREFIX: ":"
+      KATIB_DB_MANAGER_SERVICE_IP: katib-db-manager
+      KATIB_DB_MANAGER_SERVICE_PORT: "6789"
+      KATIB_CORE_NAMESPACE: kubeflow
+      DB_NAME: mysql
+      DB_USER: root
+      DB_PASSWORD: katibpassword
+      KATIB_MYSQL_DB_HOST: katib-mysql
+      KATIB_MYSQL_DB_PORT: "3306"
+      KATIB_MYSQL_DB_DATABASE: katib
+      KATIB_POSTGRESQL_DB_HOST: katib-postgres
+      KATIB_POSTGRESQL_DB_PORT: "5432"
+      KATIB_POSTGRESQL_DB_DATABASE: katib
+      KATIB_POSTGRESQL_SSL_MODE: disable
+      SKIP_DB_INITIALIZATION: "false"
+      KATIB_SUGGESTION_COMPOSER: General
+    depends_on:
+      db-manager:
+        condition: service_healthy
+    networks:
+      - katib-network
+    restart: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "curl --no-progress-meter --fail --connect-timeout 5 http://localhost:8080/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+volumes:
+  mysql_data:
+    driver: local
+  postgres_data:
+    driver: local
+
+networks:
+  katib-network:
+    driver: bridge

@@ -1,0 +1,13 @@
+{
+  "service_id": "d7bc5927b2d8de852c9ade34",
+  "repo_name": "kubeflow/katib",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "3.42MB",
+  "language": "python",
+  "star": 1645,
+  "repo_flag": "PYTHON-TensorFlow",
+  "uploaded_at": "2026-01-14T04:30:01.175328"
+}
