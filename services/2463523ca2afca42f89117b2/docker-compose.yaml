@@ -1,0 +1,132 @@
+services:
+  # PostgreSQL database for DSpace
+  postgres:
+    image: postgres:16-alpine
+    container_name: dspace-postgres
+    environment:
+      POSTGRES_DB: dspace
+      POSTGRES_USER: dspace
+      POSTGRES_PASSWORD: dspace
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - dspace-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dspace -d dspace"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # Solr search engine for DSpace
+  solr:
+    build:
+      context: ./dspace/src/main/docker/dspace-solr/
+      dockerfile: Dockerfile
+      additional_contexts:
+        solrconfigs: ./dspace/solr/
+      args:
+        SOLR_VERSION: 9.8
+    container_name: dspace-solr
+    environment:
+      SOLR_OPTS: "-Dsolr.config.lib.enabled=true"
+    volumes:
+      - solr_data:/var/solr/data
+    networks:
+      - dspace-network
+    ports:
+      - "8983:8983"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:8983/solr/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # DSpace REST API server
+  dspace:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dspace-server
+    environment:
+      dspace.dir: /dspace
+      dspace.server.url: http://127.0.0.1:40523/server
+      dspace.server.ssr.url: http://127.0.0.1:40523/server
+      dspace.ui.url: http://localhost:4000
+      dspace.name: DSpace at My University
+      solr.server: http://solr:8983/solr
+      db.url: jdbc:postgresql://postgres:5432/dspace
+      db.username: dspace
+      db.password: dspace
+      # Flyway configuration
+      flyway.enabled: "true"
+      flyway.locations: classpath:db/migration
+      # Hibernate configuration - create schema on empty database
+      spring.jpa.hibernate.ddl-auto: update
+      spring.jpa.open-in-view: "false"
+      mail.server: smtp.example.com
+      mail.server.port: "25"
+      mail.from.address: dspace-noreply@example.com
+      mail.admin: admin@example.com
+      user.registration: "true"
+      user.forgot-password: "true"
+      registration.verification.enabled: "false"
+      jwt.login.token.secret: ""
+      jwt.login.token.expiration: "1800000"
+      jwt.shortLived.token.secret: ""
+      jwt.shortLived.token.expiration: "2000"
+      rest.cors.allowed-origins: "http://localhost:4000"
+      ldn.enabled: "true"
+      authentication-password.regex-validation.pattern: "^.{8,}$"
+      authentication-password.digestAlgorithm: SHA-512
+    volumes:
+      - dspace-jars:/app
+    networks:
+      - dspace-network
+    ports:
+      - "40523:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      solr:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:8080/server/api/health || exit 1"]
+      interval: 60s
+      timeout: 30s
+      retries: 10
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+networks:
+  dspace-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  solr_data:
+  dspace-jars:

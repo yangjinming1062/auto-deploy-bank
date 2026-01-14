@@ -1,0 +1,13 @@
+{
+  "service_id": "2463523ca2afca42f89117b2",
+  "repo_name": "DSpace/DSpace",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "7.78MB",
+  "language": "java",
+  "star": 1019,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-14T23:04:48.389164"
+}
