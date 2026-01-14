@@ -1,0 +1,83 @@
+services:
+
+  mysql:
+    image: mysql:8.0.36
+    container_name: tduck-mysql
+    networks:
+      - tduck-network
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=tduck@mysql
+      - MYSQL_DATABASE=tduck
+      - MYSQL_ROOT_HOST=%
+      - TZ=Asia/Shanghai
+    volumes:
+      - mysql-volume:/var/lib/mysql
+      - ./init-db:/docker-entrypoint-initdb.d
+    command: --default-authentication-plugin=caching_sha2_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  tduck-platform:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: tduck-platform:latest
+    container_name: tduck-platform
+    networks:
+      - tduck-network
+    restart: always
+    ports:
+      - "40123:8999"
+    volumes:
+      - upload-volume:/application/BOOT-INF/lib/upload
+      - ../target.jar:/scan/target.jar
+    environment:
+      - TZ=Asia/Shanghai
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/tduck?useSSL=false&useUnicode=true&characterEncoding=utf8&serverTimezone=UTC&tinyInt1isBit=false&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=tduck@mysql
+      - SPRING_MAIL_HOST=smtp.163.com
+      - SPRING_MAIL_PORT=465
+      - SPRING_MAIL_USERNAME=test@163.com
+      - SPRING_MAIL_PASSWORD=
+      - SPRING_MAIL_PROTOCOL=smtps
+      - PLATFORM_JWT_SECRET=f6f31a5f2136758f86b67cde583cb125
+      - PLATFORM_JWT_EXPIRE=604800
+      - PLATFORM_JWT_HEADER=token
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8999/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+volumes:
+  mysql-volume:
+  upload-volume:
+
+networks:
+  tduck-network:
+    driver: bridge

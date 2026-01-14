@@ -1,0 +1,13 @@
+{
+  "service_id": "ac035dda809a302ebf8878a8",
+  "repo_name": "TDuckCloud/tduck-platform",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "6.55MB",
+  "language": "java",
+  "star": 1165,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-14T08:35:13.367441"
+}
