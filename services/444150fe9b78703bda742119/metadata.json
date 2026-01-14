@@ -1,0 +1,13 @@
+{
+  "service_id": "444150fe9b78703bda742119",
+  "repo_name": "codemod/codemod",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "146.40MB",
+  "language": "nodejs",
+  "star": 900,
+  "repo_flag": "NODEJS-ChromaDB",
+  "uploaded_at": "2026-01-14T18:28:55.151237"
+}
