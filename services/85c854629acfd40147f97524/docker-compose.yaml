@@ -1,0 +1,57 @@
+services:
+  dgraph:
+    image: dgraph/standalone:v20.11.0
+    container_name: unigraph-dgraph
+    # Dgraph ports are internal only (communicates via Docker network)
+    volumes:
+      - dgraph-data:/dgraph
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    networks:
+      - unigraph-network
+
+  unigraph:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: unigraph-backend
+    ports:
+      - "40090:4001"
+    depends_on:
+      dgraph:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=production
+      - PORT=4001
+      - DGRAPH_HOST=dgraph
+      - UNIGRAPH_RECOVERY_MODE=${UNIGRAPH_RECOVERY_MODE:-}
+    volumes:
+      - ./secrets.env.json:/app/packages/unigraph-dev-backend/dist/secrets.env.json:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4001/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - unigraph-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+volumes:
+  dgraph-data:
+    driver: local
+
+networks:
+  unigraph-network:
+    driver: bridge
