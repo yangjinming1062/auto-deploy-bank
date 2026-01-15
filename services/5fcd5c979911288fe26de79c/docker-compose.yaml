@@ -1,0 +1,25 @@
+services:
+  ai-commits-plugin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai-commits-plugin
+    ports:
+      - "40720:8080"
+    volumes:
+      # Volume mount for security scanning - plugin available at ./target.jar on host
+      - ./target.jar:/usr/share/nginx/html/target.jar
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/target.jar"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
