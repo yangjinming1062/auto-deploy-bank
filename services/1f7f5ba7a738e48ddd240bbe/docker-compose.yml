@@ -1,0 +1,102 @@
+services:
+  app:
+    build:
+      context: .
+    container_name: openboxes-app
+    ports:
+      - "40425:8080"
+    environment:
+      # Database Configuration (required)
+      - DATASOURCE_URL=jdbc:mysql://db/openboxes?useSSL=false
+      - DATASOURCE_USERNAME=${DATASOURCE_USERNAME:-openboxes}
+      - DATASOURCE_PASSWORD=${DATASOURCE_PASSWORD:-openboxes}
+
+      # JVM Settings
+      - JAVA_TOOL_OPTIONS=${JAVA_TOOL_OPTIONS:--Xms1024m -Xmx1024m -XX:+UseParallelGC -Djava.awt.headless=true}
+
+      # Mail Configuration (optional)
+      - GRAILS_MAIL_HOST=${GRAILS_MAIL_HOST:-localhost}
+      - GRAILS_MAIL_PORT=${GRAILS_MAIL_PORT:-25}
+      - GRAILS_MAIL_USERNAME=${GRAILS_MAIL_USERNAME:-}
+      - GRAILS_MAIL_PASSWORD=${GRAILS_MAIL_PASSWORD:-}
+
+      # Sentry Error Monitoring (optional)
+      - SENTRY_DSN=${SENTRY_DSN:-}
+      - SENTRY_DSN_BACKEND=${SENTRY_DSN_BACKEND:-}
+      - SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT:-production}
+
+      # LDAP Configuration (optional)
+      - OPENBOXES_LDAP_ENABLED=${OPENBOXES_LDAP_ENABLED:-false}
+      - OPENBOXES_LDAP_CONTEXT_MANAGER_DN=${OPENBOXES_LDAP_CONTEXT_MANAGER_DN:-}
+      - OPENBOXES_LDAP_CONTEXT_MANAGER_PASSWORD=${OPENBOXES_LDAP_CONTEXT_MANAGER_PASSWORD:-}
+      - OPENBOXES_LDAP_SERVER_HOST=${OPENBOXES_LDAP_SERVER_HOST:-}
+      - OPENBOXES_LDAP_SERVER_PORT=${OPENBOXES_LDAP_SERVER_PORT:-389}
+      - OPENBOXES_LDAP_SEARCH_BASE=${OPENBOXES_LDAP_SEARCH_BASE:-}
+      - OPENBOXES_LDAP_SEARCH_FILTER=${OPENBOXES_LDAP_SEARCH_FILTER:-(uid={0})}
+
+      # Signup Configuration (optional)
+      - OPENBOXES_SIGNUP_ENABLED=${OPENBOXES_SIGNUP_ENABLED:-true}
+      - OPENBOXES_SIGNUP_RECAPTCHA_ENABLED=${OPENBOXES_SIGNUP_RECAPTCHA_ENABLED:-false}
+      - OPENBOXES_SIGNUP_RECAPTCHA_V2_SITE_KEY=${OPENBOXES_SIGNUP_RECAPTCHA_V2_SITE_KEY:-}
+      - OPENBOXES_SIGNUP_RECAPTCHA_V2_SECRET_KEY=${OPENBOXES_SIGNUP_RECAPTCHA_V2_SECRET_KEY:-}
+
+      # Frontend Sentry (optional)
+      - REACT_APP_WEB_SENTRY_DSN=${REACT_APP_WEB_SENTRY_DSN:-}
+      - REACT_APP_SENTRY_ENVIRONMENT=${REACT_APP_SENTRY_ENVIRONMENT:-}
+
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      # External configuration override (optional)
+      - ./config/openboxes.yml:/home/openboxes/.grails/openboxes.yml:ro
+    networks:
+      - openboxes-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8080/openboxes/ 2>/dev/null || curl -s -o /dev/null http://localhost:8080/openboxes/ 2>/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 180s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  db:
+    image: mariadb:10
+    container_name: openboxes-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: openboxes
+      MYSQL_USER: ${DATASOURCE_USERNAME:-openboxes}
+      MYSQL_PASSWORD: ${DATASOURCE_PASSWORD:-openboxes}
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    networks:
+      - openboxes-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "$$MYSQL_USER", "--password=$$MYSQL_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+networks:
+  openboxes-network:
+    driver: bridge
+
+volumes:
+  mariadb-data:
