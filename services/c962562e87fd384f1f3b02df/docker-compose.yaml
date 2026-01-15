@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  text-classification:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: text-classification-api
+    ports:
+      - "40328:5000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
