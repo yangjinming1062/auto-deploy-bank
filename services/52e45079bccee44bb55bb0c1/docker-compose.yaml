@@ -1,0 +1,31 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: online-editor
+    ports:
+      - "40585:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_SERVER_URL=http://1.117.152.40:8080
+      - NEXT_PUBLIC_WS_URL=ws://1.117.152.40:8080
+      - NEXT_PUBLIC_API_URL=
+      - MODEL_API_BASE_URL=https://dashscope.aliyuncs.com/api/v1/apps/
+      - QWEN_APP_ID=
+      - QWEN_AUTH=
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
