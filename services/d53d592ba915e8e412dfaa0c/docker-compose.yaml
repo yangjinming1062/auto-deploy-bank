@@ -1,0 +1,27 @@
+services:
+  spring-shell:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: spring-shell-app
+    ports:
+      - "40351:40351"
+    volumes:
+      - ./target.jar:/data/target.jar
+    environment:
+      - spring.application.name=spring-shell
+      - CI=true
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:40351/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
