@@ -1,0 +1,22 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "40036:8888"
+    environment:
+      - CUDA_VISIBLE_DEVICES=
+      - HF_HOME=/root/.cache/huggingface
+      - PYTHONUNBUFFERED=1
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    volumes:
+      - ./:/home/ubuntu/deploy-projects/20d958e0929f6618a35b1d55
+    shm_size: 4g
