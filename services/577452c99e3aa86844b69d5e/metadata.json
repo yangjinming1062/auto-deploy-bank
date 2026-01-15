@@ -1,0 +1,13 @@
+{
+  "service_id": "577452c99e3aa86844b69d5e",
+  "repo_name": "securefederatedai/openfederatedlearning",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.93MB",
+  "language": "python",
+  "star": 818,
+  "repo_flag": "PYTHON-PyTorch",
+  "uploaded_at": "2026-01-15T04:09:51.895906"
+}

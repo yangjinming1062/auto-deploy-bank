@@ -1,0 +1,36 @@
+services:
+  openfl:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: openfl-service
+    ports:
+      - "40359:50051"
+      - "40360:8080"
+    environment:
+      - GRPC_VERBOSITY=INFO
+      - TF_CPP_MIN_LOG_LEVEL=2
+      - PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+      - OPENFL_TLS_MODE=disabled
+    volumes:
+      - ./plan:/home/ubuntu/deploy-projects/577452c99e3aa86844b69d5e/plan:ro
+      - ./openfl-workspace:/home/ubuntu/deploy-projects/577452c99e3aa86844b69d5e/openfl-workspace:ro
+      - ./save:/home/ubuntu/deploy-projects/577452c99e3aa86844b69d5e/save
+      - ./data:/home/ubuntu/deploy-projects/577452c99e3aa86844b69d5e/data
+      - ./cert:/home/ubuntu/deploy-projects/577452c99e3aa86844b69d5e/cert
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import socket; s=socket.socket(); s.settimeout(1); s.connect(('127.0.0.1', 50051)); s.close()\""]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    command: ["/bin/bash", "-c", "python3 http_server.py & fx aggregator start"]
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
