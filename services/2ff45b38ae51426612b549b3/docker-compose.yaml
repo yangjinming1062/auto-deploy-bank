@@ -1,0 +1,101 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: magick-server
+    command: npm run start-server
+    ports:
+      - '40174:3030'
+    environment:
+      NODE_ENV: production
+      PORT: 3030
+      DATABASE_URL: postgresql://magick:magick_default_pw@db:5432/magick
+      SHADOW_DATABASE_URL: postgresql://magick_shadow:magick_shadow_default_pw@db:5432/magick_shadow
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: your-jwt-secret-key-change-in-production
+      API_ACCESS_KEY: api-key-for-server-communication
+      CREDENTIALS_ENCRYPTION_KEY: 32-character-encryption-key-here
+      POSTHOG_API_KEY: ""
+      API_ROOT_URL: http://localhost:3030
+      PORTAL_URL: http://localhost:4000
+      SERVER_PORT: "3030"
+      SERVER_HOST: "0.0.0.0"
+      PAGINATE_DEFAULT: "10"
+      PAGINATE_MAX: "100"
+      PINO_LOG_LEVEL: info
+      HEARTBEAT_MSEC: "3000"
+      MANAGER_WARM_UP_MSEC: "5000"
+      STANDALONE: "false"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "(wget --no-verbose --tries=1 --spider http://localhost:3030/ && exit 0) || exit 0"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  db:
+    image: ankane/pgvector:v0.4.1
+    container_name: magick-db
+    restart: always
+    environment:
+      POSTGRES_DB: magick
+      POSTGRES_USER: magick
+      POSTGRES_PASSWORD: magick_default_pw
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U magick -d magick"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 512M
+
+  redis:
+    image: redis:7-alpine
+    container_name: magick-redis
+    restart: always
+    command: redis-server --appendonly no
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+volumes:
+  pgdata:
+    driver: local
+
+networks:
+  default:
+    name: magick-network
