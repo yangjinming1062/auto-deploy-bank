@@ -1,0 +1,31 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: image-generation-cot
+    ports:
+      - "40524:40524"
+    environment:
+      - TOKENIZERS_PARALLELISM=true
+      - CUDA_LAUNCH_BLOCKING=1
+      - CUBLAS_WORKSPACE_CONFIG=:16:8
+      - RANK=-1
+      - NCCL_P2P_DISABLE=1
+      - NCCL_DEBUG=INFO
+      - PYTHONUNBUFFERED=1
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:40524/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped

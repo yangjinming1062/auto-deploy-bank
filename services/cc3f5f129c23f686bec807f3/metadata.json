@@ -1,0 +1,13 @@
+{
+  "service_id": "cc3f5f129c23f686bec807f3",
+  "repo_name": "ZiyuGuo99/Image-Generation-CoT",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "5.79MB",
+  "language": "python",
+  "star": 840,
+  "repo_flag": "PYTHON-LlamaIndex",
+  "uploaded_at": "2026-01-15T01:13:36.542206"
+}
