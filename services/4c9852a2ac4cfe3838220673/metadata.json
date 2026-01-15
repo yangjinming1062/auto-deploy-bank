@@ -1,0 +1,13 @@
+{
+  "service_id": "4c9852a2ac4cfe3838220673",
+  "repo_name": "cdapio/cdap",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "48.00MB",
+  "language": "java",
+  "star": 783,
+  "repo_flag": "JAVA-Logback",
+  "uploaded_at": "2026-01-15T11:36:43.800979"
+}

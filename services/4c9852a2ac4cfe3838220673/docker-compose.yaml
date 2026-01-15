@@ -1,0 +1,54 @@
+services:
+  cdap-master:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cdap-master
+    hostname: cdap-master
+
+    # Port mapping - CDAP Router on port 11015, UI on port 11011, SSL on port 10443
+    ports:
+      - "40461:11015"
+      - "11011:11011"
+      - "10443:10443"
+
+    # Environment variables
+    environment:
+      - CDAP_HOME=/opt/cdap/sandbox
+      - JAVA_OPTS=-Xmx4g -Xms1g
+
+    # Volume mount for security scanning - JAR file at /app/target.jar
+    # Note: ./target.jar file must exist on host before running docker compose
+    volumes:
+      - ./target.jar:/app/target.jar
+
+    # Resource limits to prevent container from consuming all system resources
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+    # Health check configuration
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:11015/v3/health"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 180s
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Network configuration - internal network for service communication
+    networks:
+      - cdap-internal
+
+# Internal network for CDAP services (not exposed to host)
+networks:
+  cdap-internal:
+    driver: bridge
+    internal: false
