@@ -1,0 +1,22 @@
+services:
+  findbugs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: findbugs
+    ports:
+      - "40470:8080"
+    environment:
+      - FB_NO_UPDATE_CHECKS=true
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    volumes:
+      # Mount the JAR from container for security scanning
+      - ./target.jar:/app/target/target.jar
+
