@@ -1,0 +1,127 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: bootdo-app:latest
+    container_name: bootdo-app
+    ports:
+      - "40619:80"
+    environment:
+      # Database configuration (useSSL=false for Java 17 compatibility)
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/bootdo?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true
+      # Disable Druid WallFilter to allow Activiti schema creation
+      SPRING_DATASOURCE_FILTERS: stat,slf4j
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_DATASOURCE_DRIVERCLASSNAME: com.mysql.jdbc.Driver
+      # Connection pool settings
+      SPRING_DATASOURCE_INITIALSIZE: 1
+      SPRING_DATASOURCE_MINIDLE: 3
+      SPRING_DATASOURCE_MAXACTIVE: 20
+      # Redis configuration (optional)
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_REDIS_PASSWORD: ""
+      SPRING_REDIS_TIMEOUT: 10000
+      # Cache configuration
+      SPRING_CACHE_TYPE: ehcache
+      # Session configuration
+      SERVER_SESSIONTIMEOUT: 1800
+      # Upload path
+      BOOTDO_UPLOADPATH: /var/uploaded_files/
+      # Active profile
+      SPRING_PROFILES_ACTIVE: dev
+      # Disable Activiti schema creation - tables are created via init scripts
+      ACTIVITI_DATABASESCHEMAUPDATE: false
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    volumes:
+      # Mount target directory for JAR access and security scanning
+      - ./target:/output:ro
+      # Persistent storage for uploads
+      - bootdo-uploads:/var/uploaded_files/
+    restart: unless-stopped
+    networks:
+      - bootdo-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  mysql:
+    image: mysql:5.6
+    container_name: bootdo-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: bootdo
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    command: --explicit-defaults-for-timestamp=1 --sql-mode=""
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./bootdo/bootdo.sql:/docker-entrypoint-initdb.d/bootdo.sql:ro
+      - ./bootdo/src/main/resources/activiti-tables.sql:/docker-entrypoint-initdb.d/activiti-tables.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - bootdo-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  redis:
+    image: redis:7-alpine
+    container_name: bootdo-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - bootdo-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+volumes:
+  mysql-data:
+    driver: local
+  redis-data:
+    driver: local
+  bootdo-uploads:
+    driver: local
+
+networks:
+  bootdo-network:
+    driver: bridge
