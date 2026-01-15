@@ -1,0 +1,77 @@
+services:
+  # MongoDB database service (internal only, not exposed to host)
+  mongodb:
+    image: mongo:5
+    container_name: flyfish-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: flyfish
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - flyfish-network
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval \"db.adminCommand('ping')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # FlyFish lcapServer application
+  lcapserver:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flyfish-lcapserver
+    restart: unless-stopped
+    ports:
+      - "40808:7001"
+    environment:
+      NODE_ENV: production
+      PORT: 7001
+      EGG_SERVER_ENV: docker
+      MONGODB_URI: mongodb://mongodb:27017/flyfish
+      mongodbIp: mongodb
+      mongodbPort: 27017
+      mongodbDatabase: flyfish
+      serverIp: 0.0.0.0
+      serverPort: 7001
+      WORKERS: 1
+    volumes:
+      - lcap_logs:/home/ubuntu/deploy-projects/761e5623bd8b94717cba3daf/lcapServer/logs
+      - lcap_www:/home/ubuntu/deploy-projects/761e5623bd8b94717cba3daf/lcapServer/www
+      - app_data:/home/ubuntu/deploy-projects/761e5623bd8b94717cba3daf/home/ubuntu/deploy-projects/761e5623bd8b94717cba3dafData
+    depends_on:
+      - mongodb
+    networks:
+      - flyfish-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+networks:
+  flyfish-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
+  lcap_logs:
+    driver: local
+  lcap_www:
+    driver: local
+  app_data:
+    driver: local
