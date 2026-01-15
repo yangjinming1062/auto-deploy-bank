@@ -1,0 +1,25 @@
+services:
+  app:
+    build: .
+    container_name: csp-detection
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
+    volumes:
+      - ./data:/app/data
+    ports:
+      - "5000:5000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import os; import sys; sys.exit(0 if os.path.exists('/app/app.py') else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    command: ["python", "-u", "app.py"]
