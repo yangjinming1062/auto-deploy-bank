@@ -1,0 +1,13 @@
+{
+  "service_id": "f4a854a389361a05615b417d",
+  "repo_name": "thunlp/LLMxMapReduce",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "4.64MB",
+  "language": "python",
+  "star": 843,
+  "repo_flag": "PYTHON-vllm",
+  "uploaded_at": "2026-01-15T00:33:23.796058"
+}

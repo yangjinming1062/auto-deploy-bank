@@ -1,0 +1,33 @@
+services:
+  llmxmapreduce:
+    build:
+      context: ./LLMxMapReduce_V3
+      dockerfile: Dockerfile
+    container_name: llmxmapreduce
+    ports:
+      - "40483:40483"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_API_BASE=${OPENAI_API_BASE:-}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - SERP_API_KEY=${SERP_API_KEY:-}
+      - SERPAPI_KEY=${SERPAPI_KEY:-}
+      - BING_SEARCH_V7_SUBSCRIPTION_KEY=${BING_SEARCH_V7_SUBSCRIPTION_KEY:-}
+      - BING_SEARCH_V7_ENDPOINT=${BING_SEARCH_V7_ENDPOINT:-}
+      - GOOGLE_CUSTOM_SEARCH_API_KEY=${GOOGLE_CUSTOM_SEARCH_API_KEY:-}
+      - PROMPT_LANGUAGE=${PROMPT_LANGUAGE:-en}
+    volumes:
+      - ./output:/app/output
+    working_dir: /app
+    command: >
+      python src/web_server.py
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
