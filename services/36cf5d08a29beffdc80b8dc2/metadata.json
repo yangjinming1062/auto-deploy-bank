@@ -1,0 +1,13 @@
+{
+  "service_id": "36cf5d08a29beffdc80b8dc2",
+  "repo_name": "matplotlib/basemap",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "123.73MB",
+  "language": "python",
+  "star": 798,
+  "repo_flag": "PYTHON-Matplotlib",
+  "uploaded_at": "2026-01-15T04:49:03.966814"
+}
