@@ -1,0 +1,20 @@
+services:
+  stock-prediction:
+    build: .
+    container_name: stock-prediction-service
+    ports:
+      - "40434:40434"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:40434/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
