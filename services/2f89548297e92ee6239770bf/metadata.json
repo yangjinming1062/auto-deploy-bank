@@ -1,0 +1,13 @@
+{
+  "service_id": "2f89548297e92ee6239770bf",
+  "repo_name": "DR-lin-eng/stock-scanner",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.18MB",
+  "language": "python",
+  "star": 776,
+  "repo_flag": "PYTHON-NumPy",
+  "uploaded_at": "2026-01-15T09:27:53.036436"
+}
