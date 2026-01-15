@@ -1,0 +1,13 @@
+{
+  "service_id": "945b57a8a33541d3b577294e",
+  "repo_name": "KoljaB/Linguflex",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.32MB",
+  "language": "python",
+  "star": 782,
+  "repo_flag": "PYTHON-ollama",
+  "uploaded_at": "2026-01-15T07:10:48.431548"
+}
