@@ -1,0 +1,13 @@
+{
+  "service_id": "39e0564fa3570827a93de441",
+  "repo_name": "malywut/gpt_examples",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "251KB",
+  "language": "python",
+  "star": 662,
+  "repo_flag": "PYTHON-langchain",
+  "uploaded_at": "2026-01-16T17:59:33.058248"
+}
