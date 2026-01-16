@@ -1,0 +1,28 @@
+services:
+  hyperchat:
+    build:
+      context: .
+      dockerfile: docker/no_electron/Dockerfile
+    ports:
+      - "42321:16100"
+    environment:
+      - NODE_ENV=production
+      - PORT=16100
+      - myEnv=prod
+      - runtime=node
+      - no_electron=1
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:16100/123456/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
