@@ -1,0 +1,13 @@
+{
+  "service_id": "b3b55dafb318fea698231fb5",
+  "repo_name": "mckaywrigley/ai-brainstore",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "540KB",
+  "language": "nodejs",
+  "star": 722,
+  "repo_flag": "NODEJS-ChromaDB",
+  "uploaded_at": "2026-01-16T11:29:21.266929"
+}

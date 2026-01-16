@@ -1,0 +1,40 @@
+services:
+  chromadb:
+    image: chromadb/chroma:0.4.15
+    container_name: ai-brainstore-chromadb
+    expose:
+      - "8000"
+    environment:
+      - IS_PERSISTENT=TRUE
+    volumes:
+      - chromadb_data:/chroma/chroma
+
+  ai-brainstore:
+    build: .
+    container_name: ai-brainstore-app
+    stdin_open: true
+    tty: true
+    ports:
+      - "43927:43927"
+    environment:
+      - NODE_ENV=production
+      - PORT=43927
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - DEFAULT_MODEL=${DEFAULT_MODEL:-gpt-3.5-turbo}
+      - COLLECTION_NAME=${COLLECTION_NAME:-ai-brainstore}
+      - REVIEW_MEMORIES=${REVIEW_MEMORIES:-true}
+      - SERPAPI_API_KEY=${SERPAPI_API_KEY}
+      - CHROMA_HOST=http://chromadb:8000
+    depends_on:
+      - chromadb
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+volumes:
+  chromadb_data:
