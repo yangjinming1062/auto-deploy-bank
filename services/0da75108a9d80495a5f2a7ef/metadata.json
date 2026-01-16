@@ -1,0 +1,13 @@
+{
+  "service_id": "0da75108a9d80495a5f2a7ef",
+  "repo_name": "SkyworkAI/Skywork-OR1",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "3.82MB",
+  "language": "python",
+  "star": 733,
+  "repo_flag": "PYTHON-vllm",
+  "uploaded_at": "2026-01-16T00:10:47.663494"
+}

@@ -1,0 +1,49 @@
+services:
+  verl:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: verl-training
+    ports:
+      - "40627:40587"
+    environment:
+      - WORLD_SIZE=1
+      - RANK=0
+      - LOCAL_RANK=0
+      - MASTER_ADDR=127.0.0.1
+      - MASTER_PORT=29500
+      - LOCAL_WORLD_SIZE=1
+      - CUDA_VISIBLE_DEVICES=
+      - NCCL_DEBUG=WARN
+      - TOKENIZERS_PARALLELISM=true
+      - WANDB_API_KEY=${WANDB_API_KEY:-}
+      - OPENAI_KEY=${OPENAI_KEY:-}
+      - ANTHROPIC_KEY=${ANTHROPIC_KEY:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY:-}
+      - COHERE_API_KEY=${COHERE_API_KEY:-}
+      - FIREWORKS_API=${FIREWORKS_API:-}
+      - SWANLAB_API_KEY=${SWANLAB_API_KEY:-}
+      - SWANLAB_MODE=cloud
+      - RAY_DEBUG=${RAY_DEBUG:-}
+      - DISABLE_WORKER_INIT=0
+      - VERL_ENABLE_TRACKER=${VERL_ENABLE_TRACKER:-}
+      - VLLM_ATTENTION_BACKEND=${VLLM_ATTENTION_BACKEND:-}
+    volumes:
+      - ./data:/home/ubuntu/deploy-projects/0da75108a9d80495a5f2a7ef/data
+      - ./checkpoints:/home/ubuntu/deploy-projects/0da75108a9d80495a5f2a7ef/checkpoints
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:40587/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    command: ["python", "/home/ubuntu/deploy-projects/0da75108a9d80495a5f2a7ef/web_server.py"]
