@@ -1,0 +1,13 @@
+{
+  "service_id": "3bfd5b43acccd24638c4584b",
+  "repo_name": "arx-deidentifier/arx",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "71.47MB",
+  "language": "java",
+  "star": 683,
+  "repo_flag": "JAVA-Mahout",
+  "uploaded_at": "2026-01-16T16:01:24.364323"
+}

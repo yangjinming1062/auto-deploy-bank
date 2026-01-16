@@ -1,0 +1,19 @@
+services:
+  arx:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: arx-app
+    ports:
+      - "44373:44373"
+    volumes:
+      - ./target.jar:/app/host-target.jar:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
