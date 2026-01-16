@@ -1,0 +1,13 @@
+{
+  "service_id": "a8b0530db6974f1580ef436c",
+  "repo_name": "DataDog/dd-trace-java",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "60.30MB",
+  "language": "java",
+  "star": 681,
+  "repo_flag": "JAVA-Logback",
+  "uploaded_at": "2026-01-16T11:59:14.969810"
+}
