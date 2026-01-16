@@ -1,0 +1,13 @@
+{
+  "service_id": "d07f5793b48b072008ccf133",
+  "repo_name": "VectorSpaceLab/general-agentic-memory",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.18MB",
+  "language": "python",
+  "star": 720,
+  "repo_flag": "PYTHON-vllm",
+  "uploaded_at": "2026-01-16T04:25:18.822138"
+}
