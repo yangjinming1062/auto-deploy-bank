@@ -1,0 +1,13 @@
+{
+  "service_id": "49b65a14bc2b017e325149f2",
+  "repo_name": "NVlabs/Long-RL",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "6.16MB",
+  "language": "python",
+  "star": 673,
+  "repo_flag": "PYTHON-vllm",
+  "uploaded_at": "2026-01-16T17:26:25.413978"
+}
