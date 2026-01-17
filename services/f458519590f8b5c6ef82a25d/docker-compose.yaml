@@ -1,0 +1,82 @@
+services:
+  db:
+    image: mysql:5.7
+    container_name: reactpress_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${DB_DATABASE:-reactpress}
+      MYSQL_USER: ${DB_USER:-reactpress}
+      MYSQL_PASSWORD: ${DB_PASSWD:-reactpress}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - reactpress-network
+    healthcheck:
+      test: ["CMD", "mysql", "-u", "root", "-proot", "-e", "SELECT 1"]
+      timeout: 20s
+      retries: 10
+      start_period: 30s
+      interval: 10s
+    ports: []
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: reactpress_server
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=production
+      - PORT=3002
+      - SERVER_PORT=3002
+      - SERVER_API_PREFIX=/api
+      - DB_HOST=${DB_HOST:-db}
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_USER=${DB_USER:-reactpress}
+      - DB_PASSWD=${DB_PASSWD:-reactpress}
+      - DB_DATABASE=${DB_DATABASE:-reactpress}
+      - SERVER_SITE_URL=${SERVER_SITE_URL:-http://localhost:40160}
+      - CLIENT_SITE_URL=${CLIENT_SITE_URL:-http://localhost:40160}
+      - ADMIN_USER=${ADMIN_USER:-admin}
+      - ADMIN_PASSWD=${ADMIN_PASSWD:-admin}
+    ports:
+      - "40160:3002"
+    networks:
+      - reactpress-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3002/api"]
+      timeout: 30s
+      retries: 5
+      start_period: 40s
+      interval: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+volumes:
+  db_data:
+
+networks:
+  reactpress-network:
+    driver: bridge
