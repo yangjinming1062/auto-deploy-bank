@@ -1,0 +1,13 @@
+{
+  "service_id": "97325efb8a24cd5e89597bd5",
+  "repo_name": "wandb/edu",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "19.91MB",
+  "language": "python",
+  "star": 644,
+  "repo_flag": "PYTHON-PyTorch",
+  "uploaded_at": "2026-01-17T06:04:18.476559"
+}
