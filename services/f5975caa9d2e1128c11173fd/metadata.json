@@ -1,0 +1,13 @@
+{
+  "service_id": "f5975caa9d2e1128c11173fd",
+  "repo_name": "UMass-Embodied-AGI/3D-VLA",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.50MB",
+  "language": "python",
+  "star": 602,
+  "repo_flag": "PYTHON-Transformers",
+  "uploaded_at": "2026-01-17T13:30:15.883236"
+}

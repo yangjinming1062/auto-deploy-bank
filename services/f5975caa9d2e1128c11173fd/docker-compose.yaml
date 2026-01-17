@@ -1,0 +1,26 @@
+services:
+  3dvla:
+    build: .
+    ports:
+      - "41752:8000"
+    environment:
+      - DIFFUSEBOT_ROOT=/home/ubuntu/deploy-projects/f5975caa9d2e1128c11173fd
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./cache:/home/ubuntu/deploy-projects/f5975caa9d2e1128c11173fd/cache
+      - ./docs:/home/ubuntu/deploy-projects/f5975caa9d2e1128c11173fd/docs:ro
+      - ./results:/home/ubuntu/deploy-projects/f5975caa9d2e1128c11173fd/results
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
