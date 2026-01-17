@@ -1,0 +1,13 @@
+{
+  "service_id": "ee2a533d8b92db80eb34ff12",
+  "repo_name": "microsoft/PodcastCopilot",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "2.52MB",
+  "language": "python",
+  "star": 649,
+  "repo_flag": "PYTHON-LangChain",
+  "uploaded_at": "2026-01-17T05:47:38.718041"
+}

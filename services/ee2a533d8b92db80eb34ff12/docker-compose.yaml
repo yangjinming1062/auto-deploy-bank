@@ -1,0 +1,40 @@
+services:
+  podcast-copilot:
+    build: .
+    container_name: podcast-social-media-copilot
+    ports:
+      - "5000:5000"
+    # Environment variables required for Azure OpenAI and Bing Search API
+    environment:
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+      - AZURE_OPENAI_API_BASE=${AZURE_OPENAI_API_BASE}
+      - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION:-2023-03-15-preview}
+      - GPT4_DEPLOYMENT_NAME=${GPT4_DEPLOYMENT_NAME:-gpt-4}
+      - BING_SUBSCRIPTION_KEY=${BING_SUBSCRIPTION_KEY}
+      - PODCAST_AUDIO_FILE=${PODCAST_AUDIO_FILE:-./PodcastSnippet.mp3}
+      - PODCAST_URL=${PODCAST_URL:-https://www.microsoft.com/behind-the-tech}
+      # Set to "y" to enable LinkedIn posting (requires manual confirmation disabled)
+      - LINKEDIN_POST_CONFIRM=${LINKEDIN_POST_CONFIRM:-n}
+    # Volume mount for input/output files
+    volumes:
+      - ./PodcastSnippet.mp3:/home/ubuntu/deploy-projects/ee2a533d8b92db80eb34ff12/PodcastSnippet.mp3:ro
+      - ./output:/home/ubuntu/deploy-projects/ee2a533d8b92db80eb34ff12/output
+    # Resource limits - Dolly 2 ONNX model requires ~14GB memory
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 16G
+        reservations:
+          cpus: '2.0'
+          memory: 4G
+    # Healthcheck - batch job is healthy if main process is running
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "PodcastSocialMediaCopilot.py", "||", "exit", "1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    # Batch job - runs to completion and exits
+    tty: true
+    stdin_open: true
