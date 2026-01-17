@@ -1,0 +1,31 @@
+services:
+  video2dataset:
+    build: .
+    container_name: video2dataset
+    command: ["python", "web_server.py", "8001"]
+    environment:
+      - PYTHONUNBUFFERED=1
+      - CALLED_FROM_SLURM=${CALLED_FROM_SLURM:-}
+      - GLOBAL_RANK=${GLOBAL_RANK:-}
+      - LOCAL_RANK=${LOCAL_RANK:-}
+      - VIRTUAL_ENV=${VIRTUAL_ENV:-}
+      - CONDA_ENV=${CONDA_ENV:-}
+      - XDG_CACHE_HOME=${XDG_CACHE_HOME:-}
+      - S3_VERIFY_SSL=${S3_VERIFY_SSL:-1}
+      - TF_CPP_MIN_LOG_LEVEL=${TF_CPP_MIN_LOG_LEVEL:-2}
+    ports:
+      - "41595:8001"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8001/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
