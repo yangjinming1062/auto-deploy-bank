@@ -1,0 +1,7 @@
+# Jiron Cloud Platform - Root Level Docker Compose
+# Includes the main configuration from docker/docker-compose.yml
+
+include:
+  - path: docker/docker-compose.yml
+
+# Optional: Override or add additional configuration here if needed
