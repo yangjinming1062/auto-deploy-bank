@@ -1,0 +1,45 @@
+services:
+  raydiffusion:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: raydiffusion:latest
+    container_name: raydiffusion-container
+    environment:
+      - MODE=${MODE:-verify}
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+      - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
+      - NVIDIA_DRIVER_CAPABILITIES=${NVIDIA_DRIVER_CAPABILITIES:-compute,utility}
+      - TRAINING_BATCH_SIZE=${TRAINING_BATCH_SIZE:-8}
+      - TRAINING_MAX_ITERATIONS=${TRAINING_MAX_ITERATIONS:-300000}
+      - REGRESSION=${REGRESSION:-False}
+      - DATASET_CATEGORY=${DATASET_CATEGORY:-all_train}
+      - WANDB_API_KEY=${WANDB_API_KEY:-}
+      - WANDB_MODE=${WANDB_MODE:-offline}
+      - CO3D_DATA_DIR=${CO3D_DATA_DIR:-../co3d_data}
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./:/app
+      - ./output:/app/output
+      - ./models:/app/models
+      - ./examples:/app/examples
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import torch; import cv2; from accelerate import Accelerator\" || exit 1"]
+      interval: 120s
+      timeout: 60s
+      retries: 3
+      start_period: 180s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    ports:
+      - "8080:8080"
+    command: ["sh", "-c", "python server.py"]
+    stdin_open: true
+    tty: true
+    network_mode: bridge

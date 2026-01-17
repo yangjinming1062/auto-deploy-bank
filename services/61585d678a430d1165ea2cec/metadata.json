@@ -1,0 +1,13 @@
+{
+  "service_id": "61585d678a430d1165ea2cec",
+  "repo_name": "jasonyzhang/RayDiffusion",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "3.59MB",
+  "language": "python",
+  "star": 613,
+  "repo_flag": "PYTHON-Matplotlib",
+  "uploaded_at": "2026-01-17T14:09:03.753401"
+}
