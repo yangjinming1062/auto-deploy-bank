@@ -1,0 +1,31 @@
+services:
+  lstr:
+    build: .
+    container_name: lstr-lane-detection
+    environment:
+      - PYTHONUNBUFFERED=1
+      - CUDA_DEVICE_ORDER=PCI_BUS_ID
+      - CUDA_VISIBLE_DEVICES=0
+      - RANK=0
+      - WORLD_SIZE=1
+      - LOCAL_RANK=0
+      - SERVER_PORT=8080
+    ports:
+      - "40940:8080"
+    volumes:
+      - ./:/home/ubuntu/deploy-projects/47bb5f3ab9460c0e249214c4
+      - ./data:/data
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
