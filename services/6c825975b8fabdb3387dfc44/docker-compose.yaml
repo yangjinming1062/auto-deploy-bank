@@ -1,0 +1,25 @@
+services:
+  comsat-spring-boot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: comsat-spring-boot-app
+    ports:
+      - "41360:8080"
+    environment:
+      - CI=true
+    volumes:
+      - ./target.jar:/app/target.jar
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+
+networks:
+  default:
+    name: comsat-network

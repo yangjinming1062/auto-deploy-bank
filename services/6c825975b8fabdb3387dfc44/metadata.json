@@ -1,0 +1,13 @@
+{
+  "service_id": "6c825975b8fabdb3387dfc44",
+  "repo_name": "puniverse/comsat",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "2.26MB",
+  "language": "java",
+  "star": 595,
+  "repo_flag": "JAVA-SpringBoot",
+  "uploaded_at": "2026-01-17T21:27:30.758505"
+}
