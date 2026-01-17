@@ -1,0 +1,29 @@
+services:
+  evomaster:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: evomaster
+    volumes:
+      - ./generated_tests:/app/generated_tests
+    environment:
+      - JAVA_HOME=/opt/java/openjdk
+      - JAVA_OPTS=--add-opens java.base/java.net=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: "no"
+
+  webserver:
+    image: nginx:alpine
+    container_name: evomaster-web
+    ports:
+      - "41181:80"
+    volumes:
+      - ./generated_tests:/usr/share/nginx/html:ro
+    restart: "no"
