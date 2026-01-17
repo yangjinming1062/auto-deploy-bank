@@ -1,0 +1,13 @@
+{
+  "service_id": "8a2c5d71b5bc26899abe4528",
+  "repo_name": "fantasticit/wipi",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "620KB",
+  "language": "nodejs",
+  "star": 621,
+  "repo_flag": "NODEJS-PM2",
+  "uploaded_at": "2026-01-17T08:06:43.895670"
+}

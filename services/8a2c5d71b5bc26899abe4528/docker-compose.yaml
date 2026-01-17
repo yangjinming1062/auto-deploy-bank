@@ -1,0 +1,147 @@
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: wipi-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: wipi
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - wipi-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: server
+    container_name: wipi-server
+    restart: unless-stopped
+    ports:
+      - "41742:3003"
+    environment:
+      NODE_ENV: production
+      PORT: 3003
+      SERVER_PORT: 3003
+      SERVER_API_URL: http://localhost:41742/api
+      SERVER_API_PREFIX: /api
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWD: root
+      DB_DATABASE: wipi
+      ADMIN_USER: admin
+      ADMIN_PASSWD: admin
+      CLIENT_SITE_URL: http://localhost:41717
+      ADMIN_ASSET_PREFIX: /
+      CLIENT_ASSET_PREFIX: /
+      GITHUB_CLIENT_ID: "0"
+      GITHUB_CLIENT_SECRET: "0"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - wipi-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3003/api"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: admin
+    container_name: wipi-admin
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      ADMIN_PORT: 3002
+      SERVER_API_URL: http://server:3003/api
+      ADMIN_ASSET_PREFIX: /
+    depends_on:
+      server:
+        condition: service_healthy
+    networks:
+      - wipi-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3002"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: client
+    container_name: wipi-client
+    restart: unless-stopped
+    ports:
+      - "41717:3001"
+    environment:
+      NODE_ENV: production
+      CLIENT_PORT: 3001
+      SERVER_API_URL: http://server:3003/api
+      CLIENT_SITE_URL: http://localhost:41717
+      CLIENT_ASSET_PREFIX: /
+    depends_on:
+      server:
+        condition: service_healthy
+    networks:
+      - wipi-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  wipi-network:
+    driver: bridge
