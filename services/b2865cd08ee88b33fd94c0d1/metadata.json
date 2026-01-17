@@ -1,0 +1,13 @@
+{
+  "service_id": "b2865cd08ee88b33fd94c0d1",
+  "repo_name": "statmike/vertex-ai-mlops",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "749.56MB",
+  "language": "python",
+  "star": 650,
+  "repo_flag": "PYTHON-NumPy",
+  "uploaded_at": "2026-01-17T06:54:52.552260"
+}
