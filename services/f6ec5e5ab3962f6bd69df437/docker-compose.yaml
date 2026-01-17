@@ -1,0 +1,33 @@
+services:
+  iqq:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: iqq-desktop
+    ports:
+      - "40432:40432"
+      - "6080:6080"
+    volumes:
+      - ./target.jar:/app/target.jar:ro
+    environment:
+      - DISPLAY=:99
+      - app.dir=/app
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "target.jar"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    security_opt:
+      - seccomp:unconfined
+    stdin_open: true
+    tty: true
