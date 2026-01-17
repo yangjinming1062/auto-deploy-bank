@@ -1,0 +1,13 @@
+{
+  "service_id": "61f05e879cf951590298e443",
+  "repo_name": "frank-xwang/InstanceDiffusion",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "6.61MB",
+  "language": "python",
+  "star": 600,
+  "repo_flag": "PYTHON-Transformers",
+  "uploaded_at": "2026-01-17T19:20:23.607986"
+}

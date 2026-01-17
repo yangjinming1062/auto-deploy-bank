@@ -1,0 +1,32 @@
+services:
+  instancediffusion:
+    build: .
+    ports:
+      - "41605:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - CUDA_VISIBLE_DEVICES=0
+      - WANDB__SERVICE_WAIT=600
+      - XDG_CACHE_HOME=~/.cache
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 180s
+    restart: unless-stopped
+    volumes:
+      - ./OUTPUT:/app/OUTPUT
+      - ./pretrained:/app/pretrained
+      - ./configs:/app/configs
+      - ./demos:/app/demos
+    command: ["python", "service.py"]
