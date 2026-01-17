@@ -1,0 +1,185 @@
+services:
+  db:
+    image: mysql:8
+    restart: always
+    environment:
+      MYSQL_DATABASE: django_vue
+      MYSQL_USER: chenze
+      MYSQL_PASSWORD: "123456"
+      MYSQL_ROOT_PASSWORD: root123456
+      TZ: Asia/Shanghai
+    volumes:
+      - ./sql/django_vue.sql:/docker-entrypoint-initdb.d/django_vue.sql
+      - mysql_data:/var/lib/mysql
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:7
+    restart: always
+    command: redis-server --appendonly yes
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    command: gunicorn backend.wsgi:application --bind 0.0.0.0:8000
+    environment:
+      DEBUG: "False"
+      DEMO_MODE: "False"
+      DJANGO_ALLOWED_HOSTS: "*"
+      DB_NAME: django_vue
+      DB_USER: chenze
+      DB_PASSWORD: "123456"
+      DB_HOST: db
+      DB_PORT: "3306"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ""
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    volumes:
+      - static_data:/app/static
+      - media_data:/app/media
+    ports:
+      - "40423:8000"
+    networks:
+      - app_network
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  celery_worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    command: celery -A backend worker -l info
+    environment:
+      DB_NAME: django_vue
+      DB_USER: chenze
+      DB_PASSWORD: "123456"
+      DB_HOST: db
+      DB_PORT: "3306"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    networks:
+      - app_network
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  celery_beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    command: celery -A backend beat -l info
+    environment:
+      DB_NAME: django_vue
+      DB_USER: chenze
+      DB_PASSWORD: "123456"
+      DB_HOST: db
+      DB_PORT: "3306"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    networks:
+      - app_network
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  ai_service:
+    build:
+      context: ./ai_service
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: ""
+      OPENAI_API_KEY: ""
+      DEEPSEEK_API_KEY: ""
+      DASHSCOPE_API_KEY: ""
+    networks:
+      - app_network
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8010/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+volumes:
+  mysql_data:
+  static_data:
+  media_data:
+
+networks:
+  app_network:
+    driver: bridge
