@@ -1,0 +1,80 @@
+services:
+  app:
+    build:
+      context: eladmin
+      dockerfile: Dockerfile
+    container_name: eladmin-app
+    ports:
+      - "41620:8000"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=1
+      - REDIS_PWD=
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=eladmin-mp
+      - DB_USER=root
+      - DB_PWD=123456
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - eladmin-network
+    volumes:
+      - ./target.jar:/app/target.jar
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    container_name: eladmin-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=eladmin-mp
+    networks:
+      - eladmin-network
+    volumes:
+      - mysql-data:/var/lib/mysql
+    ports:
+      - "8013:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: eladmin-redis
+    command: redis-server --appendonly yes
+    networks:
+      - eladmin-network
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+networks:
+  eladmin-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  redis-data:

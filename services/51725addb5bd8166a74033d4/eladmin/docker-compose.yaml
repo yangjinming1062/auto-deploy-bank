@@ -1,0 +1,120 @@
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: eladmin-mysql
+    restart: unless-stopped
+    # Port not exposed to host - internal communication only via Docker network
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: eladmin-mp
+      MYSQL_CHARACTERSET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ../sql:/docker-entrypoint-initdb.d:ro
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - eladmin-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: eladmin-redis
+    restart: unless-stopped
+    # Port not exposed to host - internal communication only via Docker network
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - eladmin-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # ElAdmin Application
+  eladmin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: eladmin-app
+    restart: unless-stopped
+    ports:
+      - "41605:8000"
+    environment:
+      # Database Configuration
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: eladmin
+      DB_USER: root
+      DB_PWD: "123456"
+      # Redis Configuration
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 1
+      REDIS_PWD: ""
+      # Application Configuration
+      SERVER_PORT: 8000
+      SPRING_PROFILES_ACTIVE: dev
+    volumes:
+      # Volume mount for security scanning (JAR accessible from host via bind mount)
+      - ./target.jar:/exports/target.jar
+      # Mount config.yaml for environment variables
+      - ../config.yaml:/app/config.yaml:ro
+      # File storage volumes
+      - file-data:/home/eladmin/file
+      - avatar-data:/home/eladmin/avatar
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8000/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - eladmin-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+networks:
+  eladmin-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  redis-data:
+  file-data:
+  avatar-data:
