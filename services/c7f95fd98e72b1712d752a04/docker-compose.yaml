@@ -1,0 +1,51 @@
+services:
+  memoripy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: memoripy-app
+    ports:
+      - "40098:8080"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-your-api-key}
+      - MEMORIPY_CHAT_MODEL=${MEMORIPY_CHAT_MODEL:-openai}
+      - MEMORIPY_CHAT_MODEL_NAME=${MEMORIPY_CHAT_MODEL_NAME:-gpt-4o-mini}
+      - MEMORIPY_EMBEDDING_MODEL=${MEMORIPY_EMBEDDING_MODEL:-openai}
+      - MEMORIPY_EMBEDDING_MODEL_NAME=${MEMORIPY_EMBEDDING_MODEL_NAME:-text-embedding-3-small}
+      - MEMORIPY_DYNAMO_HOST=${MEMORIPY_DYNAMO_HOST:-}
+      - MEMORIPY_DYNAMO_REGION=${MEMORIPY_DYNAMO_REGION:-us-east-1}
+      - PORT=8080
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  dynamodb:
+    image: amazon/dynamodb-local:latest
+    container_name: memoripy-dynamodb
+    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
+    ports:
+      - "8200:8000"
+    volumes:
+      - dynamodb_data:/home/dynamodblocal/data
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+volumes:
+  dynamodb_data:
