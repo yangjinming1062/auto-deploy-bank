@@ -1,0 +1,35 @@
+services:
+  comfyui-idm-vton:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: comfyui-idm-vton
+    ports:
+      - "41737:40148"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    environment:
+      - PYTHONUNBUFFERED=1
+      - HF_TOKEN=${HF_TOKEN:-}
+    volumes:
+      - ./models:/comfyui/models
+      - ./output:/comfyui/output
+    networks:
+      - comfyui-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:40148"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 120s
+
+networks:
+  comfyui-network:
+    driver: bridge
