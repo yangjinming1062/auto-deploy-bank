@@ -1,0 +1,90 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: linfeng-community
+    ports:
+      - "47260:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev,docker
+      - SPRING_DATASOURCE_DRUID_URL=jdbc:mysql://mysql:3306/linfeng-community-ky?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_DRUID_USERNAME=root
+      - SPRING_DATASOURCE_DRUID_PASSWORD=root
+      - LINFENG_REDIS_HOST=redis
+      - LINFENG_REDIS_PORT=6379
+      - LINFENG_REDIS_PASSWORD=
+      - LINFENG_JWT_SECRET=f4e2e52034348f86b67cde581c0f9eb5
+      - LINFENG_JWT_EXPIRE=604800
+      - LINFENG_JWT_HEADER=token
+      - LINFENG_SMS_OPEN=false
+      - LINFENG_OSS_MAX_SIZE=30
+      - LINFENG_ADMIN_OSS_MAX_SIZE=5
+      - LINFENG_SWAGGER_ENABLE=true
+      - LINFENG_SWAGGER_VERSION=3.0.0
+      - SERVER_PORT=8080
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    networks:
+      - app-network
+    volumes:
+      - ./target.jar:/app/target.jar
+
+  mysql:
+    image: mysql:8.0
+    container_name: linfeng-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: linfeng-community-ky
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./config/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    networks:
+      - app-network
+    ports: []
+
+  redis:
+    image: redis:7-alpine
+    container_name: linfeng-redis
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - redis-data:/data
+    networks:
+      - app-network
+    ports: []
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  redis-data:
