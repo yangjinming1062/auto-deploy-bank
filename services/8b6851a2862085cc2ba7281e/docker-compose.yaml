@@ -1,0 +1,97 @@
+services:
+  easy-rag:
+    build: .
+    container_name: easy-rag
+    ports:
+      - "47351:7860"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - OLLAMA_HOST=http://ollama:11434
+      - SEARXNG_HOST=http://searxng:8080
+      - DEFAULT_LLM_MODEL=qwen2:7b
+      - DEFAULT_EMBED_MODEL=mofanke/acge_text_embedding:latest
+      - VECTOR_DB=2
+      - GRADIO_HOST=0.0.0.0
+      - GRADIO_PORT=7860
+    volumes:
+      - ./Faiss_db:/app/Faiss_db
+      - ./Chroma_db:/app/Chroma_db
+      - modelscope_data:/root/.cache/modelscope
+    depends_on:
+      ollama:
+        condition: service_healthy
+      searxng:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # Internal Ollama service (communicates via Docker network only)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    volumes:
+      - ollama_data:/root/.ollama
+    expose:
+      - "11434"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'echo > /dev/tcp/localhost/11434'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # Internal SearXNG service (communicates via Docker network only)
+  searxng:
+    image: searxng/searxng:latest
+    container_name: searxng
+    environment:
+      - UWSGI_NUM_PROCESSES=2
+      - UWSGI_THUNDER_LOCK=1
+      - UWSGI_CHEAPER_RSS_LIMIT_WORKER=256000
+      - SEARXNG_BASE_URL=http://searxng:8080/
+      - SEARXNG_SECRET_KEY=${SEARXNG_SECRET_KEY:-$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | head -c 64)}
+    volumes:
+      - ./searxng:/etc/searxng
+    expose:
+      - "8080"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8080 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+volumes:
+  ollama_data:
+  modelscope_data:
