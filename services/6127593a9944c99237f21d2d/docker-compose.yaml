@@ -1,0 +1,47 @@
+services:
+  diffir-training:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: diffir-training
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+      - MODEL_PATH=${MODEL_PATH:-./experiments/DiffIRS2-GAN.pth}
+      - SCALE=${SCALE:-4}
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - OMP_NUM_THREADS=1
+      - OPENBLAS_NUM_THREADS=1
+      - MKL_NUM_THREADS=1
+      - VECLIB_MAXIMUM_THREADS=1
+      - NUMEXPR_NUM_THREADS=1
+    volumes:
+      - ./DiffIR-RealSR/experiments:/app/experiments:rw
+      - ./DiffIR-RealSR/inputs:/app/inputs:rw
+      - ./DiffIR-RealSR/outputs:/app/outputs:rw
+      - ./DiffIR-RealSR/options:/app/options:ro
+      - ./DiffIR-RealSR/datasets:/app/datasets:rw
+      - ./DiffIR-RealSR/run_train.sh:/app/run_train.sh:ro
+      - ./DiffIR-RealSR/experiments:/mnt/bn/xiabinpaint/dataset:ro
+    ports:
+      - "8081:8081"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
+    networks:
+      - diffir-network
+
+networks:
+  diffir-network:
+    driver: bridge
