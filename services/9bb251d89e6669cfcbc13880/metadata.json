@@ -1,0 +1,13 @@
+{
+  "service_id": "9bb251d89e6669cfcbc13880",
+  "repo_name": "yeungchenwa/OCR-SAM",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "16.02MB",
+  "language": "python",
+  "star": 575,
+  "repo_flag": "PYTHON-Transformers",
+  "uploaded_at": "2026-01-18T01:34:42.622605"
+}

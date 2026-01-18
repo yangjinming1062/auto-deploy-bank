@@ -1,0 +1,26 @@
+services:
+  mmocr-sam-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mmocr-sam-service
+    ports:
+      - "41763:7860"
+    environment:
+      - KMP_DUPLICATE_LIB_OK=TRUE
+      - PYTHONUNBUFFERED=1
+      - CUDA_VISIBLE_DEVICES=
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
+      interval: 30s
+      timeout: 30s
+      retries: 10
+      start_period: 600s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 8G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
