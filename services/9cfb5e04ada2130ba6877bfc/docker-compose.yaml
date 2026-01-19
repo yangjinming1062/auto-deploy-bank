@@ -1,0 +1,58 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vlp-web
+    ports:
+      - "43785:7860"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - DATA_DIR=${DATA_DIR:-/root/VLP_web_data}
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+      - RANK=${RANK:-0}
+      - WORLD_SIZE=${WORLD_SIZE:-1}
+      - LOCAL_RANK=${LOCAL_RANK:-0}
+      - MASTER_ADDR=${MASTER_ADDR:-127.0.0.1}
+      - MASTER_PORT=${MASTER_PORT:-29500}
+    volumes:
+      - ./data:/home/ubuntu/deploy-projects/9cfb5e04ada2130ba6877bfc/data
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    networks:
+      - vlp-network
+    depends_on:
+      - controller
+    restart: unless-stopped
+
+  controller:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vlp-controller
+    command: ["python", "controller.py", "--host", "0.0.0.0", "--port", "12001"]
+    environment:
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+    volumes:
+      - ./data:/home/ubuntu/deploy-projects/9cfb5e04ada2130ba6877bfc/data
+    networks:
+      - vlp-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    restart: unless-stopped
+
+networks:
+  vlp-network:
+    driver: bridge
