@@ -1,0 +1,261 @@
+version: "3.8"
+
+services:
+  # MySQL Database (Internal only - no host port exposure)
+  mysql:
+    image: mysql:5.7
+    container_name: quick-jwt-mysql
+    hostname: mysql
+    command: --default-authentication-plugin=mysql_native_password --require_secure_transport=OFF
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: testdb
+      MYSQL_USER: quickuser
+      MYSQL_PASSWORD: quickpass
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - quick-jwt-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Redis Cache (Internal only)
+  redis:
+    image: redis:7-alpine
+    container_name: quick-jwt-redis
+    hostname: redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - quick-jwt-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # RabbitMQ (Internal only)
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: quick-jwt-rabbitmq
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - quick-jwt-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Apache Kafka (Internal only)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: quick-jwt-zookeeper
+    hostname: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_logs:/var/lib/zookeeper/log
+    networks:
+      - quick-jwt-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.25'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: quick-jwt-kafka
+    hostname: kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      - quick-jwt-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # MongoDB (Internal only)
+  mongodb:
+    image: mongo:6
+    container_name: quick-jwt-mongodb
+    hostname: mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: test-springboot
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - quick-jwt-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Spring Boot Application
+  quick-jwt-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: quick-jwt-app
+    hostname: quick-jwt-app
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "40045:8080"  # Host port:Container port
+    # Volume mount for security scanning
+    volumes:
+      - ./target/quick-jwt-1.0-SNAPSHOT.jar:/app/target.jar
+    networks:
+      - quick-jwt-network
+    environment:
+      # JPA Configuration
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=create-drop
+      - SPRING_JPA_SHOW_SQL=true
+
+      # JWT Security Configuration
+      - SECURITY_JWT_TOKEN_SECRET_KEY=secret-key
+      - SECURITY_JWT_TOKEN_EXPIRE_LENGTH=36000
+
+      # Redis Configuration
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+      - SPRING_REDIS_PASSWORD=
+      - SPRING_REDIS_DATABASE=1
+      - SPRING_REDIS_TIMEOUT=500
+
+      # RabbitMQ Configuration (for future use)
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USERNAME=guest
+      - RABBITMQ_PASSWORD=guest
+      - RABBITMQ_VIRTUAL_HOST=/
+
+      # Kafka Configuration (for future use)
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+
+      # MongoDB Configuration (for future use)
+      - SPRING_DATA_MONGODB_URI=mongodb://admin:password@mongodb:27017/test-springboot?authSource=admin
+
+      # Application Configuration
+      - SERVER_PORT=8080
+      - SPRING_APPLICATION_NAME=quick-jwt-service
+
+      # Java Options
+      - JAVA_OPTS=-Xms512m -Xmx1g -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=512m --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+
+networks:
+  quick-jwt-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+  kafka_data:
+    driver: local
+  zookeeper_data:
+    driver: local
+  zookeeper_logs:
+    driver: local
+  mongodb_data:
+    driver: local
