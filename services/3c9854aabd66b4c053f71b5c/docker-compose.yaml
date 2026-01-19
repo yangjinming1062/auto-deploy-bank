@@ -1,0 +1,79 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: kestra-postgres
+    environment:
+      POSTGRES_DB: kestra
+      POSTGRES_USER: kestra
+      POSTGRES_PASSWORD: k3str4
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=en_US.UTF-8 --lc-ctype=en_US.UTF-8"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kestra -d kestra"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - kestra-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  kestra:
+    image: 3c9854aabd66b4c053f71b5c-kestra
+    container_name: kestra-app
+    ports:
+      - "40169:8080"
+    volumes:
+      - ./target.jar:/app/target.jar
+      - kestra_storage:/app/storage
+      - kestra_logs:/app/logs
+    environment:
+      DATASOURCES_DEFAULT_URL: jdbc:postgresql://postgres:5432/kestra
+      DATASOURCES_DEFAULT_USERNAME: kestra
+      DATASOURCES_DEFAULT_PASSWORD: k3str4
+      DATASOURCES_DEFAULT_DRIVERCLASSNAME: org.postgresql.Driver
+      kestra.storage.local.basePath: /app/storage
+      FLYWAY_DATASOURCES_DEFAULT_ENABLED: "true"
+      FLYWAY_DATASOURCES_DEFAULT_LOCATIONS: classpath:migrations/postgres
+      MICRONAUT_ENVIRONMENTS: override
+      KESTRA_PLUGINS_PATH: local/plugins
+      KESTRA_WORKER_THREADS: "4"
+      KESTRA_URL: http://127.0.0.1:40169
+      KESTRA_TASKS_TMPDIR_PATH: /tmp/kestra-wd/tmp
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - kestra-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  kestra_storage:
+  kestra_logs:
+
+networks:
+  kestra-network:
+    driver: bridge

@@ -1,0 +1,13 @@
+{
+  "service_id": "3c9854aabd66b4c053f71b5c",
+  "repo_name": "kestra-io/kestra",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "10.98MB",
+  "language": "java",
+  "star": 25962,
+  "repo_flag": "JAVA-LangChain4j",
+  "uploaded_at": "2026-01-19T07:32:26.573775"
+}
