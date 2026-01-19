@@ -1,0 +1,13 @@
+{
+  "service_id": "28ec58f7835c77c951fb3e50",
+  "repo_name": "thingsboard/thingsboard",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "30.03MB",
+  "language": "java",
+  "star": 20403,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-19T14:57:03.594834"
+}
