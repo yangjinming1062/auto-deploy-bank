@@ -1,0 +1,32 @@
+services:
+  librec:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: librec-recommender
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+
+    # Resource limits to prevent consuming all system resources
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+    # Environment variables
+    environment:
+      - JAVA_OPTS=-Xmx2g
+      - RESULTS_DIR=/app/Results
+      - CONFIG_DIR=/app/demo/config
+
+    # Volume mount for results persistence
+    volumes:
+      - librec-results:/app/Results
+
+volumes:
+  librec-results:
