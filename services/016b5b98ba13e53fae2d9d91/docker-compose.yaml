@@ -1,0 +1,231 @@
+services:
+  # MySQL Database - Internal only
+  mysql:
+    image: mysql:8.0.29
+    container_name: novel-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: test123456
+      MYSQL_DATABASE: novel_plus
+      MYSQL_TCP_PORT: 3306
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./doc/sql:/docker-entrypoint-initdb.d:ro
+    networks:
+      - novel-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ptest123456"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    command: --default-authentication-plugin=mysql_native_password
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # Redis Cache - Internal only
+  redis:
+    image: redis:7-alpine
+    container_name: novel-redis
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: test123456
+    volumes:
+      - redis_data:/data
+    networks:
+      - novel-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "test123456", "--raw", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    command: redis-server --requirepass test123456
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Novel Admin - Admin Backend (Internal only)
+  novel-admin:
+    build:
+      context: .
+      dockerfile: ./novel-admin/src/main/build/docker/Dockerfile
+    container_name: novel-admin
+    restart: unless-stopped
+    environment:
+      # Database configuration
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/novel_plus?allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: test123456
+
+      # Redis configuration
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: test123456
+      SPRING_DATA_REDIS_TIMEOUT: 10000
+
+      # Application configuration
+      JWT_SECRET: novel!#20191230
+      JWT_EXPIRATION: 604800
+
+    # volumes:
+    #   # JAR file for security scanning
+    #   - ./target-admin.jar:/app/target.jar
+
+    networks:
+      - novel-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Novel Crawl - Web Scraping Service (Internal only)
+  novel-crawl:
+    build:
+      context: .
+      dockerfile: ./novel-crawl/src/main/build/docker/Dockerfile
+    container_name: novel-crawl
+    restart: unless-stopped
+    environment:
+      # Database configuration
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/novel_plus?allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: test123456
+
+      # Redis configuration
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: test123456
+      SPRING_DATA_REDIS_TIMEOUT: 10000
+
+      # Application configuration
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: admin
+      CRAWL_UPDATE_THREAD: 1
+      CRAWL_INTERVAL_MIN: 300
+      CRAWL_INTERVAL_MAX: 500
+
+    # volumes:
+    #   # JAR file for security scanning
+    #   - ./target-crawl.jar:/app/target.jar
+
+    networks:
+      - novel-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Novel Front - Main Frontend Service (Exposed to host)
+  novel-front:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: novel-front
+    restart: unless-stopped
+    ports:
+      - "40419:8083"
+    environment:
+      # Database configuration
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/novel_plus?allowPublicKeyRetrieval=true&useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: test123456
+
+      # Redis configuration
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: test123456
+      SPRING_DATA_REDIS_TIMEOUT: 10000
+
+      # Application configuration
+      JWT_SECRET: novel!#20191230
+      JWT_EXPIRATION: 604800
+      CACHE_MANAGER_PASSWORD: novel@2020117
+
+      # XSS protection
+      XSS_ENABLED: true
+      XSS_EXCLUDES: /system/notice/*
+
+      # AI configuration (using SiliconFlow API)
+      SPRING_AI_OPENAI_API_KEY: sk-jjtixmivxaccndqgkqfkbgkzvmbctdxogcrfbjzfttbouitt
+      SPRING_AI_OPENAI_BASE_URL: https://api.siliconflow.cn
+      SPRING_AI_OPENAI_CHAT_OPTIONS_MODEL: deepseek-ai/DeepSeek-R1-0528-Qwen3-8B
+      SPRING_AI_OPENAI_IMAGE_OPTIONS_MODEL: Kwai-Kolors/Kolors
+
+      # Website configuration
+      WEBSITE_NAME: "小说精品屋"
+      WEBSITE_DOMAIN: "www.xxyopen.com"
+      WEBSITE_KEYWORD: "小说,小说CMS,原创文学系统"
+      WEBSITE_DESCRIPTION: "小说精品屋是一个多端阅读原创文学CMS系统"
+
+    volumes:
+      - ./target.jar:/app/target.jar
+
+    networks:
+      - novel-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8083/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+networks:
+  novel-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  redis_data:
