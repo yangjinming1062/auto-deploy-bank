@@ -39,14 +39,7 @@ WORKDIR /app
 # Copy built artifacts from builder stage
 COPY --from=builder /app/docker-build /app
 
-# Copy webapp static files to the classes directory for Spring Boot static resource serving
-# Spring Boot serves static content from classpath:/static which is in BOOT-INF/classes
-COPY --from=builder /app/webapp/dist /app/app/static
-
-# Copy the built JAR file for volume mount and security scanning
-COPY --from=builder /app/backend/app/build/libs/*.jar /app/target.jar
-
-# Copy startup script
+# Copy the startup script from the original source
 COPY --chmod=755 docker/app/cmd.sh /app/cmd.sh
 
 # Expose application port
