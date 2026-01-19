@@ -1,0 +1,13 @@
+{
+  "service_id": "f9e25fa293946eca30e92e02",
+  "repo_name": "inference-labs-inc/subnet-2",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "7.00MB",
+  "language": "python",
+  "star": 2104,
+  "repo_flag": "PYTHON-FastAPI",
+  "uploaded_at": "2026-01-19T19:21:18.107302"
+}

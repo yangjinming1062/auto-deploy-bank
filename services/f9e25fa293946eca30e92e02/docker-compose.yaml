@@ -1,0 +1,91 @@
+services:
+  subnet-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: subnet-2:latest
+    container_name: subnet-2-validator
+
+    # Environment variables for configuration
+    environment:
+      - WALLET_NAME=${WALLET_NAME:-default}
+      - WALLET_HOTKEY=${WALLET_HOTKEY:-default}
+      - NETUID=${NETUID:-2}
+      - SUBTENSOR_NETWORK=${SUBTENSOR_NETWORK:-finney}
+      - SUBNET_2_NO_AUTO_UPDATE=${SUBNET_2_NO_AUTO_UPDATE:-1}
+      - SUBNET_2_DOCKER_BUILD=1
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - STORAGE_PROVIDER=${STORAGE_PROVIDER:-r2}
+      - STORAGE_BUCKET=${STORAGE_BUCKET:-}
+      - R2_BUCKET=${R2_BUCKET:-}
+      - STORAGE_ACCOUNT_ID=${STORAGE_ACCOUNT_ID:-}
+      - R2_ACCOUNT_ID=${R2_ACCOUNT_ID:-}
+      - STORAGE_ACCESS_KEY=${STORAGE_ACCESS_KEY:-}
+      - R2_ACCESS_KEY=${R2_ACCESS_KEY:-}
+      - STORAGE_SECRET_KEY=${STORAGE_SECRET_KEY:-}
+      - R2_SECRET_KEY=${R2_SECRET_KEY:-}
+      - STORAGE_REGION=${STORAGE_REGION:-us-east-1}
+      - ONNXRUNTIME_LOGGING_LEVEL=${ONNXRUNTIME_LOGGING_LEVEL:-3}
+      - WANDB_CONSOLE=${WANDB_CONSOLE:-false}
+
+    # Port mapping - only expose API port (8443) externally
+    # Internal ports 8091 (axon) and 9090 (Prometheus) remain internal
+    ports:
+      - "40568:8443"
+
+    # Volume mount for wallet files
+    volumes:
+      - /home/ubuntu/.bittensor:/home/ubuntu/.bittensor
+
+    # Resource limits to prevent excessive resource consumption
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+    # Health check to ensure service is running properly
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8443/circuits"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Default command - runs as validator (has API server)
+    command: >
+      validator.py
+      --wallet.name
+      ${WALLET_NAME:-default}
+      --wallet.hotkey
+      ${WALLET_HOTKEY:-default}
+      --netuid
+      2
+      --subtensor.network
+      finney
+      --disable-wandb
+      --ignore-external-requests
+      false
+
+    # Alternative miner command (uncomment the lines below and comment validator to use)
+    # command: >
+    #   miner.py
+    #   --wallet.name
+    #   ${WALLET_NAME:-default}
+    #   --wallet.hotkey
+    #   ${WALLET_HOTKEY:-default}
+    #   --netuid
+    #   2
+    #   --subtensor.network
+    #   finney
+
+    # Keep container running
+    stdin_open: true
+    tty: true
