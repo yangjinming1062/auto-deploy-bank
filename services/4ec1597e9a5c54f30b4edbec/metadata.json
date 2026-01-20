@@ -1,0 +1,13 @@
+{
+  "service_id": "4ec1597e9a5c54f30b4edbec",
+  "repo_name": "SHI-Labs/Prompt-Free-Diffusion",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "22.46MB",
+  "language": "python",
+  "star": 757,
+  "repo_flag": "PYTHON-PyTorch",
+  "uploaded_at": "2026-01-20T21:45:02.395789"
+}

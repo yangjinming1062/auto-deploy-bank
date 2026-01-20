@@ -1,0 +1,31 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: prompt-free-diffusion
+    ports:
+      - "41612:11234"
+    environment:
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+      - MASTER_ADDR=${MASTER_ADDR:-127.0.0.1}
+      - MASTER_PORT=${MASTER_PORT:-15000}
+      - NCCL_SOCKET_FAMILY=${NCCL_SOCKET_FAMILY:-AF_INET}
+      - GLOO_SOCKET_FAMILY=${GLOO_SOCKET_FAMILY:-AF_INET}
+      - KMP_DUPLICATE_LIB_OK=${KMP_DUPLICATE_LIB_OK:-TRUE}
+    volumes:
+      - ./pretrained:/home/ubuntu/deploy-projects/4ec1597e9a5c54f30b4edbec/pretrained
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 16G
+        reservations:
+          cpus: '2.0'
+          memory: 4G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11234/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
