@@ -1,0 +1,13 @@
+{
+  "service_id": "fe3a5f5582e5d2685d1f8927",
+  "repo_name": "microsoft/RecAI",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "18.35MB",
+  "language": "python",
+  "star": 989,
+  "repo_flag": "PYTHON-vllm",
+  "uploaded_at": "2026-01-20T05:46:20.663119"
+}

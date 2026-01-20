@@ -1,0 +1,36 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
+services:
+  intec-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: intec-agent
+    ports:
+      - "40028:7891"
+    environment:
+      - DOMAIN=${DOMAIN:-game}
+      - AGENT_ENGINE=${AGENT_ENGINE:-text-davinci-003}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_API_BASE=${OPENAI_API_BASE:-https://api.openai.com/v1}
+      - OPENAI_API_VERSION=${OPENAI_API_VERSION:-2023-03-15-preview}
+      - OPENAI_API_TYPE=${OPENAI_API_TYPE:-open_ai}
+      - OPENAI_EMB_MODEL=${OPENAI_EMB_MODEL:-}
+      - SIMULATOR_API_KEY=${SIMULATOR_API_KEY:-}
+      - DEBUG=${DEBUG:-0}
+      - TOKENIZERS_PARALLELISM=false
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7891/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
