@@ -1,0 +1,72 @@
+services:
+  app:
+    build: .
+    container_name: shaban-md
+    ports:
+      - "40359:9090"
+    environment:
+      - NODE_ENV=production
+      - PORT=9090
+      - SESSION_ID=${SESSION_ID:-""}
+      - OWNER_NUMBER=${OWNER_NUMBER:-""}
+      - STICKER_NAME=${STICKER_NAME:-Shaban-MD}
+      - PREFIX=${PREFIX:-.}
+      - MODE=${MODE:-public}
+      - ALWAYS_ONLINE=${ALWAYS_ONLINE:-false}
+      - AUTO_VOICE=${AUTO_VOICE:-false}
+      - AUTO_REPLY=${AUTO_REPLY:-false}
+      - AUTO_STICKER=${AUTO_STICKER:-false}
+      - AUTO_STATUS_SEEN=${AUTO_STATUS_SEEN:-false}
+      - AUTO_STATUS_REACT=${AUTO_STATUS_REACT:-false}
+      - AUTO_STATUS_REPLY=${AUTO_STATUS_REPLY:-false}
+      - DELETE_LINK=${DELETE_LINK:-false}
+      - ANTI_LINK=${ANTI_LINK:-false}
+      - ADMIN_EVENTS=${ADMIN_EVENTS:-true}
+      - WELCOME=${WELCOME:-true}
+      - ANTI_CALL=${ANTI_CALL:-false}
+      - ANTI_BAD_WORD=${ANTI_BAD_WORD:-false}
+      - AUTO_RECORDING=${AUTO_RECORDING:-false}
+      - AUTO_TYPING=${AUTO_TYPING:-false}
+      - AUTO_REACT=${AUTO_REACT:-false}
+      - CUSTOM_REACT=${CUSTOM_REACT:-true}
+      - ANTI_DELETE=${ANTI_DELETE:-false}
+      - READ_MESSAGE=${READ_MESSAGE:-true}
+      - MONGOOSE_URI=mongodb://mongo:27017/shaban-md
+      - CDN=${CDN:-https://bandaheali-cdn.koyeb.app}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  mongo:
+    image: mongo:7.0
+    container_name: shaban-mongo
+    ports: []
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+volumes:
+  mongo-data:
