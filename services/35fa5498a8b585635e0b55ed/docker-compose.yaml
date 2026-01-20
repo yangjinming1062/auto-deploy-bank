@@ -1,0 +1,72 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    environment:
+      POSTGRES_USER: miyagi_user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: miyagi
+    volumes:
+      - ./services/user-service/java/src/main/resources/db/migration:/docker-entrypoint-initdb.d/migration
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "miyagi_user", "-d", "miyagi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  user-service:
+    build:
+      context: services/user-service/java
+      dockerfile: Dockerfile
+    container_name: user-service
+    ports:
+      - "41634:8901"
+    environment:
+      - SERVER_PORT=8901
+      - POSTGRESQLURL=jdbc:postgresql://postgres:5432/miyagi
+      - POSTGRESQLUSER=miyagi_user
+      - POSTGRESQLPASSWORD=password
+      - KAFKABOOTSTRAPSERVERS=${KAFKABOOTSTRAPSERVERS}
+      - KAFKATOPICNAME=${KAFKATOPICNAME:-miyagi}
+      - KAFKATOPICGROUP=${KAFKATOPICGROUP:-user-service}
+      - KAFKASECURITYPROTOCOL=${KAFKASECURITYPROTOCOL:-PLAINTEXT}
+      - KAFKASASLMECHANISM=${KAFKASASLMECHANISM:-PLAIN}
+      - KAFKASASLJAASCONFIG=${KAFKASASLJAASCONFIG}
+      - AZURE_OPENAI_KEY=${AZURE_OPENAI_KEY:-dummy-key-for-local-dev}
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT:-https://gk-oai.openai.azure.com/}
+      - AZURE_OPENAI_MODEL_ID=${AZURE_OPENAI_MODEL_ID:-gk-gpt-35}
+      - AZUREREDISHOST=${AZUREREDISHOST}
+      - AZUREREDISPORT=${AZUREREDISPORT:-6380}
+      - AZUREREDISACCESSKEY=${AZUREREDISACCESSKEY}
+      - AZURECOSMOSDBURI=${AZURECOSMOSDBURI}
+      - AZURECOSMOSDBKEY=${AZURECOSMOSDBKEY}
+      - AZURECOSMOSDBSECONDARYKEY=${AZURECOSMOSDBSECONDARYKEY}
+      - AZURECOSMOSDBDATABASENAME=${AZURECOSMOSDBDATABASENAME:-miyagi}
+      - AZURESTORAGEACCOUNTNAME=${AZURESTORAGEACCOUNTNAME}
+      - AZURESTORAGEACCOUNTKEY=${AZURESTORAGEACCOUNTKEY}
+      - AZURESTORAGEENDPOINT=${AZURESTORAGEENDPOINT}
+      - APPLICATIONINSIGHTS_CONNECTION_STRING=${APPLICATIONINSIGHTS_CONNECTION_STRING}
+      - SK_BASE_URL=${SK_BASE_URL:-http://localhost:7071}
+    volumes:
+      - ./target.jar:/app/app.jar
+    depends_on:
+      postgres:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8901/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
