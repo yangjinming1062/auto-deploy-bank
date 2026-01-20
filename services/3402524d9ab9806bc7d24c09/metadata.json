@@ -1,0 +1,13 @@
+{
+  "service_id": "3402524d9ab9806bc7d24c09",
+  "repo_name": "3DTopia/3DTopia-XL",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "18.23MB",
+  "language": "python",
+  "star": 1015,
+  "repo_flag": "PYTHON-PyTorch",
+  "uploaded_at": "2026-01-20T05:18:19.830828"
+}
