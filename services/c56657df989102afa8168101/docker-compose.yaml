@@ -1,0 +1,73 @@
+services:
+  # Main SeaTunnel Web Application
+  seatunnel-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: seatunnel-web
+    hostname: seatunnel-web
+    ports:
+      - "41649:8801"
+    environment:
+      - TZ=Asia/Shanghai
+      - DOCKER=true
+      - SEATUNNEL_HOME=/opt/app/seatunnel-web
+      # Server configuration
+      - server.port=8801
+      # JWT configuration (IMPORTANT: Change secretKey for production!)
+      - jwt.expireTime=86400
+      - jwt.secretKey=seatunnel-web-secret-key-change-in-production
+      - jwt.algorithm=HS256
+      # Database configuration (MySQL - uses existing MySQL service on host)
+      - spring.datasource.url=jdbc:mysql://host.docker.internal:3306/seatunnel?useSSL=false&useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true&allowPublicKeyRetrieval=true
+      - spring.datasource.username=root
+      - spring.datasource.password=123456
+      - spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+      # Async thread pool configuration
+      - spring.async-config.core-pool-size=10
+      - spring.async-config.max-pool-size=20
+      - spring.async-config.queue-capacity=100
+      # LDAP configuration (optional)
+      - spring.ldap.url=ldap://ldap:389
+      - spring.ldap.search.base=ou=people,dc=example,dc=com
+      - spring.ldap.search.domain=example.com
+      # Resource storage configuration (optional)
+      - resource.storage.type=NONE
+      # Datasource encryption (optional)
+      - datasource.encryption.enable=false
+      - datasource.encryption.salt=
+    volumes:
+      # Volume mount for JAR file security scanning
+      - ./target.jar:/opt/app/seatunnel-web/app.jar
+      # Mount logs directory
+      - seatunnel-logs:/opt/app/seatunnel-web/logs
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - seatunnel-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8801/ || wget --spider -q http://localhost:8801/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+
+networks:
+  seatunnel-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+volumes:
+  seatunnel-logs:
+    driver: local

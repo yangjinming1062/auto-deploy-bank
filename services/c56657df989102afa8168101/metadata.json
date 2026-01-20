@@ -1,0 +1,13 @@
+{
+  "service_id": "c56657df989102afa8168101",
+  "repo_name": "apache/seatunnel-web",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "3.15MB",
+  "language": "java",
+  "star": 749,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-20T19:16:36.095233"
+}
