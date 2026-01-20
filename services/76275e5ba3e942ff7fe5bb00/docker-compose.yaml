@@ -1,0 +1,41 @@
+services:
+  dcgan-train:
+    build: .
+    container_name: dcgan-training
+    restart: "no"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'python main.py' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  web:
+    build: .
+    container_name: dcgan-web
+    restart: "unless-stopped"
+    ports:
+      - "5000:5000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./data:/data
+    command: python webserver.py
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s

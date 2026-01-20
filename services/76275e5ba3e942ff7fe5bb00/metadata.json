@@ -1,0 +1,13 @@
+{
+  "service_id": "76275e5ba3e942ff7fe5bb00",
+  "repo_name": "Zeleni9/pytorch-wgan",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "5.51MB",
+  "language": "python",
+  "star": 796,
+  "repo_flag": "PYTHON-TensorFlow",
+  "uploaded_at": "2026-01-20T16:08:47.862720"
+}
