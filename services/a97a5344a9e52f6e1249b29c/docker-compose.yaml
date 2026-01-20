@@ -1,0 +1,23 @@
+services:
+  # Android build service - builds the APK
+  android-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: passandroid-builder
+    ports:
+      - "41493:41493"
+    volumes:
+      # Mount for APK output
+      - ./target:/app/output
+      # Volume mount for security scanning (JAR/AAPK equivalent)
+      - ./target.jar:/app/target.jar
+    working_dir: /app
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
