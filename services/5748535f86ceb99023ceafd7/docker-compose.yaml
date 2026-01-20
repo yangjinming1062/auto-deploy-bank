@@ -1,0 +1,175 @@
+services:
+  db:
+    image: metasfresh/metasfresh-db:latest
+    environment:
+      - POSTGRES_PASSWORD=metasfresh
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "15432:5432"
+    healthcheck:
+      test: pg_isready -h localhost -U metasfresh -d metasfresh -t 1
+      interval: 10s
+      timeout: 10s
+      start_period: 180s
+      retries: 90
+    networks:
+      - metasfresh-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  rabbitmq:
+    image: rabbitmq:3.9.13-management
+    environment:
+      - RABBITMQ_DEFAULT_USER=metasfresh
+      - RABBITMQ_DEFAULT_PASS=metasfresh
+    healthcheck:
+      test: rabbitmq-diagnostics -q status
+      interval: 10s
+      timeout: 10s
+      start_period: 60s
+      retries: 30
+    networks:
+      - metasfresh-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  search:
+    image: elasticsearch:7.17.8
+    environment:
+      - discovery.type=single-node
+      - LOG4J_FORMAT_MSG_NO_LOOKUPS=true
+      - ES_JAVA_OPTS=-Xms256m -Xmx512m -XX:MaxDirectMemorySize=128m
+      - LIMIT_FILE_COUNT=65536
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    healthcheck:
+      test: "curl --fail --silent http://localhost:9200/_cluster/health?pretty | grep status | grep -q '\\(green\\|yellow\\)'"
+      interval: 10s
+      timeout: 10s
+      start_period: 60s
+      retries: 30
+    networks:
+      - metasfresh-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  webapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${mfregistry:-metasfresh}/metas-api:${mfversion:-local}
+    volumes:
+      - ./target.jar:/app/target.jar
+      - ./docker-builds/compose/metasfresh.properties:/app/metasfresh.properties:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 120s
+      retries: 5
+    environment:
+      # Database configuration
+      - METASFRESH_DB_SERVER=db
+      - METASFRESH_DB_PORT=5432
+      - METASFRESH_DB_NAME=metasfresh
+      - METASFRESH_DB_USER=metasfresh
+      - METASFRESH_DB_PASSWORD=metasfresh
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=metasfresh
+      - DB_USER=metasfresh
+      - DB_PASSWORD=metasfresh
+
+      # Elasticsearch configuration
+      - ES_HOST=search
+      - ES_PORT=9300
+      - SPRING_DATA_ELASTICSEARCH_CLUSTER_NODES=search:9200
+      - SPRING_DATA_ELASTICSEARCH_CLIENT_REACTIVE_ENDPOINTS=search:9200
+      - METASFRESH_ELASTICSEARCH_HOST=search:9300
+
+      # RabbitMQ configuration
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_PORT=5672
+      - RABBITMQ_USER=metasfresh
+      - RABBITMQ_PASSWORD=metasfresh
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=metasfresh
+      - SPRING_RABBITMQ_PASSWORD=metasfresh
+
+      # Java options
+      - JAVA_TOOL_OPTIONS=-Xmx512M -XX:+HeapDumpOnOutOfMemoryError -Djava.awt.headless=true
+      - JAVA_SECURITY_EGD=file:/dev/./urandom
+
+      # App configuration
+      - APP_HOST=app
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      search:
+        condition: service_healthy
+    networks:
+      - metasfresh-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  webui:
+    image: nginx:alpine
+    ports:
+      - "40422:80"
+    volumes:
+      - ./docker-builds/webui/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./docker-builds/webui/index.html:/usr/share/nginx/html/index.html:ro
+    depends_on:
+      - webapi
+    networks:
+      - metasfresh-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+
+networks:
+  metasfresh-network:
+    driver: bridge
+
+volumes:
+  pgdata:

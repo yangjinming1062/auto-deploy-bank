@@ -1,0 +1,13 @@
+{
+  "service_id": "5748535f86ceb99023ceafd7",
+  "repo_name": "metasfresh/metasfresh",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "114.61MB",
+  "language": "java",
+  "star": 2148,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-20T04:31:06.604163"
+}
