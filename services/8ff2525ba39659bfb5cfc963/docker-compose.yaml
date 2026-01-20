@@ -1,0 +1,19 @@
+services:
+  modsimpy:
+    build: .
+    ports:
+      - "40332:40332"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:40332/api/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
