@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  yolov5-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: yolov5-api
+    ports:
+      - "41583:5000"
+    environment:
+      - LOCAL_RANK=-1
+      - RANK=-1
+      - WORLD_SIZE=1
+      - CUDA_VISIBLE_DEVICES=
+      - WANDB_API_KEY=
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
