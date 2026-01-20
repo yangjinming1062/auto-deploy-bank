@@ -1,0 +1,13 @@
+{
+  "service_id": "60235be3b6db101b31f508e6",
+  "repo_name": "aiming-lab/Agent0",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "17.00MB",
+  "language": "python",
+  "star": 874,
+  "repo_flag": "PYTHON-vllm",
+  "uploaded_at": "2026-01-20T11:04:56.670044"
+}

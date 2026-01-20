@@ -1,0 +1,53 @@
+services:
+  verl-training:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: verl-training
+    ports:
+      - "41488:8000"
+    environment:
+      - HF_TOKEN=${HF_TOKEN:-}
+      - WANDB_API_KEY=${WANDB_API_KEY:-}
+      - STORAGE_PATH=/home/ubuntu/deploy-projects/60235be3b6db101b31f508e6/storage
+      - HUGGINGFACENAME=${HUGGINGFACENAME:-}
+      - SANDBOX_FUSION_URL=${SANDBOX_FUSION_URL:-}
+      - MCP_SERVER_URL=${MCP_SERVER_URL:-}
+      - RETRIEVER_URL=${RETRIEVER_URL:-}
+      - SERPER_API_KEY=${SERPER_API_KEY:-}
+      - BRIGHTDATA_API_KEY=${BRIGHTDATA_API_KEY:-}
+      - SWANLAB_API_KEY=${SWANLAB_API_KEY:-}
+      - RANK=${RANK:-0}
+      - WORLD_SIZE=${WORLD_SIZE:-1}
+      - LOCAL_RANK=${LOCAL_RANK:-0}
+      - MASTER_ADDR=127.0.0.1
+      - MASTER_PORT=${MASTER_PORT:-29500}
+      - LOCAL_WORLD_SIZE=${LOCAL_WORLD_SIZE:-1}
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+      - VERL_LOGGING_LEVEL=WARN
+      - VERL_VLLM_DISTRIBUTED_BACKEND=zeromq
+      - VLLM_USE_V1=1
+      - NCCL_DEBUG=WARN
+      - TOKENIZERS_PARALLELISM=true
+      - FLASH_ATTENTION_DETERMINISTIC=0
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./storage:/home/ubuntu/deploy-projects/60235be3b6db101b31f508e6/storage
+      - ./data:/home/ubuntu/deploy-projects/60235be3b6db101b31f508e6/data
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    restart: unless-stopped
+    working_dir: /home/ubuntu/deploy-projects/60235be3b6db101b31f508e6
+    command: ["python", "health_server.py"]
