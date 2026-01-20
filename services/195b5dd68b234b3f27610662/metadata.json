@@ -1,0 +1,13 @@
+{
+  "service_id": "195b5dd68b234b3f27610662",
+  "repo_name": "CIDARLAB/cello",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "200.30MB",
+  "language": "java",
+  "star": 848,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-20T10:35:35.874815"
+}

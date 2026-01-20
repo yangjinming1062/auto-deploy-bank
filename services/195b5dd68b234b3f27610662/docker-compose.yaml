@@ -1,0 +1,40 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cello-app
+    ports:
+      - "40362:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:derby:resources/derbydb2;create=true
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.apache.derby.jdbc.EmbeddedDriver
+      - SPRING_DATASOURCE_USERNAME=
+      - SPRING_DATASOURCE_PASSWORD=
+      - SERVER_PORT=8080
+      - CELLO_USER_DB_NAME=CELLO
+      - CELLO_RESULT_PATH=/app/cello_results
+      - CELLO_SRC_PATH=/app
+      - CELLO_API_URL=http://localhost:40362
+    volumes:
+      - ./target.jar:/app/target.jar
+      - cello_results:/app/cello_results
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+volumes:
+  cello_results:
+    driver: local
