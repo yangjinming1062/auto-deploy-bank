@@ -1,0 +1,49 @@
+services:
+  llmbox:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: llmbox-inference
+    # Remove 'runtime: nvidia' if nvidia-container-toolkit is not installed on host
+    # For GPU support, install nvidia-container-toolkit and uncomment below:
+    # runtime: nvidia
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY:-}
+      - QIANFAN_ACCESS_KEY=${QIANFAN_ACCESS_KEY:-}
+      - QIANFAN_SECRET_KEY=${QIANFAN_SECRET_KEY:-}
+      - HF_TOKEN=${HF_TOKEN:-}
+      # HF_TOKEN_PATH is optional - only set if using file-based auth
+      # - HF_TOKEN_PATH=/path/to/hf_token.txt
+      - HF_ENDPOINT=${HF_ENDPOINT:-https://hf-mirror.com}
+      - HF_UPDATE_DOWNLOAD_COUNTS=${HF_UPDATE_DOWNLOAD_COUNTS:-FALSE}
+      - HF_DATASETS_OFFLINE=${HF_DATASETS_OFFLINE:-0}
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-}
+      - PYTORCH_CUDA_ALLOC_CONF=${PYTORCH_CUDA_ALLOC_CONF:-}
+      - TOKENIZERS_PARALLELISM=${TOKENIZERS_PARALLELISM:-False}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-}
+      - ANTHROPIC_BASE_URL=${ANTHROPIC_BASE_URL:-}
+    volumes:
+      - .:/home/ubuntu/deploy-projects/272a562294e5910726787d5f
+    ports:
+      - "41513:41513"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "python", "-c", "import utilization"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    # Default uses gpt2 (HuggingFace model, no API key needed)
+    # For OpenAI models: MODEL=gpt-3.5-turbo OPENAI_API_KEY=sk-... docker compose up -d
+    # Web server command
+    command: >
+      python web_server.py

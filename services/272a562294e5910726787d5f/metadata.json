@@ -1,0 +1,13 @@
+{
+  "service_id": "272a562294e5910726787d5f",
+  "repo_name": "RUCAIBox/LLMBox",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.55MB",
+  "language": "python",
+  "star": 846,
+  "repo_flag": "PYTHON-vllm",
+  "uploaded_at": "2026-01-20T22:34:36.961288"
+}
