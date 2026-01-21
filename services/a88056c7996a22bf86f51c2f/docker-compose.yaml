@@ -1,0 +1,26 @@
+services:
+  thetimemachine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: thetimemachine
+    ports:
+      - "40698:41221"
+    environment:
+      - PORT=41221
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:41221/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
