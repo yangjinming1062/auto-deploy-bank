@@ -1,0 +1,126 @@
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:5.7
+    container_name: teaching-open-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass123
+      MYSQL_DATABASE: teachingopen
+      MYSQL_USER: teachingopen
+      MYSQL_PASSWORD: teachingopen
+    command: --lower_case_table_names=1
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - teaching-open-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "teachingopen", "-pteachingopen"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Redis Cache
+  redis:
+    image: redis:6.0-alpine
+    container_name: teaching-open-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - teaching-open-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # Spring Boot Application
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: teaching-open-api
+    ports:
+      - "40453:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SERVER_PORT: 8081
+      SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_URL: jdbc:mysql://mysql:3306/teachingopen?characterEncoding=UTF-8&useUnicode=true&useSSL=false&tinyInt1isBit=false
+      SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_USERNAME: teachingopen
+      SPRING_DATASOURCE_DYNAMIC_DATASOURCE_MASTER_PASSWORD: teachingopen
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_REDIS_PASSWORD: ''
+      SPRING_REDIS_DATABASE: 1
+      JEECG_DOMAIN: http://127.0.0.1:40453
+      JEECG_UPLOADTYPE: qiniu
+      JEECG_PATH_UPLOAD: /app/uploads
+      JEECG_PATH_WEBAPP: /app/webapp
+      JEECG_PATH_STATICDOMAIN: /api/sys/common/static
+      JEECG_QINIU_ACCESSKEY: ''
+      JEECG_QINIU_SECRETKEY: ''
+      JEECG_QINIU_BUCKETNAME: teaching-open
+      JEECG_QINIU_STATICDOMAIN: //qn.open.teaching.vip
+      JEECG_QINIU_AREA: z0
+    volumes:
+      - ./target.jar:/app/app.jar
+      - uploads_data:/app/uploads
+      - webapp_data:/app/webapp
+    networks:
+      - teaching-open-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/api/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+# Named volumes for data persistence
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+  uploads_data:
+    driver: local
+  webapp_data:
+    driver: local
+
+# Network configuration
+networks:
+  teaching-open-network:
+    driver: bridge

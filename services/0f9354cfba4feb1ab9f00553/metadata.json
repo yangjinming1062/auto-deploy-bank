@@ -1,0 +1,13 @@
+{
+  "service_id": "0f9354cfba4feb1ab9f00553",
+  "repo_name": "open-scratch/teaching-open",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "141.33MB",
+  "language": "java",
+  "star": 573,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-21T14:54:07.798092"
+}
