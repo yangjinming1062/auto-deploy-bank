@@ -1,0 +1,233 @@
+version : '3.8'
+networks:
+  cloud-net:
+    name: cloud-net
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16
+services:
+  hcp-nacos:
+    container_name: hcp-nacos
+    image: nacos/nacos-server:2.0.3-slim
+    build:
+      context: ./nacos
+    environment:
+      - MODE=standalone
+    volumes:
+      - ./nacos/logs/:/home/nacos/logs
+      - ./nacos/conf/application.properties:/home/nacos/conf/application.properties
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+      - "9849:9849"
+    depends_on:
+      - hcp-mysql
+    networks:
+      cloud-net:
+        ipv4_address: 172.18.0.6
+  hcp-mysql:
+    container_name: hcp-mysql
+    image: mysql:5.7
+    build:
+      context: ./mysql
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql/conf:/etc/mysql/conf.d
+      - ./mysql/logs:/logs
+      - ./mysql/data:/var/lib/mysql
+      - ./mysql/db:/docker-entrypoint-initdb.d
+    command: [
+      'mysqld',
+      '--innodb-buffer-pool-size=80M',
+      '--character-set-server=utf8mb4',
+      '--collation-server=utf8mb4_unicode_ci',
+      '--default-time-zone=+8:00',
+      '--lower-case-table-names=1'
+    ]
+    environment:
+      MYSQL_DATABASE: 'vctgo_platform'
+      MYSQL_ROOT_PASSWORD: password
+    networks:
+      cloud-net:
+        ipv4_address: 172.18.0.2
+  hcp-redis:
+    container_name: hcp-redis
+    image: redis
+    build:
+      context: ./redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis/conf/redis.conf:/home/hcp/redis/redis.conf
+      - ./redis/data:/data
+    command: redis-server /home/hcp/redis/redis.conf
+    networks:
+      cloud-net:
+        ipv4_address: 172.18.0.3
+  hcp-nginx:
+    container_name: hcp-nginx
+    image: nginx
+    build:
+      context: ./nginx
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./nginx/html/dist:/home/hcp/projects/hcp-ui
+      - ./nginx/conf/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/logs:/var/log/nginx
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - hcp-gateway
+    links:
+      - hcp-gateway
+    networks:
+      cloud-net:
+        ipv4_address: 172.18.0.4
+  hcp-gateway:
+    container_name: hcp-gateway
+    build:
+      context: hcp/gateway
+      dockerfile: dockerfile
+    ports:
+      - "38080:38080"
+    depends_on:
+      - hcp-redis
+    links:
+      - hcp-redis
+    environment:
+      - NACOS_HOST=172.18.0.6
+      - NACOS_PORT=8848
+      - NETWORK_IP=192.168.1.4
+    networks:
+      cloud-net:
+        ipv4_address: 172.18.0.5
+  hcp-auth:
+    container_name: hcp-auth
+    build:
+      context: hcp/auth
+      dockerfile: dockerfile
+    ports:
+      - "39200:39200"
+    depends_on:
+      - hcp-redis
+    links:
+      - hcp-redis
+    environment:
+      - NACOS_HOST=172.18.0.6
+      - NACOS_PORT=8848
+      - NETWORK_IP=192.168.1.4
+    networks:
+      cloud-net:
+        ipv4_address: 172.18.0.7
+  hcp-system:
+    container_name: hcp-system
+    build:
+      context: hcp/modules/system
+      dockerfile: dockerfile
+    ports:
+      - "39201:39201"
+    depends_on:
+      - hcp-redis
+      - hcp-mysql
+    links:
+      - hcp-redis
+      - hcp-mysql
+      - hcp-file
+    environment:
+      - NACOS_HOST=172.18.0.6
+      - NACOS_PORT=8848
+      - NETWORK_IP=192.168.1.4
+    networks:
+      cloud-net:
+        ipv4_address: 172.18.0.8
+  hcp-gen:
+    container_name: hcp-gen
+    build:
+      context: hcp/modules/gen
+      dockerfile: dockerfile
+    ports:
+      - "39202:39202"
+    depends_on:
+      - hcp-mysql
+    links:
+      - hcp-mysql
+    environment:
+      - NACOS_HOST=172.18.0.6
+      - NACOS_PORT=8848
+      - NETWORK_IP=192.168.1.4
+    networks:
+      cloud-net:
+        ipv4_address: 172.18.0.9
+  hcp-file:
+    container_name: hcp-file
+    build:
+      context: hcp/modules/file
+      dockerfile: dockerfile
+    ports:
+      - "39300:39300"
+    volumes:
+      - ./vctgo/uploadPath:/home/hcp/uploadPath
+    environment:
+      - NACOS_HOST=172.18.0.6
+      - NACOS_PORT=8848
+      - NETWORK_IP=192.168.1.4
+    networks:
+      cloud-net:
+        ipv4_address: 172.18.0.10
+  hcp-monitor:
+    container_name: hcp-monitor
+    build:
+      context: hcp/visual/monitor
+      dockerfile: dockerfile
+    ports:
+      - "39100:39100"
+    environment:
+      - NACOS_HOST=172.18.0.6
+      - NACOS_PORT=8848
+      - NETWORK_IP=192.168.1.4
+    networks:
+      cloud-net:
+        ipv4_address: 172.18.0.11
+  hcp-demo:
+    container_name: hcp-demo
+    build:
+      context: hcp/demo
+      dockerfile: dockerfile
+    ports:
+      - "39203:39203"
+    depends_on:
+      - hcp-redis
+      - hcp-mysql
+    links:
+      - hcp-redis
+      - hcp-mysql
+      - hcp-file
+    environment:
+      - NACOS_HOST=172.18.0.6
+      - NACOS_PORT=8848
+      - NETWORK_IP=192.168.1.4
+    networks:
+      cloud-net:
+        ipv4_address: 172.18.0.12
+  hcp-job:
+    container_name: hcp-job
+    build:
+      context: hcp/modules/job
+      dockerfile: dockerfile
+    ports:
+      - "39204:39204"
+    depends_on:
+      - hcp-redis
+      - hcp-mysql
+    links:
+      - hcp-redis
+      - hcp-mysql
+      - hcp-file
+    environment:
+      - NACOS_HOST=172.18.0.6
+      - NACOS_PORT=8848
+      - NETWORK_IP=192.168.1.4
+    networks:
+      cloud-net:
+        ipv4_address: 172.18.0.13

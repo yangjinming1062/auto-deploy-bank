@@ -1,0 +1,194 @@
+# ===================================================================
+# HCP (Huizhi Charging Platform) - Docker Compose Configuration
+# ===================================================================
+
+networks:
+  hcp-network:
+    driver: bridge
+
+services:
+  # ===================================================================
+  # MySQL Database Service
+  # ===================================================================
+  hcp-mysql:
+    image: mysql:8.0.36
+    container_name: hcp-mysql
+    restart: unless-stopped
+    networks:
+      - hcp-network
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: hcp_config
+    command: --default-authentication-plugin=mysql_native_password
+              --character-set-server=utf8mb4
+              --collation-server=utf8mb4_unicode_ci
+              --init-connect='SET NAMES utf8mb4'
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./sql:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-ppassword"]
+      timeout: 20s
+      retries: 10
+      interval: 10s
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 512M
+
+  # ===================================================================
+  # Redis Cache Service
+  # ===================================================================
+  hcp-redis:
+    image: redis:7-alpine
+    container_name: hcp-redis
+    restart: unless-stopped
+    networks:
+      - hcp-network
+    environment:
+      REDIS_PASSWORD: root
+    command: redis-server --requirepass root
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+  # ===================================================================
+  # Nacos Service Discovery & Configuration
+  # ===================================================================
+  hcp-nacos:
+    image: nacos/nacos-server:v2.1.1
+    container_name: hcp-nacos
+    restart: unless-stopped
+    networks:
+      - hcp-network
+    environment:
+      MODE: standalone
+      SPRING_DATASOURCE_PLATFORM: mysql
+      MYSQL_HOST: hcp-mysql
+      MYSQL_SERVICE_HOST: hcp-mysql
+      MYSQL_SERVICE_DB_NAME: hcp_config
+      MYSQL_SERVICE_PORT: "3306"
+      MYSQL_SERVICE_USER: root
+      MYSQL_SERVICE_PASSWORD: password
+    volumes:
+      - ./docker/nacos/conf:/home/nacos/conf
+      - ./docker/nacos/plugins/mysql:/home/nacos/plugins/mysql
+      - nacos-data:/home/nacos/data
+      - nacos-logs:/home/nacos/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8848/nacos/v1/console/health/readiness"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # ===================================================================
+  # HCP Gateway Service (Main Application)
+  # ===================================================================
+  hcp-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hcp-gateway
+    restart: unless-stopped
+    networks:
+      - hcp-network
+    ports:
+      - "40544:38080"
+    environment:
+      # Spring Profile
+      SPRING_PROFILES_ACTIVE: dev
+
+      # Nacos Configuration
+      NACOS_HOST: hcp-nacos
+      NACOS_PORT: 8848
+
+      # MySQL Configuration
+      MYSQL_HOST: hcp-mysql
+      MYSQL_PORT: 3306
+      MYSQL_DB: hcp_config
+      MYSQL_DB_APP: hcp_cloud
+      MYSQL_USER: root
+      MYSQL_PWD: password
+
+      # Redis Configuration
+      SPRING_REDIS_HOST: hcp-redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_REDIS_PASSWORD: root
+      REDIS_HOST: hcp-redis
+      REDIS_PORT: 6379
+      REDIS_PWD: root
+
+      # Sentinel Configuration
+      SENTINEL_HOST: hcp-nacos
+      SENTINEL_PORT: 8718
+
+      # JVM Configuration
+      JAVA_OPTS: >
+        -Dfile.encoding=utf-8
+        -Xms512m
+        -Xmx1024m
+        -XX:MetaspaceSize=128m
+        -XX:MaxMetaspaceSize=512m
+    volumes:
+      # Mount JAR file for security scanning
+      - ./target.jar:/app/target.jar
+      - ./logs:/app/logs
+    depends_on:
+      hcp-mysql:
+        condition: service_healthy
+      hcp-redis:
+        condition: service_healthy
+      hcp-nacos:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:38080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+# ===================================================================
+# Volumes Definition
+# ===================================================================
+volumes:
+  mysql-data:
+    driver: local
+  redis-data:
+    driver: local
+  nacos-data:
+    driver: local
+  nacos-logs:
+    driver: local

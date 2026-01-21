@@ -1,0 +1,13 @@
+{
+  "service_id": "08dd59d78e901c23bec9cfe3",
+  "repo_name": "roinli/HUIZHI-ChargeOS-cloud",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "43.90MB",
+  "language": "java",
+  "star": 598,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-21T06:59:45.163594"
+}
