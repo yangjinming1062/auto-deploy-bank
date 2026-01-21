@@ -1,0 +1,23 @@
+services:
+  wine-quality-prediction:
+    build:
+      context: "Wine Quality Prediction"
+      dockerfile: Dockerfile
+    container_name: wine-quality-prediction
+    ports:
+      - "41259:5000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
