@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  tts-synthesizer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tts-synthesizer
+    ports:
+      - "45119:40721"
+    environment:
+      - TF_CPP_MIN_LOG_LEVEL=1
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./synthesizer/saved_models:/home/ubuntu/deploy-projects/5b7a5be3bb6a00daea517b54/synthesizer/saved_models
+      - ./synthesizer/presets:/home/ubuntu/deploy-projects/5b7a5be3bb6a00daea517b54/synthesizer/presets
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:40721/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
