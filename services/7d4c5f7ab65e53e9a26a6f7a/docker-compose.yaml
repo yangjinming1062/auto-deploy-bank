@@ -1,0 +1,34 @@
+# Docker Compose configuration for LLM Q&A System
+# This configuration runs the Gradio-based web interface for the LLM Q&A demo
+
+services:
+  llm-qa-system:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: llm-qa-system
+    ports:
+      - "40784:7860"
+    environment:
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY:-your-api-key-here}
+      - GRADIO_PORT=7860
+      - GRADIO_HOST=0.0.0.0
+      - PYTHONUNBUFFERED=1
+    volumes:
+      # Mount Key.json for API key configuration
+      - ./Key.json:/home/ubuntu/deploy-projects/7d4c5f7ab65e53e9a26a6f7a/Key.json:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
