@@ -1,0 +1,13 @@
+{
+  "service_id": "ec745b269933224cd9244c31",
+  "repo_name": "pannous/tensorflow-ocr",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "138.16MB",
+  "language": "python",
+  "star": 646,
+  "repo_flag": "PYTHON-TensorFlow",
+  "uploaded_at": "2026-01-21T07:24:24.041227"
+}
