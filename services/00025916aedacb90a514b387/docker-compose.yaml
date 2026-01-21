@@ -1,0 +1,103 @@
+services:
+  # ChromaDB Vector Database for RAG functionality (internal only)
+  chromadb:
+    image: chromadb/chroma:0.6.2
+    container_name: devoxx-genie-chromadb
+    environment:
+      - CHROMA_SERVER_HOST=0.0.0.0
+      - CHROMA_SERVER_PORT=8000
+    volumes:
+      - chromadb_data:/chroma/chroma
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+
+  # Plugin Build Service
+  build-plugin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    container_name: devoxx-genie-build
+    volumes:
+      - build_output:/app/build
+      - gradle_cache:/home/gradle/.gradle
+      - ./target.jar:/app/target.jar
+    working_dir: /app
+    command: sh -c "./gradlew shadowJar --no-daemon --console=plain && cp /app/build/libs/target.jar /app/target.jar"
+    environment:
+      - GRADLE_OPTS=-Xmx2g
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 6G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+    profiles:
+      - build
+      - build-only
+
+  # Development Environment
+  dev-env:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: devoxx-genie-dev
+    volumes:
+      - .:/app
+      - build_output:/app/build
+      - ~/.gradle:/home/gradle/.gradle
+    environment:
+      - GRADLE_OPTS=-Xmx2g
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    profiles:
+      - dev
+    stdin_open: true
+    tty: true
+    command: tail -f /dev/null
+
+  # Docusaurus Documentation Web Service
+  web:
+    build:
+      context: ./docusaurus
+      dockerfile: Dockerfile.web
+    container_name: devoxx-genie-web
+    ports:
+      - "8080:8080"
+    depends_on:
+      chromadb:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  chromadb_data:
+    driver: local
+  build_output:
+    driver: local
+  gradle_cache:
+    driver: local
+
+networks:
+  default:
+    name: devoxx-genie-network
