@@ -1,0 +1,13 @@
+{
+  "service_id": "c994539d92609e7f20803122",
+  "repo_name": "andysingal/llm-course",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "119.21MB",
+  "language": "python",
+  "star": 711,
+  "repo_flag": "PYTHON-langfuse",
+  "uploaded_at": "2026-01-21T09:28:24.616053"
+}

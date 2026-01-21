@@ -1,0 +1,124 @@
+services:
+  web:
+    container_name: chat_web
+    build: app
+    command: python app.py
+    restart: unless-stopped
+    environment:
+      - APP_PORT=5000
+      - APP_DEBUG=False
+      - INFINITY_INSTANCE_URL=http://infinity:7997
+      - EMBEDDING_MODEL=BAAI/bge-small-en-v1.5
+      - OLLAMA_INSTANCE_URL=http://ollama:11434
+      - MODEL=llama3.2
+      - OPENSEARCH_HOSTNAME=opensearch-node1
+      - OPENSEARCH_REST_API_PORT_HOST=9200
+      - OPENSEARCH_USER=admin
+      - OPENSEARCH_PASSWORD=admin
+    ports:
+      - "40698:5000"
+    depends_on:
+      infinity:
+        condition: service_healthy
+      opensearch-node1:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  infinity:
+    container_name: chat_infinity
+    image: python:3.12-slim
+    restart: unless-stopped
+    command: >
+      bash -c "pip install infinity-emb[torch] && python -c 'from infinity_emb import Server; Server.run(port=7997, model=\"BAAI/bge-small-en-v1.5\")'"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7997/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  ollama:
+    container_name: chat_ollama
+    image: ollama/ollama:0.1.42
+    restart: unless-stopped
+    volumes:
+      - ./volumes/ollama:/root/.ollama
+    command: >
+      bash -c "ollama serve & sleep 5 && ollama pull llama3.2"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  opensearch-node1:
+    container_name: chat_opensearch_opensearch_node1
+    image: opensearchproject/opensearch:2.15.0
+    restart: unless-stopped
+    environment:
+      - cluster.name=opensearch-cluster
+      - node.name=opensearch-node1
+      - discovery.seed_hosts=opensearch-node1
+      - cluster.initial_cluster_manager_nodes=opensearch-node1
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=admin
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - ./volumes/opensearch/search_node_1:/usr/share/opensearch/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -s -I http://localhost:9200 | grep -q 'HTTP/1.1 302 Found' || curl -s http://localhost:9200 | grep -q 'unknown'",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
