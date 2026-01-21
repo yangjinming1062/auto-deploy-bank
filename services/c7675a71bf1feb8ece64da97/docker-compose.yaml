@@ -1,0 +1,30 @@
+services:
+  agentforge:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agentforge
+    ports:
+      - "41578:8000"
+    environment:
+      - PORT=8000
+      - PYTHONUNBUFFERED=1
+      - AGENTFORGE_ROOT=/home/ubuntu/deploy-projects/c7675a71bf1feb8ece64da97
+    working_dir: /home/ubuntu/deploy-projects/c7675a71bf1feb8ece64da97
+    volumes:
+      - ./:/home/ubuntu/deploy-projects/c7675a71bf1feb8ece64da97
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
