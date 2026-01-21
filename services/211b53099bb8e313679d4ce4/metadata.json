@@ -1,0 +1,13 @@
+{
+  "service_id": "211b53099bb8e313679d4ce4",
+  "repo_name": "AFK-surf/open-agent",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "37.99MB",
+  "language": "nodejs",
+  "star": 520,
+  "repo_flag": "NODEJS-Lodash",
+  "uploaded_at": "2026-01-21T22:33:08.499011"
+}
