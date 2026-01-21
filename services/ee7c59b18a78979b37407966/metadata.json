@@ -1,0 +1,13 @@
+{
+  "service_id": "ee7c59b18a78979b37407966",
+  "repo_name": "apache/incubator-kie-kogito-runtimes",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "10.98MB",
+  "language": "java",
+  "star": 591,
+  "repo_flag": "JAVA-Logback",
+  "uploaded_at": "2026-01-21T07:38:14.794862"
+}
