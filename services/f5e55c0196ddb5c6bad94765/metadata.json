@@ -1,0 +1,13 @@
+{
+  "service_id": "f5e55c0196ddb5c6bad94765",
+  "repo_name": "exchange-server/CoinExchange",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "28.02MB",
+  "language": "java",
+  "star": 587,
+  "repo_flag": "JAVA-Guava",
+  "uploaded_at": "2026-01-21T08:06:04.282481"
+}

@@ -1,0 +1,191 @@
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:5.7
+    container_name: bizzan-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: bizzan
+      MYSQL_USER: bizzan
+      MYSQL_PASSWORD: password
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./00_framework/config/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - bizzan-network
+
+  # MongoDB
+  mongodb:
+    image: mongo:3.6
+    container_name: bizzan-mongodb
+    environment:
+      MONGO_INITDB_DATABASE: bizzan
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo localhost:27017/test --quiet
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - bizzan-network
+
+  # Redis
+  redis:
+    image: redis:3.2
+    container_name: bizzan-redis
+    command: redis-server --requirepass "" --appendonly yes --notify-keyspace-events Egx
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - bizzan-network
+
+  # Zookeeper (required for Kafka)
+  zookeeper:
+    image: confluentinc/cp-zookeeper:5.2.1
+    container_name: bizzan-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_logs:/var/lib/zookeeper/log
+    healthcheck:
+      test: ["CMD", "sh", "-c", "echo ruok | nc localhost 2181 | grep imok"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - bizzan-network
+
+  # Kafka
+  kafka:
+    image: confluentinc/cp-kafka:5.2.1
+    container_name: bizzan-kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - bizzan-network
+
+  # Cloud Service (Eureka Registry) - Exposed on host port 40452
+  cloud:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bizzan-cloud
+    ports:
+      - "40615:7000"  # Host port 40615 -> Container port 7000
+    environment:
+      # Database Configuration
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/bizzan?characterEncoding=utf8&serverTimezone=GMT%2B8&useSSL=false
+      SPRING_DATASOURCE_USERNAME: bizzan
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+
+      # Redis Configuration
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      SPRING_REDIS_PASSWORD:
+
+      # MongoDB Configuration
+      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/bizzan
+      SPRING_DATA_MONGODB_DATABASE: bizzan
+
+      # Kafka Configuration
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+
+      # Eureka Configuration
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://cloud:7000/eureka/
+
+      # Mail Configuration (optional placeholders)
+      SPRING_MAIL_HOST: smtp.gmail.com
+      SPRING_MAIL_PORT: 465
+      SPRING_MAIL_USERNAME: ""
+      SPRING_MAIL_PASSWORD: ""
+
+      # System Configuration
+      SPARK_SYSTEM_WORK_ID: "1"
+      SPARK_SYSTEM_DATA_CENTER_ID: "1"
+
+      # JVM Options for container
+      JAVA_OPTS: -Xms512m -Xmx1024m
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7000/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    restart: unless-stopped
+    networks:
+      - bizzan-network
+    volumes:
+      - ./target.jar:/app/target.jar
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+volumes:
+  mysql_data:
+    driver: local
+  mongodb_data:
+    driver: local
+  redis_data:
+    driver: local
+  kafka_data:
+    driver: local
+  zookeeper_data:
+    driver: local
+  zookeeper_logs:
+    driver: local
+
+networks:
+  bizzan-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
