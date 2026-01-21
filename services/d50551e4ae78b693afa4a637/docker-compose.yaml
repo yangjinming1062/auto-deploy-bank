@@ -1,0 +1,35 @@
+services:
+  mofa-video:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mofa-video-gradio
+    ports:
+      - "44447:9080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DEBIAN_FRONTEND=noninteractive
+      - CUDA_HOME=/usr/local/cuda
+      - CUDA_VISIBLE_DEVICES=0
+      - NVIDIA_VISIBLE_DEVICES=0
+      - TORCH_HOME=/root/.cache/torch
+      - PYTHONHASHSEED=42
+    volumes:
+      - ./MOFA-Video-Hybrid/ckpts:/app/ckpts
+      - ./MOFA-Video-Hybrid/Output_audio_driven:/app/Output_audio_driven
+      - ./MOFA-Video-Hybrid/Output_video_driven:/app/Output_video_driven
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 12G
+        reservations:
+          cpus: '1.0'
+          memory: 4G
+    restart: always
