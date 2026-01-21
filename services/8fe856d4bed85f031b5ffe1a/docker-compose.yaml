@@ -1,0 +1,25 @@
+services:
+  composeml:
+    build: .
+    container_name: composeml-service
+    restart: unless-stopped
+    tty: true
+    stdin_open: true
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:41164/health || exit 1"]
+      start_period: 60s
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    ports:
+      - "40789:41164"
+    environment:
+      - PYTHONUNBUFFERED=1
