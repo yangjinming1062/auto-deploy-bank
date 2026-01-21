@@ -1,0 +1,32 @@
+services:
+  facenet:
+    build: .
+    container_name: facenet-service
+    ports:
+      - "40740:40200"
+    environment:
+      - CUDA_VISIBLE_DEVICES=
+      - LOCAL_RANK=0
+      - RANK=0
+      - MODE=train
+      - PORT=40200
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./datasets:/home/ubuntu/deploy-projects/7190552897c0bdf9361ff9b2/datasets
+      - ./model_data:/home/ubuntu/deploy-projects/7190552897c0bdf9361ff9b2/model_data
+      - ./logs:/home/ubuntu/deploy-projects/7190552897c0bdf9361ff9b2/logs
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:40200/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    restart: unless-stopped
