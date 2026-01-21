@@ -1,0 +1,106 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: zdh_mysql
+    hostname: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: zdh
+      MYSQL_USER: zyc
+      MYSQL_PASSWORD: 123456
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - zdh_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpass"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    # MySQL is internal - DO NOT expose port to host
+
+  redis:
+    image: redis:7-alpine
+    container_name: zdh_redis
+    hostname: redis
+    command: redis-server --requirepass zyczzu
+    volumes:
+      - redis_data:/data
+    networks:
+      - zdh_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "zyczzu", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    # Redis is internal - DO NOT expose port to host
+
+  zdh_web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: zdh_web
+    hostname: zdh_web
+    ports:
+      - "40714:8081"
+    environment:
+      - ZDH_RUN_MODE=prod
+      - spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration,org.springframework.boot.autoconfigure.mongo.MongoReactiveAutoConfiguration,org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration,org.springframework.boot.autoconfigure.data.mongo.MongoReactiveDataAutoConfiguration
+      - spring.datasource.url=jdbc:mysql://mysql:3306/zdh?serverTimezone=GMT%2B8&useSSL=false&allowPublicKeyRetrieval=true&autoReconnect=true
+      - spring.datasource.username=zyc
+      - spring.datasource.password=123456
+      - spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+      - spring.datasource.type=com.alibaba.druid.pool.DruidDataSource
+      - spring.redis.hostName=redis
+      - spring.redis.port=6379
+      - spring.redis.password=zyczzu
+    volumes:
+      - ./target.jar:/app/target.jar
+    networks:
+      - zdh_network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "ss -tlnp | grep -q ':8081'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+networks:
+  zdh_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  redis_data:
