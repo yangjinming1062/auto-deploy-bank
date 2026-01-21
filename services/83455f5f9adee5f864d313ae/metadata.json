@@ -1,0 +1,13 @@
+{
+  "service_id": "83455f5f9adee5f864d313ae",
+  "repo_name": "LedgerHQ/ledger-live",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "153.55MB",
+  "language": "nodejs",
+  "star": 541,
+  "repo_flag": "NODEJS-Lodash",
+  "uploaded_at": "2026-01-21T15:18:30.803358"
+}
