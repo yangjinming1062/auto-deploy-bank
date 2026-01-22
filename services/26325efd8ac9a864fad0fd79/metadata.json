@@ -1,0 +1,13 @@
+{
+  "service_id": "26325efd8ac9a864fad0fd79",
+  "repo_name": "imalooney/t3tr0s",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "17.77MB",
+  "language": "nodejs",
+  "star": 465,
+  "repo_flag": "NODEJS-SocketIO",
+  "uploaded_at": "2026-01-22T12:00:18.970081"
+}

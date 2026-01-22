@@ -1,0 +1,26 @@
+services:
+  t3tr0s:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: t3tr0s
+    ports:
+      - "40313:1984"
+    environment:
+      - NODE_ENV=production
+      - PORT=1984
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:1984"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
