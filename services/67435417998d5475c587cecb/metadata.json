@@ -1,0 +1,13 @@
+{
+  "service_id": "67435417998d5475c587cecb",
+  "repo_name": "langchain-ai/how_to_fix_your_context",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.33MB",
+  "language": "python",
+  "star": 485,
+  "repo_flag": "PYTHON-langgraph",
+  "uploaded_at": "2026-01-22T02:23:32.222996"
+}
