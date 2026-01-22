@@ -1,0 +1,13 @@
+{
+  "service_id": "12f05413b563fe70cbed49dc",
+  "repo_name": "VQAssessment/DOVER",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "38.99MB",
+  "language": "python",
+  "star": 461,
+  "repo_flag": "PYTHON-PyTorch",
+  "uploaded_at": "2026-01-22T23:04:57.053205"
+}
