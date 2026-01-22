@@ -1,0 +1,13 @@
+{
+  "service_id": "7fce57fdb6ca80777ebf02fe",
+  "repo_name": "Azure-Samples/azureai-samples",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "5.54MB",
+  "language": "python",
+  "star": 468,
+  "repo_flag": "PYTHON-langgraph",
+  "uploaded_at": "2026-01-22T17:32:57.864812"
+}
