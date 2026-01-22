@@ -1,0 +1,13 @@
+{
+  "service_id": "11b4575bb8425ea2637ad0cd",
+  "repo_name": "oracle/coherence",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "117.59MB",
+  "language": "java",
+  "star": 464,
+  "repo_flag": "JAVA-Logback",
+  "uploaded_at": "2026-01-22T22:57:17.022540"
+}
