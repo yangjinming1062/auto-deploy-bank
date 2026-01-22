@@ -1,0 +1,35 @@
+volumes:
+  plugin-data:
+
+services:
+  ijaas:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ijaas-server
+    ports:
+      - "40313:5800"
+    environment:
+      - IJAAS_PORT=5800
+      - JAVA_HOME=/opt/intellij/jbr
+      - IDEA_HOME=/opt/intellij
+      - AWT_HEADLESS=true
+      - DISPLAY=:99
+      - XAUTHORITY=/tmp/.Xauthority
+    volumes:
+      - plugin-data:/data
+      - ./target.jar:/app/target.jar
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import socket; s=socket.socket(); s.connect(('127.0.0.1', 5800)); s.close()"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 120s
