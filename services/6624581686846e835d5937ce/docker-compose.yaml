@@ -1,0 +1,31 @@
+services:
+  amplify-docs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "41984:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - ALGOLIA_APP_ID=${ALGOLIA_APP_ID:-WUUEEESZ67}
+      - ALGOLIA_API_KEY=${ALGOLIA_API_KEY:-096fb25a5abb771ed2ac4391e80673c4}
+      - ALGOLIA_INDEX_NAME=${ALGOLIA_INDEX_NAME:-amplify}
+      - BUILD_ENV=${BUILD_ENV:-development}
+      - ANALYZE=${ANALYZE:-false}
+      - SITEMAP_DOMAIN=${SITEMAP_DOMAIN:-}
+      - ALLOW_ROBOTS=${ALLOW_ROBOTS:-}
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
