@@ -1,0 +1,38 @@
+services:
+  inception:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: inception-app
+    ports:
+      - "41387:8080"
+    environment:
+      # Database configuration
+      - INCEPTION_DB_URL=jdbc:hsqldb:file:/opt/inception/.inception/db/inception
+      - INCEPTION_DB_USERNAME=sa
+      - INCEPTION_DB_PASSWORD=
+      # INCEpTION home directory
+      - inception.home=/opt/inception/.inception
+      # Java options
+      - JAVA_OPTS=-Djava.awt.headless=true
+      - JAVA_MEM_OPTS=-XX:MaxRAMPercentage=80
+    volumes:
+      # Volume mount for security scanning - extracts JAR for inspection
+      - ./target.jar:/opt/inception/target.jar
+      # Persistent data volume for INCEpTION home
+      - inception-data:/opt/inception/.inception
+      # Temp volume
+      - /tmp
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+
+volumes:
+  inception-data:
+    driver: local
