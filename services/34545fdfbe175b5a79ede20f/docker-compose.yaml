@@ -1,0 +1,44 @@
+services:
+  omegat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: omegat-app
+    # Expose port 41994 (OmegaT is a GUI app, runs headless with Xvfb - no server ports)
+    ports:
+      - "41994:41994"
+    # Environment variables for headless operation
+    environment:
+      - DISPLAY=:99
+      - JAVA_OPTS=-Xmx1024m
+      - XDG_CONFIG_HOME=/home/appuser/.config
+      - XDG_DATA_HOME=/home/appuser/.local/share
+    # Volume mount for JAR file security scanning
+    volumes:
+      - ./target.jar:/app/target.jar
+    # Resource limits to prevent container from consuming all system resources
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    # Healthcheck for the container (OmegaT runs under xvfb-run)
+    healthcheck:
+      test: ["CMD", "sh", "-c", "ps aux | grep -v grep | grep -E '(xvfb-run|OmegaT)'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    # Restart policy
+    restart: unless-stopped
+    # Tmpfs for temp files
+    tmpfs:
+      - /tmp:mode=1777
+
+# Network configuration
+networks:
+  default:
+    name: omegat-network

@@ -1,0 +1,13 @@
+{
+  "service_id": "34545fdfbe175b5a79ede20f",
+  "repo_name": "omegat-org/omegat",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "29.47MB",
+  "language": "java",
+  "star": 490,
+  "repo_flag": "JAVA-Guava",
+  "uploaded_at": "2026-01-22T04:36:51.592425"
+}
