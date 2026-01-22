@@ -1,0 +1,13 @@
+{
+  "service_id": "bd3b549db50acd354c078329",
+  "repo_name": "fit2cloud/rackshift",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "2.25MB",
+  "language": "java",
+  "star": 630,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-22T10:06:07.734492"
+}
