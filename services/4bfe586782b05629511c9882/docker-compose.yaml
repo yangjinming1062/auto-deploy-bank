@@ -1,0 +1,23 @@
+services:
+  helloworld-jsp:
+    build:
+      context: ./helloworld-jsp
+      dockerfile: Dockerfile
+    ports:
+      - "41407:8080"
+    volumes:
+      - ./helloworld-jsp/target/helloworld-jsp-1.0-SNAPSHOT.war:/app/target.jar
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/hello.jsp"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
