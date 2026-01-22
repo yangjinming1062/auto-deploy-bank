@@ -1,0 +1,27 @@
+services:
+  v3d:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: v3d-app
+    ports:
+      - "40794:4321"
+    environment:
+      - CUDA_DEVICE_ORDER=PCI_BUS_ID
+      - CUDA_VISIBLE_DEVICES=
+      - HF_HOME=/root/.cache/huggingface
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4321/"]
+      interval: 60s
+      timeout: 30s
+      start_period: 120s
+      retries: 3
