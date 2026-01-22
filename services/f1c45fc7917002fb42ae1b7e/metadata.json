@@ -1,0 +1,13 @@
+{
+  "service_id": "f1c45fc7917002fb42ae1b7e",
+  "repo_name": "taishan1994/BERT-BILSTM-CRF",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.05MB",
+  "language": "python",
+  "star": 476,
+  "repo_flag": "PYTHON-PyTorch",
+  "uploaded_at": "2026-01-22T11:22:39.388649"
+}
