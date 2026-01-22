@@ -1,0 +1,35 @@
+services:
+  leo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: leo-embodied-agent
+    environment:
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+      - HF_TOKEN=${HF_TOKEN}
+      - WANDB_API_KEY=${WANDB_API_KEY}
+      - WANDB_ENTITY=${WANDB_ENTITY}
+      - TOKENIZERS_PARALLELISM=false
+      - PYOPENGL_PLATFORM=osmesa
+    volumes:
+      - ${DATA_SCANNET_PATH:-./data/scannet}:/data/scannet:ro
+      - ${DATA_3RSCAN_PATH:-./data/3rscan}:/data/3rscan:ro
+      - ${DATA_ALIGNMENT_PATH:-./data/alignment}:/data/alignment:ro
+      - ${DATA_INSTRUCTION_PATH:-./data/instruction}:/data/instruction:ro
+      - ${EXPERIMENT_BASE_DIR:-./experiments}:/experiments
+    ports:
+      - "40443:40406"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "ps aux | grep -v grep | grep python || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
