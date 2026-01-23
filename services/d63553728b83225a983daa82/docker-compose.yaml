@@ -1,0 +1,35 @@
+services:
+  finn:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: finn-service
+    ports:
+      - "49032:8081"
+    environment:
+      - FINN_ROOT=/workspace
+      - FINN_BUILD_DIR=/workspace/build
+      - FINN_DEPLOY_DIR=/workspace/deploy
+      - RTLSIM_TRACE_DEPTH=1
+      - LIVENESS_THRESHOLD=10000
+      - PYNQ_BOARD=Pynq-Z1
+      - NETRON_PORT=8081
+      - LOCALHOST_URL=localhost
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+    restart: unless-stopped

@@ -1,0 +1,13 @@
+{
+  "service_id": "d63553728b83225a983daa82",
+  "repo_name": "Xilinx/finn",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "3.89MB",
+  "language": "python",
+  "star": 930,
+  "repo_flag": "PYTHON-DVC",
+  "uploaded_at": "2026-01-23T16:07:54.602262"
+}
