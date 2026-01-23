@@ -1,0 +1,23 @@
+services:
+  mlbox:
+    build: .
+    container_name: mlbox_service
+    environment:
+      - MPLBACKEND=Agg
+      - PORT=5000
+    ports:
+      - "40404:5000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 180s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
