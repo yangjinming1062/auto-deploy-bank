@@ -1,0 +1,13 @@
+{
+  "service_id": "43055fa0ab3342bba4e184c7",
+  "repo_name": "automl/NASLib",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "13.58MB",
+  "language": "python",
+  "star": 583,
+  "repo_flag": "PYTHON-LightGBM",
+  "uploaded_at": "2026-01-23T21:29:35.951133"
+}

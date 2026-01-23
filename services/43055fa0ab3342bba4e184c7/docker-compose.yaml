@@ -1,0 +1,29 @@
+services:
+  naslib:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: naslib-training
+    ports:
+      - "40363:40363"
+    environment:
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-}
+      - RANK=${RANK:-0}
+      - WORLD_SIZE=${WORLD_SIZE:-1}
+    volumes:
+      - ./results:/home/ubuntu/deploy-projects/43055fa0ab3342bba4e184c7/results
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:40363"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 8G
+        reservations:
+          cpus: '2.0'
+          memory: 4G
+    restart: unless-stopped
