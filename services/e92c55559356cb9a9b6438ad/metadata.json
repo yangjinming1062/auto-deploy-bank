@@ -1,0 +1,13 @@
+{
+  "service_id": "e92c55559356cb9a9b6438ad",
+  "repo_name": "NarimanN2/ollama-playground",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "213KB",
+  "language": "python",
+  "star": 484,
+  "repo_flag": "PYTHON-langgraph",
+  "uploaded_at": "2026-01-23T05:28:41.643557"
+}
