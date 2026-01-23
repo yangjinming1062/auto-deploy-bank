@@ -1,0 +1,43 @@
+services:
+  graphstorm:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: graphstorm
+    ports:
+      - "40234:40234"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - CUDA_VISIBLE_DEVICES=
+      - PYTHONPATH=/graphstorm/python
+      - MASTER_ADDR=
+      - MASTER_PORT=
+      - WORLD_SIZE=
+      - LOCAL_RANK=
+      - LOCAL_WORLD_SIZE=
+      - OMP_NUM_THREADS=4
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - LD_LIBRARY_PATH=/usr/local/cuda/lib64:/usr/local/lib:${LD_LIBRARY_PATH:-}
+      - GS_PORT=40234
+    volumes:
+      - ./data:/graphstorm/data
+      - ./models:/graphstorm/models
+      - ./outputs:/graphstorm/outputs
+    working_dir: /graphstorm
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "pgrep", "-x", "sshd"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped

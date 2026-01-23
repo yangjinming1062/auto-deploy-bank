@@ -1,0 +1,13 @@
+{
+  "service_id": "45c256db9dfd099f0f6eb42b",
+  "repo_name": "awslabs/graphstorm",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "4.98MB",
+  "language": "python",
+  "star": 442,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-01-23T18:30:45.721835"
+}
