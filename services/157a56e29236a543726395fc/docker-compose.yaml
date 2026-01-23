@@ -1,0 +1,22 @@
+services:
+  app:
+    build: .
+    container_name: flowy-vue
+    ports:
+      - "40317:40317"
+    environment:
+      - NODE_ENV=production
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:40317/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
