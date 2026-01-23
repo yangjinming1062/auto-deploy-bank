@@ -1,0 +1,13 @@
+{
+  "service_id": "e2f95281abcd07e0b26c9acb",
+  "repo_name": "512team/dhorse",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "2.01MB",
+  "language": "java",
+  "star": 459,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-23T15:52:26.295031"
+}

@@ -1,0 +1,90 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: dhorse-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=dhorse
+      - MYSQL_CHARSET=utf8mb4
+      - MYSQL_COLLATION=utf8mb4_unicode_ci
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - dhorse-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  dhorse:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dhorse-rest
+    ports:
+      - "44010:8100"
+    environment:
+      - DATA_PATH=/app/data
+      - LOG_PATH=/app/data/logs
+      - SERVER_PORT=8100
+      - SPRING_CONFIG_LOCATION=/app/conf/
+      # MySQL settings (enabled)
+      - MYSQL_ENABLE=true
+      - MYSQL_URL=jdbc:mysql://mysql:3306/dhorse?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=rootpassword
+      # Thread pool settings
+      - THREAD_POOL_BUILD_CORE=1
+      - THREAD_POOL_BUILD_MAX=4
+      - THREAD_POOL_DEPLOYMENT_CORE=1
+      - THREAD_POOL_DEPLOYMENT_MAX=4
+      # Kubernetes client (default: fabric8)
+      - KUBERNETES_CLIENT=fabric8
+    volumes:
+      # Volume mount for security scanning
+      - ./app.jar:/app/app.jar
+      # Persistent data storage
+      - dhorse-data:/app/data
+      # Configuration file (optional override)
+      - ./conf/dhorse.yml:/app/conf/dhorse.yml
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8100/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - dhorse-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+volumes:
+  mysql-data:
+    driver: local
+  dhorse-data:
+    driver: local
+
+networks:
+  dhorse-network:
+    name: dhorse-network
