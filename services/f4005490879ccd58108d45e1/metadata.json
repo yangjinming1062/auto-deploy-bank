@@ -1,0 +1,13 @@
+{
+  "service_id": "f4005490879ccd58108d45e1",
+  "repo_name": "girder/girder",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "2.04MB",
+  "language": "python",
+  "star": 448,
+  "repo_flag": "NODEJS",
+  "uploaded_at": "2026-01-23T16:22:47.891939"
+}
