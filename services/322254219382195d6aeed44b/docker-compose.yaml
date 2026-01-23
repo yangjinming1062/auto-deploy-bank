@@ -1,0 +1,29 @@
+services:
+  vllm-cli:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vllm-cli-proxy
+    ports:
+      - "40724:8000"
+    environment:
+      - HF_TOKEN=${HF_TOKEN:-}
+      - VLLM_CLI_ASCII_BOXES=1
+      - VLLM_PROXY_HOST=0.0.0.0
+      - VLLM_PROXY_PORT=8000
+      - VLLM_ATTENTION_BACKEND=${VLLM_ATTENTION_BACKEND:-auto}
+      - VLLM_USE_V1=${VLLM_USE_V1:-}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
