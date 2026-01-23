@@ -1,0 +1,36 @@
+services:
+  yolo-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: yolo-ultralytics
+    ports:
+      - "40250:8080"
+    environment:
+      - RANK=-1
+      - LOCAL_RANK=-1
+      - YOLO_AUTOINSTALL=true
+      - YOLO_VERBOSE=true
+      - YOLO_TQDM_RICH=false
+      - YOLO_OFFLINE=false
+      - CUDA_VISIBLE_DEVICES=-1
+      - PYTHONUNBUFFERED=1
+      - OMP_NUM_THREADS=1
+      - MKL_THREADING_LAYER=GNU
+    volumes:
+      - ./:/home/ubuntu/deploy-projects/1965570298e101bafe84e0d7
+    healthcheck:
+      test: ["CMD", "python", "-c", "import ultralytics; print('YOLO Ultralytics container is running')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped

@@ -1,0 +1,13 @@
+{
+  "service_id": "1965570298e101bafe84e0d7",
+  "repo_name": "wandahangFY/YOLOv11-RGBT",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "8.40MB",
+  "language": "python",
+  "star": 585,
+  "repo_flag": "PYTHON-DVC",
+  "uploaded_at": "2026-01-23T17:04:00.674070"
+}
