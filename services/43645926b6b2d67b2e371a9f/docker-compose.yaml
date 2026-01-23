@@ -1,0 +1,41 @@
+services:
+  train:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: math-model-trainer
+    ports:
+      - "44000:44000"
+    environment:
+      - MODEL_PATH=${MODEL_PATH:-facebook/opt-125m}
+      - SAVE_PATH=${SAVE_PATH:-/tmp/model_output}
+      - MASTER_ADDR=${MASTER_ADDR:-localhost}
+      - MASTER_PORT=${MASTER_PORT:-1231}
+      - GLOO_SOCKET_IFNAME=${GLOO_SOCKET_IFNAME:-lo}
+      - NCCL_SOCKET_IFNAME=${NCCL_SOCKET_IFNAME:-lo}
+      - WANDB_DISABLED=${WANDB_DISABLED:-true}
+      - HF_TOKEN=${HF_TOKEN:-}
+      - CUDA_VISIBLE_DEVICES=0
+      - PYTHONUNBUFFERED=1
+      - SERVICE_PORT=44000
+    volumes:
+      - ./data:/home/ubuntu/deploy-projects/43645926b6b2d67b2e371a9f/data
+      - ${SAVE_PATH:-/tmp/model_output}:/tmp/model_output
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:44000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
