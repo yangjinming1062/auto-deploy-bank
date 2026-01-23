@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  powerjob-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: powerjob-server
+    ports:
+      - "50467:7700"
+    environment:
+      - SERVER_PORT=7700
+      - SPRING_PROFILES_ACTIVE=daily
+      - SPRING_DATASOURCE_CORE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
+      - SPRING_DATASOURCE_CORE_JDBC_URL=jdbc:mysql://mysql:3306/powerjob?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_CORE_USERNAME=root
+      - SPRING_DATASOURCE_CORE_PASSWORD=password
+      - SPRING_DATASOURCE_CORE_MAXIMUM_POOL_SIZE=20
+      - SPRING_DATASOURCE_CORE_MINIMUM_IDLE=5
+      - OMS_AUTH_INITIALIZE_ADMIN_PASSWORD=powerjob_admin
+      - OMS_AUTH_OPENAPI_ENABLE=false
+      - OMS_AUTH_SECURITY_JWT_EXPIRE_SECONDS=604800
+      - OMS_TRANSPORTER_ACTIVE_PROTOCOLS=AKKA,HTTP
+      - OMS_TRANSPORTER_MAIN_PROTOCOL=HTTP
+      - OMS_AKKA_PORT=10086
+      - OMS_HTTP_PORT=10010
+      - OMS_TABLE_PREFIX=
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:7700/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    volumes:
+      - ./target.jar:/app/target.jar
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    networks:
+      - powerjob-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: powerjob-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=powerjob
+      - MYSQL_CHARACTERSET=utf8mb4
+      - MYSQL_COLLATION=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ppassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    volumes:
+      - mysql-data:/var/lib/mysql
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    networks:
+      - powerjob-network
+
+networks:
+  powerjob-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
