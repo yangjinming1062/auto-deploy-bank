@@ -1,19 +1,14 @@
-# ML Tutorial Repository - Jupyter Notebook Server
 services:
-  jupyter:
+  fastapi-app:
     build: .
-    container_name: ml-tutorial-jupyter
     ports:
-      - "40219:8888"
-    environment:
-      - DISABLE_MLFLOW_INTEGRATION=TRUE
-      - CC=
+      - "40291:80"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8888"]
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 10s
     deploy:
       resources:
         limits:
@@ -22,4 +17,3 @@ services:
         reservations:
           cpus: '1.0'
           memory: 1G
-    restart: unless-stopped

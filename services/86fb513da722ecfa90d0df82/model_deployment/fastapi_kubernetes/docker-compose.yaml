@@ -1,15 +1,14 @@
 services:
-  fastapi:
+  fastapi-app:
     build: .
-    container_name: fastapi-ml-service
     ports:
-      - "40213:80"
+      - "40291:80"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:80/"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 5s
+      start_period: 10s
     deploy:
       resources:
         limits:
@@ -18,4 +17,3 @@ services:
         reservations:
           cpus: '1.0'
           memory: 1G
-    restart: unless-stopped
