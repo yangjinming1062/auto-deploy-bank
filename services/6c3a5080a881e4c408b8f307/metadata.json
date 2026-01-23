@@ -1,0 +1,13 @@
+{
+  "service_id": "6c3a5080a881e4c408b8f307",
+  "repo_name": "ncoudray/DeepPATH",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "3.63MB",
+  "language": "python",
+  "star": 527,
+  "repo_flag": "PYTHON-LightGBM",
+  "uploaded_at": "2026-01-23T22:13:51.866697"
+}
