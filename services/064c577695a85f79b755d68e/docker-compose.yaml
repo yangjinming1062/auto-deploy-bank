@@ -1,0 +1,30 @@
+services:
+  deep-research-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: deep-research-agent
+    ports:
+      - "40503:8501"
+    environment:
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - DEEPSEEK_BASE_URL=${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+      - DEEPSEEK_MODEL_REASON=${DEEPSEEK_MODEL_REASON:-deepseek-reasoner}
+      - DEEPSEEK_MODEL_CHAT=${DEEPSEEK_MODEL_CHAT:-deepseek-chat}
+      - TAVILY_API_KEY=${TAVILY_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
