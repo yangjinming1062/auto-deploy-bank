@@ -1,0 +1,13 @@
+{
+  "service_id": "fbba5d6da042006d23792895",
+  "repo_name": "googlecreativelab/teachablemachine-community",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "51.40MB",
+  "language": "nodejs",
+  "star": 1682,
+  "repo_flag": "NODEJS-TensorFlowJS",
+  "uploaded_at": "2026-01-24T03:16:42.271132"
+}
