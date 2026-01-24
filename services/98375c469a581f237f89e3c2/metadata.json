@@ -1,0 +1,13 @@
+{
+  "service_id": "98375c469a581f237f89e3c2",
+  "repo_name": "tensorflow/tfjs-models",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "82.90MB",
+  "language": "nodejs",
+  "star": 14744,
+  "repo_flag": "NODEJS-TensorFlowJS",
+  "uploaded_at": "2026-01-24T05:59:31.793113"
+}
