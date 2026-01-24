@@ -1,0 +1,55 @@
+services:
+  king-admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: king-admin
+    ports:
+      - "40499:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/king-admin?allowMultiQueries=true&useUnicode=true&characterEncoding=UTF-8&useSSL=false
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=
+      - SPRING_PROFILES_ACTIVE=dev
+      - SERVER_PORT=8080
+      - SPRING_JACKSON_TIME_ZONE=GMT+8
+      - SPRING_JACKSON_DATE_FORMAT=yyyy-MM-dd HH:mm:ss
+      - DRUID_POOL_INITIAL_SIZE=10
+      - DRUID_POOL_MAX_ACTIVE=100
+      - DRUID_POOL_MIN_IDLE=10
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/management/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    volumes:
+      - ./target.jar:/app/target.jar
+
+  mysql:
+    image: mysql:5.7
+    container_name: king-admin-mysql
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=true
+      - MYSQL_DATABASE=king-admin
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
