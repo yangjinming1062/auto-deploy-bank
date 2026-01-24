@@ -1,18 +1,14 @@
 services:
   diffsinger:
     build: .
+    container_name: diffsinger-gradio
     ports:
-      - "40291:7860"
+      - "40691:7860"
     environment:
       - PYTHONUNBUFFERED=1
       - TORCH_SHARE_STRATEGY=file_system
       - OMP_NUM_THREADS=1
-      - N_PROC=4
-      - NUM_WORKERS=2
-      - PYTHONPATH=/app
-    volumes:
-      - ./checkpoints:/app/checkpoints
-      - ./infer_out:/app/infer_out
+      - MASTER_ADDR=127.0.0.1
     deploy:
       resources:
         limits:
@@ -21,7 +17,6 @@ services:
         reservations:
           cpus: '1.0'
           memory: 1G
-    restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:7860/"]
       interval: 30s

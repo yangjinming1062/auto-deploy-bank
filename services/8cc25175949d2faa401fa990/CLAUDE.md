@@ -3,155 +3,125 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
-DiffSinger is a PyTorch implementation of singing voice synthesis (SVS) and text-to-speech (TTS) using a shallow diffusion mechanism. The project supports multiple model variants:
-- **DiffSpeech** (TTS): Text → Mel → Waveform
-- **DiffSinger** (SVS): Lyrics + F0/MIDI → Mel → Waveform with various configurations (PopCS, OpenCpop)
 
-## Architecture
-The codebase is organized as a PyTorch Lightning-based training framework with modular components:
-
-### Core Directories
-- **`modules/`** - Neural network model implementations
-  - `commons/` - Shared utilities and base classes
-  - `diffsinger_midi/` - MIDI processing components
-  - `fastspeech/` - FFT-based TTS models
-  - `hifigan/` & `parallel_wavegan/` - Vocoder implementations
-- **`tasks/`** - Task definitions and entry points
-  - `base_task.py` - PyTorch Lightning training loop and orchestration
-  - `run.py` - Main entry point that loads configs and runs tasks
-- **`configs/`** - YAML configuration files
-  - `tts/` - DiffSpeech configurations
-  - `singing/` - DiffSinger configurations (base.yaml, fs2.yaml)
-  - `config_base.yaml` - Base configuration template
-- **`data_gen/`** - Data preprocessing and binarization
-- **`usr/`** - Additional task-specific configurations
-- **`inference/`** - Inference scripts for raw input synthesis
-
-### Configuration System
-The project uses hierarchical YAML configurations:
-1. Base config (`configs/config_base.yaml`) defines global training parameters
-2. Task-specific configs inherit from base and override/add parameters
-3. Configs specify: model architecture, dataset paths, hyperparameters, training settings
-
-Configuration parameters are loaded via `utils/hparams.py` and accessed globally through `hparams` dictionary.
+DiffSinger is a Singing Voice Synthesis (SVS) and Text-to-Speech (TTS) system implementing the Shallow Diffusion Mechanism. The codebase uses PyTorch and PyTorch Lightning for training and inference.
 
 ## Common Commands
 
 ### Environment Setup
-```bash
-# Option 1: Conda (recommended)
-conda create -n diffsinger python=3.8
-conda activate diffsinger
-pip install -r requirements_2080.txt  # for GPU 2080Ti, CUDA 10.2
-# or
-pip install -r requirements_3090.txt  # for GPU 3090, CUDA 11.4
+```sh
+# GPU 2080Ti (CUDA 10.2)
+pip install -r requirements_2080.txt
 
-# Option 2: Python venv
-python -m venv venv
-source venv/bin/activate
-pip install -U pip
-pip install Cython numpy==1.19.1
-pip install torch==1.9.0
+# GPU 3090 (CUDA 11.4)
+pip install -r requirements_3090.txt
+
+# Or use requirements.txt for custom setup
 pip install -r requirements.txt
 ```
 
-### Data Preparation
-```bash
-# Binarize dataset for training
+### Data Preparation & Binarization
+```sh
 export PYTHONPATH=.
-python data_gen/tts/bin/binarize.py --config <config_path>
-# Example:
-python data_gen/tts/bin/binarize.py --config usr/configs/midi/cascade/opencs/aux_rel.yaml
+# Binarize LJ Speech dataset for TTS
+python data_gen/tts/bin/binarize.py --config configs/tts/lj/fs2.yaml
+
+# Binarize PopCS/OpenCpop for SVS
+python data_gen/singing/bin/binarize.py --config configs/singing/opencpop.yaml
 ```
 
 ### Training
-```bash
-# Train a model (training mode)
-python tasks/run.py --config <config_path> --exp_name <experiment_name> --reset
+```sh
+# FastSpeech2 baseline (prerequisite for DiffSpeech)
+python tasks/run.py --config configs/tts/lj/fs2.yaml --exp_name fs2_lj_1 --reset
 
-# Example - Train FFT-Singer:
-python tasks/run.py --config usr/configs/midi/cascade/opencs/aux_rel.yaml --exp_name 0302_opencpop_fs_midi --reset
+# DiffSpeech (TTS)
+python tasks/run.py --config usr/configs/lj_ds_beta6.yaml --exp_name lj_ds_beta6_1213 --reset
 
-# Example - Train DiffSinger:
-python tasks/run.py --config usr/configs/midi/cascade/opencs/ds60_rel.yaml --exp_name 0303_opencpop_ds58_midi --reset
+# DiffSinger (SVS)
+python tasks/run.py --config configs/singing/opencpop.yaml --exp_name opencppop --reset
 ```
 
 ### Inference
-```bash
-# Infer from packed test set
-python tasks/run.py --config <config_path> --exp_name <experiment_name> --infer
-
-# Example:
-python tasks/run.py --config usr/configs/midi/cascade/opencs/ds60_rel.yaml --exp_name 0303_opencpop_ds58_midi --infer
-# Results saved in: ./checkpoints/<exp_name>/generated_*
-
-# Infer from raw inputs (interactive)
-python inference/svs/ds_cascade.py --config <config_path> --exp_name <experiment_name>
-# Results saved in: ./infer_out
+Add `--infer` flag to training commands:
+```sh
+python tasks/run.py --config usr/configs/lj_ds_beta6.yaml --exp_name lj_ds_beta6_1213 --infer
 ```
 
 ### Monitoring
-```bash
-# Start TensorBoard
+```sh
 tensorboard --logdir_spec exp_name
-# View at http://localhost:6006
 ```
 
-## Key Configuration Details
+## Architecture
 
-### Base Training Parameters (`configs/config_base.yaml`)
-- `work_dir` - Experiment directory (default: checkpoints/)
-- `infer` - Set to `false` for training, `true` for inference
-- `load_ckpt` - Path to checkpoint for resuming/finetuning
-- `save_ckpt` - Whether to save checkpoints
-- `max_epochs` / `max_updates` - Training termination criteria
-- `num_sanity_val_steps` - Validation steps at training start
+### Core Components
 
-### Dataset Configuration
-Each task config specifies:
-- `binarizer_cls` - Data preprocessing class (e.g., `data_gen.singing.binarize.SingingBinarizer`)
-- `pre_align_cls` - Alignment preprocessing class
-- `hop_size`, `fft_size`, `win_size` - Audio processing parameters
-- Dataset paths and preprocessing options
+- **`tasks/`** - Task implementations containing training/inference logic
+  - `base_task.py` - BaseTask class defining training loop, validation, checkpointing
+  - `tts/tts.py` - TtsTask base class for TTS/SVS
+  - `tts/fs2.py` - FastSpeech2Task for FastSpeech2 model training
 
-## Model Variants
+- **`modules/`** - Neural network model definitions
+  - `fastspeech/` - FastSpeech2 encoder/decoder, duration/pitch/energy predictors
+  - `hifigan/` - HiFiGAN vocoder
+  - `parallel_wavegan/` - Parallel WaveGAN vocoder
+  - `commons/` - Shared layers (positional embeddings, common modules)
 
-### SVS Models (docs/README-SVS.md)
-1. **PopCS version** (Ground-truth F0 required)
-   - `docs/README-SVS-popcs.md`
-   - Pipeline: Lyrics → Linguistic → Mel (with GT F0) → Waveform
+- **`utils/`** - Utility functions
+  - `hparams.py` - Configuration management (YAML loading with inheritance)
+  - `pl_utils.py` - PyTorch Lightning utilities and data loaders
+  - `text_encoder.py` - Phoneme encoding
+  - `audio.py` - Audio processing (mel-spectrogram, waveform)
+  - `pitch_utils.py` - F0 processing
 
-2. **OpenCpop Cascade** (MIDI → F0 prediction)
-   - `docs/README-SVS-opencpop-cascade.md`
-   - Pipeline: Lyrics + MIDI → F0 + Duration → Mel → Waveform
+- **`data_gen/`** - Data preprocessing
+  - `tts/` - TTS binarization (phoneme alignment, pitch extraction)
+  - `singing/` - SVS binarization with MIDI support
 
-3. **OpenCpop E2E** (End-to-end, no explicit F0 prediction)
-   - `docs/README-SVS-opencpop-e2e.md`
-   - Pipeline: Lyrics + MIDI → Duration → Mel → (Pitch Extractor) → Waveform
+- **`configs/`** - Configuration YAML files (inherited via `base_config`)
+  - `config_base.yaml` - Base training/validation settings
+  - `tts/` - TTS configurations (LJ Speech, etc.)
+  - `singing/` - SVS configurations (PopCS, OpenCpop)
 
-4. **PNDM Acceleration**
-   - `docs/README-SVS-opencpop-pndm.md`
-   - Uses PNDM solver for faster sampling
+- **`usr/`** - User implementations of specific models
+  - `diffsinger_task.py` - DiffSingerTask (diffusion-based SVS)
+  - `diffspeech_task.py` - DiffSpeechTask (diffusion-based TTS)
 
-### TTS Models (docs/README-TTS.md)
-- **DiffSpeech** - Text → Mel → Waveform using shallow diffusion
-- **DiffSpeech + PNDM** - Accelerated version
+- **`inference/`** - Inference utilities and Gradio demos
 
-## Vocoders
-The project uses separate vocoder models trained independently:
-- **HiFiGAN** - For TTS (DiffSpeech)
-- **NSF-HiFiGAN** - For SVS (DiffSinger), includes NSF mechanism for pitch conditioning
+### Configuration System
 
-Pretrained vocoders must be placed in `checkpoints/` directory before training/inference. See `docs/README-SVS-opencpop-cascade.md` for download links.
+Configs use YAML with `base_config` for inheritance chains. The `set_hparams()` function in `utils/hparams.py` handles:
+- Loading config from `args.config`
+- Resolving base_config chains
+- Overriding with CLI `--hparams` arguments
+- Auto-creating `checkpoints/<exp_name>/` directories
 
-## Data Flow
-1. **Preprocessing**: Raw audio/text/MIDI → Binarized HDF5 files
-2. **Training**: Binarized data → PyTorch Lightning training loop
-3. **Inference**: Trained model → Mel spectrograms → Waveform (via vocoder)
+Example config:
+```yaml
+base_config:
+  - configs/tts/lj/fs2.yaml
+  - ./base.yaml
+task_cls: usr.diffspeech_task.DiffSpeechTask
+vocoder: vocoders.hifigan.HifiGAN
+fs2_ckpt: checkpoints/fs2_lj_1/model_ckpt_steps_150000.ckpt
+```
 
-## Important Notes
-- GPU memory requirements: Varies by model size and batch size; check GPU compatibility via requirements files
-- Dataset licensing: OpenCpop requires separate download following their instructions
-- Multi-GPU: Controlled via `CUDA_VISIBLE_DEVICES` environment variable
-- Checkpoints: Saved in `checkpoints/<exp_name>/` with automatic versioning
-- Pre-trained models: Available in releases; place in `checkpoints/` before use
+### Model Architecture
+
+**DiffSpeech/DiffSinger Pipeline:**
+1. Text/MIDI -> Linguistic representation (Encoder)
+2. Linguistic + F0 -> Mel-spectrogram (Decoder with Shallow Diffusion)
+3. Mel + F0 -> Waveform (Vocoder: HiFiGAN/NSF-HiFiGAN)
+
+**FastSpeech2:**
+- FFT-based encoder with phoneme embeddings
+- Duration, pitch, and energy predictors
+- Length regulator for alignment
+- Mel-spectrogram output layer
+
+### Data Flow
+
+Raw audio/text -> Binarizer (`data_gen/`) -> Binary dataset (`data/binary/`) ->
+Dataset class (`tasks/tts/fs2_utils.py`) -> Training loop (`tasks/tts/fs2.py`)
