@@ -1,0 +1,31 @@
+services:
+  musc:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: musc:latest
+    container_name: musc-service
+    ports:
+      - "41827:8080"
+    environment:
+      - TOKENIZERS_PARALLELISM=false
+      - PYTHONUNBUFFERED=1
+      - DATA_PATH=./data
+      - OUTPUT_DIR=./output
+    volumes:
+      - ./data:/home/ubuntu/deploy-projects/a5645506a261b37bbece66e1/data
+      - ./output:/home/ubuntu/deploy-projects/a5645506a261b37bbece66e1/output
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
