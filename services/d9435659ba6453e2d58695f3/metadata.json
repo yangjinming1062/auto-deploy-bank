@@ -1,0 +1,13 @@
+{
+  "service_id": "d9435659ba6453e2d58695f3",
+  "repo_name": "initml/clipdrop-api-samples",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "24.72MB",
+  "language": "nodejs",
+  "star": 460,
+  "repo_flag": "NODEJS-TensorFlowJS",
+  "uploaded_at": "2026-01-24T03:39:32.697228"
+}
