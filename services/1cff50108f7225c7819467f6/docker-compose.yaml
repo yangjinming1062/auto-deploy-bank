@@ -1,16 +1,13 @@
-version: '3.8'
-
 services:
-  douzero:
+  app:
     build: .
-    container_name: douzero-cardgame
+    container_name: douzhuo-ai-bot
     ports:
-      - "40293:40293"
+      - "51414:51414"
     environment:
-      - PYTHONUNBUFFERED=1
+      - DISPLAY=:99
       - GIT_PYTHON_REFRESH=quiet
-      - KMP_DUPLICATE_LIB_OK=True
-      - CUDA_VISIBLE_DEVICES=0
+      - PYTHONUNBUFFERED=1
     deploy:
       resources:
         limits:
@@ -20,9 +17,8 @@ services:
           cpus: '1.0'
           memory: 1G
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:40293/"]
-      interval: 30s
-      timeout: 10s
+      test: ["CMD", "curl", "-f", "http://localhost:51414/api/status"]
+      interval: 10s
+      timeout: 5s
       retries: 3
-      start_period: 10s
-    restart: unless-stopped
+      start_period: 5s
