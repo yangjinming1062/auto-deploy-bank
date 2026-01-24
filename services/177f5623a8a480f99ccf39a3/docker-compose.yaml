@@ -1,0 +1,27 @@
+services:
+  app:
+    build: .
+    ports:
+      - "40681:5000"
+    volumes:
+      - ./results-db:/home/ubuntu/deploy-projects/177f5623a8a480f99ccf39a3/results-db
+    environment:
+      - PYTHONUNBUFFERED=1
+      - OPENAI_API_TYPE=azure
+      - OPENAI_API_VERSION=2023-03-15-preview
+      - OPENAI_API_BASE=https://your-endpoint.openai.azure.com/
+      - OPENAI_API_KEY=your-api-key
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --tries=1 -O /dev/null http://localhost:5000/ || exit 0"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
