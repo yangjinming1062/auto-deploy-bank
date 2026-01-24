@@ -1,0 +1,154 @@
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: weimai-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: weipiao
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - weimai-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: weimai-redis
+    restart: unless-stopped
+    command: redis-server --requirepass 123456
+    volumes:
+      - redis_data:/data
+    networks:
+      - weimai-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # OpenSearch (Elasticsearch fork with better compatibility)
+  opensearch:
+    image: opensearchproject/opensearch:2.11.0
+    container_name: weimai-opensearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - cluster.name=docker-cluster
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - bootstrap.memory_lock=true
+      - "DISABLE_INSTALL_DEMO_CONFIG=true"
+      - "DISABLE_SECURITY_PLUGIN=true"
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+    networks:
+      - weimai-network
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  # Weimai Application
+  weimai-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: weimai-app
+    restart: unless-stopped
+    ports:
+      - "40587:8080"
+    environment:
+      # Database Configuration
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/weipiao?serverTimezone=Asia/Shanghai&useSSL=false&useUnicode=true&characterEncoding=utf-8&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: "123456"
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+
+      # Redis Configuration
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: "6379"
+      SPRING_REDIS_PASSWORD: "123456"
+      SPRING_REDIS_DATABASE: "1"
+
+      # OpenSearch Configuration
+      SPRING_DATA_ELASTICSEARCH_CLUSTER_NAME: docker-cluster
+      SPRING_DATA_ELASTICSEARCH_CLUSTER_NODES: opensearch:9300
+
+      # File Upload Directory
+      FILE_UPLOAD_DIR: /app/upFile
+
+      # WeChat Mini Program Configuration
+      WX_LOGIN_APPID: wxb367811c1b81b819
+      WX_LOGIN_SECRET: db157111469add32869b93d4aec1b560
+
+      # Map API Keys
+      QQ_MAP_KEY: XXOBZ-PKQWU-26BVI-4RPT3-LV5HQ-OIBQF
+      BAIDU_MAP_AK: qimDWkoOflbIZd01GrBOGwrfDNlwUj8S
+    volumes:
+      - ./target.jar:/app/target.jar
+      - upload_data:/app/upFile
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      opensearch:
+        condition: service_healthy
+    networks:
+      - weimai-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+networks:
+  weimai-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  redis_data:
+  opensearch_data:
+  upload_data:
