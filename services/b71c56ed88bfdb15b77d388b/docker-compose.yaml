@@ -1,0 +1,30 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "40153:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      # Optional environment variables
+      - PRIVATE_KEY=${PRIVATE_KEY:-}
+      - NEXT_PUBLIC_IMAGEKIT_ID=${NEXT_PUBLIC_IMAGEKIT_ID:-}
+      - NEXT_PUBLIC_LIVEPEER_KEY=${NEXT_PUBLIC_LIVEPEER_KEY:-}
+      - NEXT_PUBLIC_WEB3_STORAGE_KEY=${NEXT_PUBLIC_WEB3_STORAGE_KEY:-}
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
