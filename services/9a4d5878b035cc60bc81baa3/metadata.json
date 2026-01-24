@@ -1,0 +1,13 @@
+{
+  "service_id": "9a4d5878b035cc60bc81baa3",
+  "repo_name": "cloudflare/orange",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "5.02MB",
+  "language": "nodejs",
+  "star": 2252,
+  "repo_flag": "NODEJS-TensorFlowJS",
+  "uploaded_at": "2026-01-24T19:02:26.094422"
+}

@@ -1,0 +1,47 @@
+services:
+  orange-meets:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "51409:8787"
+    environment:
+      - NODE_ENV=production
+      - PORT=8787
+      # Required environment variables
+      - CALLS_APP_ID=${CALLS_APP_ID:-your-calls-app-id-here}
+      - CALLS_APP_SECRET=${CALLS_APP_SECRET:-your-calls-app-secret-here}
+      - SESSION_SECRET=${SESSION_SECRET:-oooOOooOOoOOoOOOOoo}
+      # Optional environment variables
+      - CALLS_API_URL=${CALLS_API_URL:-}
+      - TURN_SERVICE_TOKEN=${TURN_SERVICE_TOKEN:-}
+      - OPENAI_API_TOKEN=${OPENAI_API_TOKEN:-}
+      - OPENAI_MODEL_ENDPOINT=${OPENAI_MODEL_ENDPOINT:-}
+      - OPENAI_MODEL_ID=${OPENAI_MODEL_ID:-gpt-4o-realtime-preview-2024-10-01}
+      - MAX_WEBCAM_FRAMERATE=${MAX_WEBCAM_FRAMERATE:-24}
+      - MAX_WEBCAM_BITRATE=${MAX_WEBCAM_BITRATE:-1200000}
+      - MAX_WEBCAM_QUALITY_LEVEL=${MAX_WEBCAM_QUALITY_LEVEL:-1080}
+      - FEEDBACK_URL=${FEEDBACK_URL:-}
+      - USER_DIRECTORY_URL=${USER_DIRECTORY_URL:-}
+      - DISABLE_LOBBY_ENFORCEMENT=${DISABLE_LOBBY_ENFORCEMENT:-false}
+      - EXPERIMENTAL_SIMULCAST_ENABLED=${EXPERIMENTAL_SIMULCAST_ENABLED:-false}
+      - E2EE_ENABLED=${E2EE_ENABLED:-false}
+      - API_EXTRA_PARAMS=${API_EXTRA_PARAMS:-}
+      - MAX_API_HISTORY=${MAX_API_HISTORY:-}
+      - TRACE_LINK=${TRACE_LINK:-}
+      - DASHBOARD_WORKER_URL=${DASHBOARD_WORKER_URL:-}
+      - SENTRY_DSN=${SENTRY_DSN:-}
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8787"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
