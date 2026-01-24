@@ -1,0 +1,26 @@
+services:
+  diffusion-explorer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: diffusion-explorer-app
+    ports:
+      - "42899:5173"
+    environment:
+      - NODE_ENV=development
+      - BASE_PATH=
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:5173"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    working_dir: /app/diffusion-explorer/apps/diffusion-explorer
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
