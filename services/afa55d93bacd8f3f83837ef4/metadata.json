@@ -1,0 +1,13 @@
+{
+  "service_id": "afa55d93bacd8f3f83837ef4",
+  "repo_name": "liangwq/Chatglm_lora_multi-gpu",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "170.15MB",
+  "language": "python",
+  "star": 411,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-01-24T18:29:48.459613"
+}
