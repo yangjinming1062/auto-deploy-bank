@@ -1,0 +1,198 @@
+services:
+  # PostgreSQL Database (internal, not exposed to host)
+  db:
+    image: postgres:15-alpine
+    container_name: dify-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: difyai123456
+      POSTGRES_DB: dify
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - dify-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d dify"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Redis (internal, not exposed to host)
+  redis:
+    image: redis:7-alpine
+    container_name: dify-redis
+    restart: unless-stopped
+    command: redis-server --requirepass difyai123456
+    volumes:
+      - redis_data:/data
+    networks:
+      - dify-network
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a difyai123456 ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # Main API Service
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dify-api
+    restart: unless-stopped
+    ports:
+      - "40913:5001"
+    environment:
+      # Flask settings
+      FLASK_APP: app.py
+      PYTHONUNBUFFERED: 1
+      DEBUG: false
+      LOG_LEVEL: INFO
+
+      # Edition settings
+      EDITION: SELF_HOSTED
+      DEPLOY_ENV: PRODUCTION
+
+      # URLs (using container names for internal communication)
+      CONSOLE_API_URL: http://api:5001
+      CONSOLE_WEB_URL: http://web:3000
+      SERVICE_API_URL: http://api:5001
+      APP_WEB_URL: http://web:3000
+      FILES_URL: http://api:5001
+
+      # Secret key (should be set externally in production)
+      SECRET_KEY: dify-secret-key-change-in-production
+
+      # Database configuration (using service names)
+      DB_USERNAME: postgres
+      DB_PASSWORD: difyai123456
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: dify
+
+      # Redis configuration (using service name)
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_USERNAME:
+      REDIS_PASSWORD: difyai123456
+      REDIS_USE_SSL: false
+      REDIS_DB: 0
+
+      # Celery broker (using service names)
+      CELERY_BROKER_URL: redis://:difyyai123456@redis:6379/1
+
+      # Storage configuration
+      STORAGE_TYPE: opendal
+      OPENDAL_SCHEME: fs
+      OPENDAL_FS_ROOT: storage
+      STORAGE_LOCAL_PATH: storage
+
+      # CORS configuration
+      CONSOLE_CORS_ALLOW_ORIGINS: "*"
+      WEB_API_CORS_ALLOW_ORIGINS: "*"
+
+      # Feature flags
+      ALLOW_REGISTER: false
+      ALLOW_CREATE_WORKSPACE: false
+
+      # Migration settings
+      MIGRATION_ENABLED: "true"
+
+      # Server settings
+      DIFY_BIND_ADDRESS: 0.0.0.0
+      DIFY_PORT: 5001
+      SERVER_WORKER_AMOUNT: 1
+      SERVER_WORKER_CLASS: gevent
+      SERVER_WORKER_CONNECTIONS: 10
+      GUNICORN_TIMEOUT: 200
+
+    volumes:
+      - storage_data:/app/api/storage
+      - uploads_data:/app/api/uploads
+    networks:
+      - dify-network
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5001/console/api/ping || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # Web Frontend Service
+  web:
+    build:
+      context: ../agent-dify-web
+      dockerfile: Dockerfile
+    container_name: dify-web
+    restart: unless-stopped
+    ports:
+      - "40914:3000"
+    environment:
+      # API URL - using localhost for internal container communication
+      # Browser API calls will be proxied through Next.js rewrites
+      CONSOLE_API_URL: http://api:5001
+      APP_API_URL: http://api:5001
+      MARKETPLACE_API_URL: https://marketplace.dify.ai
+      MARKETPLACE_URL: https://marketplace.dify.ai
+      EDITION: SELF_HOSTED
+      DEPLOY_ENV: PRODUCTION
+      NEXT_TELEMETRY_DISABLED: 1
+    networks:
+      - dify-network
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+networks:
+  dify-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  storage_data:
+  uploads_data:

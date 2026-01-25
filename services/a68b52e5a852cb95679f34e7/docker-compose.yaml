@@ -1,0 +1,134 @@
+services:
+  # PostgreSQL Database (internal, not exposed to host)
+  db:
+    image: postgres:15-alpine
+    container_name: dify-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: difyai123456
+      POSTGRES_DB: dify
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - dify-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d dify"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Redis (internal, not exposed to host)
+  redis:
+    image: redis:7-alpine
+    container_name: dify-redis
+    restart: unless-stopped
+    command: redis-server --requirepass difyai123456
+    volumes:
+      - redis_data:/data
+    networks:
+      - dify-network
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a difyai123456 ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # Main API Service
+  api:
+    build:
+      context: ./agent-dify-api
+      dockerfile: Dockerfile
+    container_name: dify-api
+    restart: unless-stopped
+    ports:
+      - "40914:5001"
+    environment:
+      FLASK_APP: app.py
+      PYTHONUNBUFFERED: 1
+      DEBUG: false
+      LOG_LEVEL: INFO
+      EDITION: SELF_HOSTED
+      DEPLOY_ENV: PRODUCTION
+      CONSOLE_API_URL: http://localhost:5001
+      CONSOLE_WEB_URL: http://localhost:3000
+      SERVICE_API_URL: http://localhost:5001
+      APP_WEB_URL: http://localhost:3000
+      FILES_URL: http://localhost:5001
+      SECRET_KEY: dify-secret-key-change-in-production
+      DB_USERNAME: postgres
+      DB_PASSWORD: difyai123456
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_DATABASE: dify
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_USERNAME:
+      REDIS_PASSWORD: difyai123456
+      REDIS_USE_SSL: false
+      REDIS_DB: 0
+      CELERY_BROKER_URL: redis://:difyyai123456@redis:6379/1
+      STORAGE_TYPE: opendal
+      OPENDAL_SCHEME: fs
+      OPENDAL_FS_ROOT: storage
+      CONSOLE_CORS_ALLOW_ORIGINS: "*"
+      WEB_API_CORS_ALLOW_ORIGINS: "*"
+      ALLOW_REGISTER: false
+      ALLOW_CREATE_WORKSPACE: false
+      MIGRATION_ENABLED: "true"
+      DIFY_BIND_ADDRESS: 0.0.0.0
+      DIFY_PORT: 5001
+      SERVER_WORKER_AMOUNT: 1
+      SERVER_WORKER_CLASS: gevent
+      SERVER_WORKER_CONNECTIONS: 10
+      GUNICORN_TIMEOUT: 200
+    volumes:
+      - storage_data:/app/api/storage
+      - uploads_data:/app/api/uploads
+    networks:
+      - dify-network
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5001/console/api/ping || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+networks:
+  dify-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  storage_data:
+  uploads_data:
