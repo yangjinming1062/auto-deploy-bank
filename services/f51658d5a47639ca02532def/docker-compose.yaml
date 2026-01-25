@@ -1,0 +1,54 @@
+services:
+  app:
+    build: .
+    ports:
+      - "40912:5555"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=production
+      - PORT=5555
+      - FORCE_DB_SYNC=false
+      - DB_NAME=mean_relational
+      - DB_USERNAME=root
+      - DB_PASSWORD=rootpassword
+      - DB_HOST=mysql
+      - DB_PORT=3306
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:5555"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  mysql:
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=mean_relational
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - default
+
+volumes:
+  mysql_data:
+
+networks:
+  default:
+    name: msr_network
