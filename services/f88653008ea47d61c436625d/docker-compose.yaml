@@ -1,0 +1,40 @@
+services:
+  verl-trainer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: verl-training
+    command: sleep infinity
+    ports:
+      - "40913:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - TORCH_NCCL_AVOID_RECORD_STREAMS=1
+      - TOKENIZERS_PARALLELISM=true
+      - NCCL_DEBUG=WARN
+      - CUDA_VISIBLE_DEVICES=""
+      - VERL_LOGGING_LEVEL=WARN
+      - VERL_PPO_LOGGING_LEVEL=WARN
+      - VERL_SFT_LOGGING_LEVEL=WARN
+      - CUDA_TIMER_STREAM_KAFKA_ENABLE=0
+      - DISABLE_WORKER_INIT=true
+      - CUDA_DEVICE_MAX_CONNECTIONS=1
+      - WANDB_MODE=offline
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import verl'"]
+      interval: 60s
+      timeout: 30s
+      start_period: 30s
+      retries: 3
+    volumes:
+      - ./data:/home/ubuntu/deploy-projects/f88653008ea47d61c436625d/data
+      - ./checkpoints:/home/ubuntu/deploy-projects/f88653008ea47d61c436625d/checkpoints
+      - ./models:/home/ubuntu/deploy-projects/f88653008ea47d61c436625d/models
