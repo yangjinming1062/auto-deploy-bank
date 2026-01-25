@@ -1,0 +1,46 @@
+services:
+  redis:
+    image: redis
+    networks:
+      - actionhero_backend
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  actionhero:
+    build: .
+    image: actionhero
+    ports:
+      - "40948:8080"
+    environment:
+      NODE_ENV: production
+      PORT: "8080"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_DB: "0"
+      LOG_LEVEL: info
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - actionhero_backend
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+networks:
+  actionhero_backend:
+    driver: bridge
