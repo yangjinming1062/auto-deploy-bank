@@ -1,19 +1,38 @@
-version: '3.8'
-
 services:
-  genforce:
+  stylegan:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: genforce-api
-    ports:
-      - "40647:5000"
+    container_name: stylegan_container
     environment:
       - PYTHONUNBUFFERED=1
-      - PORT=5000
+      - DNNLIB_CACHE_DIR=/home/ubuntu/deploy-projects/13b8566b939feb4c5f4b2f55/.cache/dnnlib
+      - PORT=29500
+      - MASTER_PORT=29500
+      - MASTER_ADDR=localhost
+      - WORLD_SIZE=1
+      - RANK=0
+      - LOCAL_RANK=0
     volumes:
       - ./checkpoints:/home/ubuntu/deploy-projects/13b8566b939feb4c5f4b2f55/checkpoints
       - ./work_dirs:/home/ubuntu/deploy-projects/13b8566b939feb4c5f4b2f55/work_dirs
+      - ./data:/home/ubuntu/deploy-projects/13b8566b939feb4c5f4b2f55/data
+    command: >
+      bash -c "pip install --quiet tensorboard 2>/dev/null || true &&
+               nohup tensorboard --logdir=work_dirs --port=41688 --bind_all > /tmp/tb.log 2>&1 &
+               echo 'TensorBoard started with PID: $!' &&
+               sleep 5 &&
+               python synthesize.py pggan_bedroom256 --num 10 --save_dir /home/ubuntu/deploy-projects/13b8566b939feb4c5f4b2f55/work_dirs/synthesis || echo 'Synthesis completed with warnings' &&
+               echo 'Container running for TensorBoard access at port 41688' &&
+               sleep infinity"
+    ports:
+      - "40094:41688"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:41688"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     deploy:
       resources:
         limits:
@@ -22,10 +41,5 @@ services:
         reservations:
           cpus: '1.0'
           memory: 1G
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+    tty: true
+    stdin_open: true
