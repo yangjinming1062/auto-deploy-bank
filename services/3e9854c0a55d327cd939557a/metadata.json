@@ -1,0 +1,13 @@
+{
+  "service_id": "3e9854c0a55d327cd939557a",
+  "repo_name": "achingbrain/pm2-web",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.61MB",
+  "language": "nodejs",
+  "star": 541,
+  "repo_flag": "NODEJS-Winston",
+  "uploaded_at": "2026-01-25T21:46:57.786490"
+}
