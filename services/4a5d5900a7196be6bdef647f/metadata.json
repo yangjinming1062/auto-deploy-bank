@@ -1,0 +1,13 @@
+{
+  "service_id": "4a5d5900a7196be6bdef647f",
+  "repo_name": "bytedance/syllepsis",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.84MB",
+  "language": "nodejs",
+  "star": 372,
+  "repo_flag": "NODEJS",
+  "uploaded_at": "2026-01-25T17:26:42.285606"
+}
