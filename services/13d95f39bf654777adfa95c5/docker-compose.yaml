@@ -2,9 +2,14 @@ services:
   streamlit:
     build: .
     ports:
-      - "40329:8501"
+      - "40430:8501"
     environment:
       - OPENCV_IO_ENABLE_OPENEXR=1
+    volumes:
+      - ./character_sheet:/home/ubuntu/deploy-projects/13d95f39bf654777adfa95c5/character_sheet
+      - ./results:/home/ubuntu/deploy-projects/13d95f39bf654777adfa95c5/results
+      - ./poses:/home/ubuntu/deploy-projects/13d95f39bf654777adfa95c5/poses
+      - ./weights:/home/ubuntu/deploy-projects/13d95f39bf654777adfa95c5/weights
     deploy:
       resources:
         limits:
@@ -13,9 +18,4 @@ services:
         reservations:
           cpus: '1.0'
           memory: 1G
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+    restart: unless-stopped
