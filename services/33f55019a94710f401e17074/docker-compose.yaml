@@ -1,0 +1,32 @@
+services:
+  traceloop-sdk:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: traceloop-sdk
+    ports:
+      - "40919:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - TRACELOOP_SYNC_ENABLED=${TRACELOOP_SYNC_ENABLED:-true}
+      - TRACELOOP_BASE_URL=${TRACELOOP_BASE_URL:-https://api.traceloop.com}
+      - TRACELOOP_SYNC_MAX_RETRIES=${TRACELOOP_SYNC_MAX_RETRIES:-3}
+      - TRACELOOP_SYNC_POLLING_INTERVAL=${TRACELOOP_SYNC_POLLING_INTERVAL:-60}
+      - TRACELOOP_SYNC_DEV_POLLING_INTERVAL=${TRACELOOP_SYNC_DEV_POLLING_INTERVAL:-5}
+      - TRACELOOP_ENRICH_TOKENS=${TRACELOOP_ENRICH_TOKENS:-true}
+      - TRACELOOP_TRACE_CONTENT=${TRACELOOP_TRACE_CONTENT:-false}
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
