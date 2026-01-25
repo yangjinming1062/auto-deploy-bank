@@ -1,0 +1,13 @@
+{
+  "service_id": "a69b5da291db24c979f93479",
+  "repo_name": "screeny05/letterboxd-list-radarr",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "61KB",
+  "language": "nodejs",
+  "star": 465,
+  "repo_flag": "NODEJS-Winston",
+  "uploaded_at": "2026-01-25T21:30:17.606270"
+}
