@@ -1,0 +1,13 @@
+{
+  "service_id": "c19553e6a89aa6979bbd57f4",
+  "repo_name": "sofastack/sofa-lookout",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.65MB",
+  "language": "java",
+  "star": 375,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-25T19:10:58.627848"
+}

@@ -1,0 +1,64 @@
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.10
+    container_name: lookout-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - lookout-network
+    # Internal only - not exposed to host
+
+  lookout:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lookout-app
+    ports:
+      - "40892:9090"
+    environment:
+      - spring.application.name=lookout
+      - metrics.exporter.es.host=elasticsearch
+      - metrics.exporter.es.port=9200
+      - metrics.exporter.es.index=gateway_metrics
+      - metrics.exporter.es.timeout=5000
+      - metrics.exporter.es.operation.auto=true
+      - metrics.server.es.index=server_metrics
+      - spring.data.jest.uri=http://elasticsearch:9200
+      - server.port.gateway=7200
+      - server.port.metrics-server=9090
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    volumes:
+      - ./target.jar:/home/admin/deploy/target.jar
+      - lookout-logs:/home/admin/logs
+    networks:
+      - lookout-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "netstat -tlnp 2>/dev/null | grep -q 7200 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+networks:
+  lookout-network:
+    driver: bridge
+
+volumes:
+  lookout-logs:
