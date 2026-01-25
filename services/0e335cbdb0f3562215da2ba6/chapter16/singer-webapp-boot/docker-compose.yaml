@@ -1,0 +1,23 @@
+services:
+  singer-webapp:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    container_name: singer-webapp
+    ports:
+      - "40918:8080"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped

@@ -1,0 +1,26 @@
+services:
+  singer-webapp-boot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: singer-webapp-boot
+    ports:
+      - "40896:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:h2:~/musicdb
+      - SPRING_DATASOURCE_USERNAME=prospring5
+      - SPRING_DATASOURCE_PASSWORD=prospring5
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.h2.Driver
+      - SERVER_PORT=8080
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=create-drop
+      - JAVA_TOOL_OPTIONS=--add-opens=java.base/java.lang=ALL-UNNAMED,--add-opens=java.base/java.lang.invoke=ALL-UNNAMED,--add-opens=java.base/java.util=ALL-UNNAMED
+    volumes:
+      - ./target.jar:/app/target.jar:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
