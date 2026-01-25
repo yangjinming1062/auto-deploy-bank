@@ -1,0 +1,13 @@
+{
+  "service_id": "9515590aa4c15cdd9af5bc0c",
+  "repo_name": "tensorflow/tfjs",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "24.11MB",
+  "language": "nodejs",
+  "star": 19073,
+  "repo_flag": "NODEJS-TensorFlowJS",
+  "uploaded_at": "2026-01-25T13:06:02.343429"
+}

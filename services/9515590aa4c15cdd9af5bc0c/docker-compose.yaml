@@ -1,0 +1,26 @@
+services:
+  tfjs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tensorflowjs
+    ports:
+      - "40395:8100"
+    environment:
+      - NODE_ENV=production
+      - PORT=8100
+    healthcheck:
+      test: ["CMD", "node", "-e", "const http = require('http'); http.get('http://localhost:8100/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
