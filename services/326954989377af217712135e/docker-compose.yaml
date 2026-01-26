@@ -1,0 +1,45 @@
+services:
+  mindspore-training:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mindspore-training
+    hostname: mindspore-training
+
+    environment:
+      - DEVICE_ID=${DEVICE_ID:-0}
+      - DEVICE_NUM=${DEVICE_NUM:-1}
+      - RANK_ID=${RANK_ID:-0}
+      - RANK_SIZE=${RANK_SIZE:-1}
+      - RANK_TABLE_FILE=${RANK_TABLE_FILE:-}
+      - MINDSPORE_HCCL_CONFIG_PATH=${MINDSPORE_HCCL_CONFIG_PATH:-}
+      - MS_ROLE=${MS_ROLE:-MS_WORKER}
+      - GLOG_v=${GLOG_v:-0}
+      - GLOG_log_dir=${GLOG_log_dir:-}
+      - ASCEND_GLOBAL_LOG_LEVEL=${ASCEND_GLOBAL_LOG_LEVEL:-0}
+      - PYTHONUNBUFFERED=1
+
+    ports:
+      - "40509:40985"
+
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:40985/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    restart: unless-stopped
+
+    volumes:
+      - ./data:/home/ubuntu/deploy-projects/326954989377af217712135e/data
+      - ./output:/home/ubuntu/deploy-projects/326954989377af217712135e/output

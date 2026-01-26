@@ -1,0 +1,13 @@
+{
+  "service_id": "326954989377af217712135e",
+  "repo_name": "mindspore-ai/models",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "124.30MB",
+  "language": "python",
+  "star": 365,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-01-26T14:35:29.852251"
+}
