@@ -1,0 +1,47 @@
+services:
+  dynasaur:
+    build: .
+    container_name: dynasaur-agent
+    ports:
+      - "40680:40680"
+    environment:
+      # Required: Main Azure OpenAI Keys
+      - AZURE_API_KEY=${AZURE_API_KEY}
+      - AZURE_ENDPOINT=${AZURE_ENDPOINT}
+      - AZURE_API_VERSION=${AZURE_API_VERSION:-2024-02-15-preview}
+      - AZURE_MODEL_NAME=${AZURE_MODEL_NAME}
+      # Required: Embedding Model Keys
+      - EMBED_MODEL_TYPE=${EMBED_MODEL_TYPE:-AzureOpenAI}
+      - AZURE_EMBED_MODEL_NAME=${AZURE_EMBED_MODEL_NAME}
+      - AZURE_EMBED_API_KEY=${AZURE_EMBED_API_KEY}
+      - AZURE_EMBED_ENDPOINT=${AZURE_EMBED_ENDPOINT}
+      - AZURE_EMBED_API_VERSION=${AZURE_EMBED_API_VERSION:-2024-02-15-preview}
+      # Optional: Alternative LLM providers
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - AWS_BEDROCK_ID=${AWS_BEDROCK_ID}
+      - AWS_BEDROCK_KEY=${AWS_BEDROCK_KEY}
+      # Optional: SerpAPI for search
+      - SERPAPI_API_KEY=${SERPAPI_API_KEY}
+      # Optional: Azure GPT-4V for vision
+      - AZURE_GPT4V_API_KEY=${AZURE_GPT4V_API_KEY}
+      - AZURE_GPT4V_ENDPOINT=${AZURE_GPT4V_ENDPOINT}
+      - AZURE_GPT4V_API_VERSION=${AZURE_GPT4V_API_VERSION:-2024-02-15-preview}
+    volumes:
+      - ./data:/app/data
+      - ./outputs:/app/outputs
+      - ./generated_actions:/app/generated_actions
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import sys; sys.exit(0)\" || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
