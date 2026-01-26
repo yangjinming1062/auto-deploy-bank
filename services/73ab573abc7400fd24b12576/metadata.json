@@ -1,0 +1,13 @@
+{
+  "service_id": "73ab573abc7400fd24b12576",
+  "repo_name": "DCDmllm/HealthGPT",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "8.64MB",
+  "language": "python",
+  "star": 1583,
+  "repo_flag": "PYTHON-OpenCV",
+  "uploaded_at": "2026-01-26T02:41:40.550027"
+}
