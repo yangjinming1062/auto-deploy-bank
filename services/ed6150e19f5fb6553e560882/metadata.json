@@ -1,0 +1,13 @@
+{
+  "service_id": "ed6150e19f5fb6553e560882",
+  "repo_name": "jason9693/MusicTransformer-tensorflow2.0",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "454KB",
+  "language": "python",
+  "star": 367,
+  "repo_flag": "PYTHON-DVC",
+  "uploaded_at": "2026-01-26T02:34:04.915084"
+}
