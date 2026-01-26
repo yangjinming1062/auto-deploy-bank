@@ -1,0 +1,13 @@
+{
+  "service_id": "60905fd7a751247f3398181c",
+  "repo_name": "fsspec/universal_pathlib",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "286KB",
+  "language": "python",
+  "star": 369,
+  "repo_flag": "PYTHON-DVC",
+  "uploaded_at": "2026-01-26T04:14:44.631222"
+}
