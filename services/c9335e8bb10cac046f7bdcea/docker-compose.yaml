@@ -1,0 +1,40 @@
+services:
+  streamlit-app:
+    build: .
+    container_name: streamlit-app
+    ports:
+      - "40582:8501"
+    environment:
+      - PYTHONUNBUFFERED=1
+      # LinkedIn credentials (optional - for LinkedIn job search)
+      - LINKEDIN_EMAIL=${LINKEDIN_EMAIL:-}
+      - LINKEDIN_PASS=${LINKEDIN_PASS:-}
+      # LangSmith API key (optional - for tracing and monitoring)
+      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY:-}
+      - LANGCHAIN_TRACING_V2=${LANGCHAIN_TRACING_V2:-}
+      - LANGCHAIN_PROJECT=${LANGCHAIN_PROJECT:-}
+      # Groq API key (optional - for Llama model inference)
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      # OpenAI API key (optional - for GPT model inference)
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      # Serper API key (optional - for Google search functionality)
+      - SERPER_API_KEY=${SERPER_API_KEY:-}
+      # FireCrawl API key (optional - for web scraping)
+      - FIRECRAWL_API_KEY=${FIRECRAWL_API_KEY:-}
+    volumes:
+      - .streamlit/secrets.toml:/home/ubuntu/deploy-projects/c9335e8bb10cac046f7bdcea/.streamlit/secrets.toml:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
+    restart: unless-stopped
