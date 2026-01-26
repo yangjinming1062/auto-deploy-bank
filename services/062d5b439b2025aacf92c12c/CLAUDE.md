@@ -4,94 +4,140 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-PowerJob is an enterprise-grade distributed job scheduling and computing framework. It consists of three main components:
+PowerJob is an enterprise job scheduling middleware with distributed computing ability. It enables task scheduling and distributed computation with features including CRON scheduling, MapReduce, workflow (DAG), and multiple execution modes (standalone, broadcast, map, map-reduce).
 
-- **Server**: Central scheduling node that manages jobs, workflows, and workers
-- **Worker**: Task executor that runs jobs on worker nodes
-- **Client**: API for submitting and managing jobs remotely
-
-## Build & Development Commands
+## Build Commands
 
 ```bash
-# Full build (development profile, skip tests)
-mvn clean package -Pdev -DskipTests
+# Build project (skip tests for faster builds)
+mvn -B clean package -Pdev -DskipTests
 
-# Build specific module
-mvn -pl powerjob-server clean package -Pdev -DskipTests
-
-# Run tests
+# Run all tests
 mvn test
 
 # Run single test class
-mvn test -Dtest=ClassNameTest
+mvn test -Dtest=TestClassName
 
-# Run single test method
-mvn test -Dtest=ClassNameTest#methodName
+# Run specific test in a module
+mvn test -pl powerjob-server/powerjob-server-starter -Dtest=ServiceTest
 
-# Build for release (with javadoc, sources, GPG signing)
-mvn clean package -Prelease
+# Build with release profile (for publishing to Maven Central)
+mvn --batch-mode clean deploy -pl powerjob-worker,powerjob-client,powerjob-worker-spring-boot-starter,powerjob-official-processors,powerjob-worker-agent -DskipTests -Prelease -am
 ```
 
-## Project Structure
+**Note**: The `dev` profile is active by default; `-Pdev` is optional. Java 8 is required.
 
-```
-powerjob/
-├── powerjob-common/           # Shared utilities, models, enums, serialization
-├── powerjob-client/           # Client API for job submission
-├── powerjob-worker/           # Worker core (task execution, persistence, actors)
-├── powerjob-worker-spring-boot-starter/  # Spring Boot auto-configuration
-├── powerjob-worker-agent/     # Standalone agent with embedded server
-├── powerjob-worker-samples/   # Example applications
-├── powerjob-server/           # Server modules
-│   ├── powerjob-server-core/  # Core scheduling logic (dispatch, workflow)
-│   ├── powerjob-server-common/   # Server utilities
-│   ├── powerjob-server-remote/   # Remote communication handlers
-│   ├── powerjob-server-persistence/ # Storage service (file, S3, DB)
-│   ├── powerjob-server-extension/  # Extension points
-│   └── powerjob-server-starter/    # Spring Boot entry point
-├── powerjob-remote/           # RPC framework
-│   ├── powerjob-remote-framework/   # Base communication framework (Actor model)
-│   └── powerjob-remote-impl-*/      # Transport implementations (Akka, HTTP)
-└── powerjob-official-processors/    # Built-in processor implementations
+## Development with Docker Compose
+
+```bash
+# Start all services (MySQL, server, worker samples)
+docker-compose up
+
+# Access points after startup:
+# - Server UI: http://localhost:10010
+# - Worker Sample App: http://localhost:8081
 ```
 
 ## Architecture
 
-### Communication Layer (Actor Model)
+### Core Modules
 
-The system uses an Actor-based messaging model via `powerjob-remote-framework`:
+- **powerjob-server** - Scheduling server with multiple sub-modules:
+  - `powerjob-server-core` - Core scheduling logic (DispatchService, scheduler, workflow engine)
+  - `powerjob-server-starter` - Spring Boot entry point with web controllers
+  - `powerjob-server-persistence` - JPA repository layer for data storage
+  - `powerjob-server-remote` - Remote transport layer for worker communication
+  - Other modules: auth, extension, migrate, monitor
 
-- **Actors**: Process messages asynchronously using the Actor model
-- **RemoteEngine**: Manages actor lifecycle and message routing
-- **Transporters**: Handle network communication (Akka or HTTP implementations)
-- **CSInitializerFactory**: Creates client/server connection initializers
+- **powerjob-worker** - Worker SDK that runs task processors:
+  - Main entry: `PowerJobWorker` class
+  - Uses Actor model: `TaskTrackerActor`, `ProcessorTrackerActor`, `WorkerActor`
+  - `core/executor/` - Task execution engine
+  - `processor/` - Processor loading and execution (BuiltIn, JarContainer)
+  - `actors/` - Message handling actors for server communication
 
-Worker nodes expose actors: `TaskTrackerActor`, `ProcessorTrackerActor`, `WorkerActor`
+- **powerjob-remote** - Pluggable remote communication framework:
+  - `powerjob-remote-framework` - Base transport abstractions using Actor model
+  - `powerjob-remote-impl-akka` - Akka-based implementation (default)
+  - `powerjob-remote-impl-http` - HTTP-based implementation
 
-### Server Core Components
+- **powerjob-common** - Shared constants, enums, utilities, and request/response models
+- **powerjob-client** - Client SDK for OpenAPI interaction with server
+- **powerjob-worker-spring-boot-starter** - Spring Boot auto-configuration integration
+- **powerjob-official-processors** - Built-in processor implementations
 
-- **DispatchService**: Distributes tasks to workers based on strategies
-- **Scheduler services**: Handle timing strategies (CRON, fixed rate, delay)
-- **Workflow engine**: Manages DAG-based workflow execution
-- **Instance service**: Tracks job instance lifecycle
+### Communication Pattern
 
-### Worker Core Components
+1. Server uses `DispatchService` to dispatch jobs to Workers
+2. Server ↔ Worker communication uses remote framework (Actor-based Akka by default)
+3. Workers report status back via actors
+4. Task results stored via TaskPersistenceService (configurable strategy)
 
-- **ExecutorManager**: Manages processor thread pools
-- **ProcessorLoader**: Loads user-defined job processors
-- **TaskPersistenceService**: Local task state persistence (H2 + HikariCP)
-- **ServerDiscoveryService**: Locates and connects to server nodes
+### Task Execution Types
 
-## Key Configuration Files
+- **STANDALONE**: Single worker executes the task
+- **BROADCAST**: All registered workers execute the task
+- **MAP**: Task is split into sub-tasks distributed across workers
+- **MAP_REDUCE**: Map phase followed by reduce phase for distributed computing
 
-- Server: `powerjob-server/powerjob-server-starter/src/main/resources/application.properties`
-- Server profiles: `application-daily.properties`, `application-product.properties`
-- Logging: `logback-dev.xml`, `logback-product.xml`
+### Timing Strategies
 
-## Java Version
+- **CRON**: Cron expression based scheduling
+- **FIXED_RATE**: Fixed rate execution (every N milliseconds)
+- **FIXED_DELAY**: Fixed delay between executions (wait N ms after completion)
+- **API**: OpenAPI triggered execution (manual triggering)
 
-Java 8 is required (`java.version=1.8`).
+### Task Trackers
 
-## Testing Framework
+Workers use TaskTrackers to manage task execution:
+- **LightTaskTracker**: For STANDALONE and BROADCAST execution (simple task tracking)
+- **HeavyTaskTracker**: For MAP and MAP_REDUCE execution (handles sub-task distribution and status aggregation)
 
-JUnit 5 (`junit-jupiter`) is used for unit tests. Tests use standard Maven layout under `src/test/java/`.
+### Key Components
+
+- **DispatchService** (`powerjob-server-core`) - Routes jobs to workers
+- **InstanceManager** - Manages job instance lifecycle
+- **TransportService** - Server-side remote communication handler
+- **ExecutorManager** - Worker-side thread pool and task execution
+- **ProcessorLoader** - Loads and manages task processors
+- **TaskTracker** - Worker-side task execution tracking (LightTaskTracker, HeavyTaskTracker)
+- **WorkflowEngine** - DAG-based workflow execution and dependency management
+
+## powerjob-common Module Structure
+
+The common module contains:
+- **Enums**: ExecuteType, TimeExpressionType, InstanceStatus, Protocol, ProcessorType, LogLevel, etc.
+- **Constants**: OmsConstant, RemoteConstant, OpenAPIConstant, WorkflowContextConstant
+- **Models**: InstanceDetail, TaskDetailInfo, AlarmConfig, PEWorkflowDAG, SystemMetrics
+- **Request/Response**: HTTP and internal RPC request/response classes
+- **Serialization**: JsonUtils for JSON serialization
+- **Utilities**: CommonUtils, NetUtils, HttpUtils, DigestUtils, CollectionUtils
+
+## Technology Stack
+
+- Java 8
+- Maven (multi-module)
+- Spring Boot (server)
+- Akka / HTTP (remote transport)
+- JPA with MySQL (default persistence)
+
+## Configuration
+
+Server configuration uses `application.properties` or `application.yml`:
+- `spring.datasource.*`: Database configuration
+- `oms.*`: PowerJob server settings
+- Port 7700: Akka/HTTP remote communication
+- Port 10086: HTTP API (OpenAPI)
+- Port 10010: Server web UI
+
+## Actor Pattern
+
+The remote framework uses an Actor-based message passing pattern:
+- Classes extending `Actor` base class with `@Actor(path = "...")` annotation
+- Message handlers use `@Handler(path = "...")` annotation
+- Server ↔ Workers communicate via Actor messages over the remote transport
+
+**Worker Actors:**
+- `TaskTrackerActor` - Receives task scheduling requests from server
+- `WorkerActor` - Handles worker registration and health reporting
+- `ProcessorTrackerActor` - Manages processor information and status

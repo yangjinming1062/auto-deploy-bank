@@ -1,41 +1,59 @@
-version: '3.8'
-
 services:
   powerjob-server:
+    container_name: powerjob-server
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: powerjob-server
-    ports:
-      - "50467:7700"
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
+      - TZ=Asia/Shanghai
       - SERVER_PORT=7700
-      - SPRING_PROFILES_ACTIVE=daily
+      - SPRING_PROFILES_ACTIVE=product
+      - SPRING_AUTOCONFIG_EXCLUDE=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration,org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      # MySQL configuration - using host.docker.internal for MySQL access
       - SPRING_DATASOURCE_CORE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
-      - SPRING_DATASOURCE_CORE_JDBC_URL=jdbc:mysql://mysql:3306/powerjob?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_CORE_JDBC_URL=jdbc:mysql://host.docker.internal:3306/powerjob?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
       - SPRING_DATASOURCE_CORE_USERNAME=root
-      - SPRING_DATASOURCE_CORE_PASSWORD=password
+      - SPRING_DATASOURCE_CORE_PASSWORD=rootpassword
       - SPRING_DATASOURCE_CORE_MAXIMUM_POOL_SIZE=20
       - SPRING_DATASOURCE_CORE_MINIMUM_IDLE=5
-      - OMS_AUTH_INITIALIZE_ADMIN_PASSWORD=powerjob_admin
-      - OMS_AUTH_OPENAPI_ENABLE=false
-      - OMS_AUTH_SECURITY_JWT_EXPIRE_SECONDS=604800
+      # Mail configuration
+      - SPRING_MAIL_HOST=smtp.example.com
+      - SPRING_MAIL_USERNAME=user@example.com
+      - SPRING_MAIL_PASSWORD=email_password
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_REQUIRED=true
+      # Multipart config
+      - SPRING_SERVLET_MULTIPART_ENABLED=true
+      - SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE=209715200
+      - SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE=209715200
+      # PowerJob transporter
       - OMS_TRANSPORTER_ACTIVE_PROTOCOLS=AKKA,HTTP
       - OMS_TRANSPORTER_MAIN_PROTOCOL=HTTP
       - OMS_AKKA_PORT=10086
       - OMS_HTTP_PORT=10010
       - OMS_TABLE_PREFIX=
-    depends_on:
-      mysql:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:7700/actuator/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+      # Auth config
+      - OMS_AUTH_INITILIAZE_ADMIN_PASSWORD=powerjob_admin
+      - OMS_AUTH_OPENAPI_ENABLE=false
+      # Retention settings
+      - OMS_INSTANCEINFO_RETENTION=7
+      - OMS_CONTAINER_RETENTION_LOCAL=7
+      - OMS_CONTAINER_RETENTION_REMOTE=-1
+      # Cache settings
+      - OMS_INSTANCE_METADATA_CACHE_SIZE=2048
+      # Logging
+      - LOGGING_CONFIG=classpath:logback-product.xml
+    ports:
+      - "40296:7700"
+      - "10086:10086"
+      - "10010:10010"
     volumes:
       - ./target.jar:/app/target.jar
+      - ./powerjob-data:/root/powerjob
     deploy:
       resources:
         limits:
@@ -44,39 +62,9 @@ services:
         reservations:
           cpus: '1.0'
           memory: 1G
-    networks:
-      - powerjob-network
-
-  mysql:
-    image: mysql:8.0
-    container_name: powerjob-mysql
-    environment:
-      - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_DATABASE=powerjob
-      - MYSQL_CHARACTERSET=utf8mb4
-      - MYSQL_COLLATION=utf8mb4_unicode_ci
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ppassword"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-    volumes:
-      - mysql-data:/var/lib/mysql
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: 2G
-        reservations:
-          cpus: '0.5'
-          memory: 512M
-    networks:
-      - powerjob-network
-
-networks:
-  powerjob-network:
-    driver: bridge
-
-volumes:
-  mysql-data:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:7700/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s

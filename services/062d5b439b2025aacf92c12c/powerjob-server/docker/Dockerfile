@@ -1,44 +1,31 @@
-# Stage 1: Build stage
-FROM maven:3.9-eclipse-temurin-17 AS builder
+# 基础镜像（支持 amd64 & arm64），based on Ubuntu 18.04.4 LTS
+FROM adoptopenjdk:8-jdk-hotspot
+# 维护者
+MAINTAINER tengjiqi@gmail.com
+# 下载并安装 maven
+RUN curl -O https://mirrors.aliyun.com/apache/maven/maven-3/3.9.4/binaries/apache-maven-3.9.4-bin.tar.gz
+RUN tar -zxvf apache-maven-3.9.4-bin.tar.gz && mv apache-maven-3.9.4 /opt/powerjob-maven && rm -rf apache-maven-3.9.4-bin.tar.gz
+# 替换 maven 配置文件
+RUN rm -rf /opt/powerjob-maven/conf/settings.xml
+COPY settings.xml /opt/powerjob-maven/conf/settings.xml
+# 设置 maven 环境变量（maven invoker 读取该变量调用 maven）
+ENV M2_HOME=/opt/powerjob-maven
 
-WORKDIR /app
-
-# Copy pom.xml first for dependency caching
-COPY pom.xml .
-RUN mvn dependency:go-offline -B
-
-# Copy source code
-COPY . .
-
-# Build the project
-RUN mvn clean package -DskipTests -B
-
-# Stage 2: Runtime stage
-FROM eclipse-temurin-17-jre-alpine
-
-WORKDIR /app
-
-# Set timezone
+# 设置时区
 ENV TZ=Asia/Shanghai
 
-# Create non-root user for security
-RUN addgroup -g 1000 app && adduser -u 1000 -G app -s /bin/sh -D app
-
-# Copy the built JAR from builder stage
-COPY --from=builder /app/powerjob-server/powerjob-server-starter/target/powerjob-server-starter-*.jar app.jar
-
-# Change ownership to non-root user
-RUN chown -R app:app /app
-
-# Switch to non-root user
-USER app
-
-# Expose ports: HTTP (7700), Akka (10086), HTTP transporter (10010)
+# 设置其他环境变量
+ENV APP_NAME=powerjob-server
+# 传递 SpringBoot 启动参数 和 JVM参数
+ENV PARAMS=""
+ENV JVMOPTIONS=""
+# 将应用 jar 包拷入 docker
+COPY powerjob-server.jar /powerjob-server.jar
+# 暴露端口（HTTP + AKKA + VertX）
 EXPOSE 7700 10086 10010
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:7700/actuator/health || exit 1
-
-# Start the application
-CMD ["java", "-Xmx512m", "-jar", "app.jar"]
+# 创建 docker 文件目录（盲猜这是用户目录）
+RUN mkdir -p /root/powerjob-server
+# 挂载数据卷，将文件直接输出到宿主机（注意，此处挂载的是匿名卷，即在宿主机位置随机）
+# VOLUME /root/powerjob
+# 启动应用
+ENTRYPOINT ["sh","-c","java $JVMOPTIONS -jar /powerjob-server.jar $PARAMS"]
