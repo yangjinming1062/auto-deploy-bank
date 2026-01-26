@@ -1,0 +1,33 @@
+services:
+  app:
+    build: .
+    container_name: streamlit-ocr-app
+    ports:
+      - "40535:8501"
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - BWB_REGION_NAME=${BWB_REGION_NAME:-us-east-1}
+      - BWB_PROFILE_NAME=${BWB_PROFILE_NAME:-default}
+      - profile_name=${profile_name:-default}
+      - BWB_ENDPOINT_URL=${BWB_ENDPOINT_URL}
+      - MODEL_ID=${MODEL_ID:-anthropic.claude-3-5-sonnet-20240620-v1:0}
+      - MAX_TOKENS=${MAX_TOKENS:-4096}
+      - PYTHONUNBUFFERED=1
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 5s
+      retries: 3
+    restart: unless-stopped
