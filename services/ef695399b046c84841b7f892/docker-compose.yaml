@@ -1,0 +1,26 @@
+services:
+  pycbc:
+    build: .
+    container_name: pycbc-service
+    ports:
+      - "40449:8080"
+    environment:
+      - PYCBC_SCHEME=cpu
+      - PYCBC_NUM_THREADS=1
+      - OMP_NUM_THREADS=1
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/home/ubuntu/deploy-projects/ef695399b046c84841b7f892
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G

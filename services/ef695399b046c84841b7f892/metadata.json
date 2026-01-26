@@ -1,0 +1,13 @@
+{
+  "service_id": "ef695399b046c84841b7f892",
+  "repo_name": "gwastro/pycbc",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "11.91MB",
+  "language": "python",
+  "star": 360,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-01-26T04:45:55.537898"
+}
