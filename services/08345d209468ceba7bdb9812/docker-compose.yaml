@@ -1,0 +1,29 @@
+services:
+  app:
+    build: .
+    ports:
+      - "40274:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - STEEMCONNECT_CLIENT_ID=busy.app
+      - STEEMCONNECT_REDIRECT_URL=http://localhost:3000/callback
+      - STEEMCONNECT_HOST=https://steemconnect.com
+      - STEEMJS_URL=https://api.steemit.com
+      - SIGNUP_URL=https://signup.steemit.com/?ref=busy
+      - MANIFEST_PATH=/assets
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

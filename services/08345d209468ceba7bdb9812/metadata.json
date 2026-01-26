@@ -1,0 +1,13 @@
+{
+  "service_id": "08345d209468ceba7bdb9812",
+  "repo_name": "busyorg/busy",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.79MB",
+  "language": "nodejs",
+  "star": 359,
+  "repo_flag": "NODEJS",
+  "uploaded_at": "2026-01-26T18:58:20.128771"
+}
