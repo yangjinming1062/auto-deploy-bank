@@ -1,0 +1,13 @@
+{
+  "service_id": "436d591082a470dc77c1b742",
+  "repo_name": "awslabs/landing-zone-accelerator-on-aws",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "6.24MB",
+  "language": "nodejs",
+  "star": 754,
+  "repo_flag": "NODEJS-Winston",
+  "uploaded_at": "2026-01-26T02:18:19.222720"
+}

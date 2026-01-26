@@ -1,0 +1,61 @@
+services:
+  lza-accelerator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lza-accelerator
+    ports:
+      - "40883:40883"
+    environment:
+      # AWS Credentials (passed via environment or secret files)
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      # CDK Settings
+      - CDK_NEW_BOOTSTRAP=1
+      # Node.js memory settings
+      - NODE_OPTIONS=--max_old_space_size=12288 --no-warnings
+      # Optional pipeline settings
+      - ENABLE_EXTERNAL_PIPELINE_ACCOUNT=${ENABLE_EXTERNAL_PIPELINE_ACCOUNT:-no}
+      - MANAGEMENT_ACCOUNT_ID=${MANAGEMENT_ACCOUNT_ID:-}
+      - MANAGEMENT_ACCOUNT_ROLE_NAME=${MANAGEMENT_ACCOUNT_ROLE_NAME:-}
+      - ACCELERATOR_QUALIFIER=${ACCELERATOR_QUALIFIER:-accel}
+      - ACCELERATOR_NODE_VERSION=${ACCELERATOR_NODE_VERSION:-20}
+      - ACCELERATOR_PERMISSION_BOUNDARY=${ACCELERATOR_PERMISSION_BOUNDARY:-}
+      - REGION_BY_REGION_DEPLOYMENT_ORDER=${REGION_BY_REGION_DEPLOYMENT_ORDER:-}
+      - ENABLE_DIAGNOSTICS_PACK=${ENABLE_DIAGNOSTICS_PACK:-No}
+      - ENABLE_TESTER=${ENABLE_TESTER:-false}
+      - MANAGEMENT_CROSS_ACCOUNT_ROLE_NAME=${MANAGEMENT_CROSS_ACCOUNT_ROLE_NAME:-}
+      - ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE=${ACCELERATOR_ENABLE_SINGLE_ACCOUNT_MODE:-}
+      # Environment
+      - NODE_ENV=production
+      - NPM_CONFIG_AUDIT=false
+      - NPM_CONFIG_FUND=false
+    volumes:
+      # Mount source directory for development (allows live edits)
+      - ./source:/home/ubuntu/deploy-projects/436d591082a470dc77c1b742/source:rw
+      # Mount config files
+      - ./cdk.json:/home/ubuntu/deploy-projects/436d591082a470dc77c1b742/cdk.json:ro
+      - ./config.yaml:/home/ubuntu/deploy-projects/436d591082a470dc77c1b742/config.yaml:ro
+    working_dir: /home/ubuntu/deploy-projects/436d591082a470dc77c1b742
+    command: ["sleep", "infinity"]
+    healthcheck:
+      test: ["CMD-SHELL", "cat /proc/1/cmdline | tr '\\0' ' ' | grep -q 'sleep'"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
+    networks:
+      - lza-network
+
+networks:
+  lza-network:
+    driver: bridge
