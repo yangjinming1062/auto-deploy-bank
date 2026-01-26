@@ -1,0 +1,38 @@
+services:
+  t2v-metrics:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: t2v-metrics
+    ports:
+      - "40484:40424"
+    environment:
+      - HF_CACHE_DIR=/home/appuser/hf_cache
+      - HF_HOME=/home/appuser/hf_cache
+      - TORCH_HOME=/home/appuser/torch_cache
+      - TOKENIZERS_PARALLELISM=false
+      - CUDA_VISIBLE_DEVICES=
+      - PORT=40424
+      - HF_TOKEN=${HF_TOKEN:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+    volumes:
+      - ./hf_cache:/home/appuser/hf_cache
+      - ./torch_cache:/home/appuser/torch_cache
+      - ./datasets:/home/appuser/datasets
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 8G
+        reservations:
+          cpus: '2.0'
+          memory: 4G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:40424/health"]
+      interval: 60s
+      timeout: 60s
+      retries: 20
+      start_period: 900s
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
