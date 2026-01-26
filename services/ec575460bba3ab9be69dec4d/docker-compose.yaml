@@ -1,0 +1,28 @@
+services:
+  dagli-webservice:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dagli-webservice
+    ports:
+      - "40300:40695"
+    environment:
+      - dagli.tmpdir=/tmp
+      - dagli.cryptoprovider=com.linkedin.dagli.util.cryptography.DefaultCryptographyProvider
+    volumes:
+      - ./target.jar:/app/target.jar
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:40695/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
