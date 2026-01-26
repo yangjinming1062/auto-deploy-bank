@@ -1,0 +1,31 @@
+services:
+  kimina-prover:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kimina-prover-demo
+    ports:
+      - "40486:8080"
+    environment:
+      - VLLM_API_URL=${VLLM_API_URL:-http://localhost:8090/v1}
+      - VLLM_API_KEY=${VLLM_API_KEY:-EMPTY}
+      - VLLM_MODEL=${VLLM_MODEL:-AI-MO/Kimina-Prover-Distill-1.7B}
+      - LEAN_SERVER_URL=${LEAN_SERVER_URL:-http://127.0.0.1:12332}
+      - MAX_TOKENS=${MAX_TOKENS:-16000}
+      - TEMPERATURE=${TEMPERATURE:-0.8}
+      - PORT=8080
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
