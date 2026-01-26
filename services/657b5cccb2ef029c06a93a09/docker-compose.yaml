@@ -1,0 +1,37 @@
+services:
+  3dtrajmaster-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: 3dtrajmaster-web
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
+      - WANDB_API_KEY=${WANDB_API_KEY}
+      - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-0}
+      - CAPTION_MODEL_ID=${CAPTION_MODEL_ID}
+      - IMAGE_MODEL_ID=${IMAGE_MODEL_ID}
+      - VIDEO_MODEL_ID=${VIDEO_MODEL_ID}
+    volumes:
+      - ./CogVideo:/home/ubuntu/deploy-projects/657b5cccb2ef029c06a93a09/CogVideo
+      - ./dataset:/home/ubuntu/deploy-projects/657b5cccb2ef029c06a93a09/dataset
+      - ./eval:/home/ubuntu/deploy-projects/657b5cccb2ef029c06a93a09/eval
+      - ./output:/home/ubuntu/deploy-projects/657b5cccb2ef029c06a93a09/output
+    ports:
+      - "40409:7860"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    command: >
+      python CogVideo/tools/llm_flux_cogvideox/gradio_page.py
