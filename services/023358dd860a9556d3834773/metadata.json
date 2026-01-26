@@ -1,0 +1,13 @@
+{
+  "service_id": "023358dd860a9556d3834773",
+  "repo_name": "windson/fastapi",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "6KB",
+  "language": "python",
+  "star": 365,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-01-26T03:59:00.923765"
+}
