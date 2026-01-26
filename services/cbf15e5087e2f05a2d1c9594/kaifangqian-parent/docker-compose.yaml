@@ -1,0 +1,123 @@
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: kaifangqian-api
+    hostname: kaifangqian-api
+    ports:
+      - "40295:8899"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./target.jar:/app/target.jar
+      - storage_data:/app/storage
+    environment:
+      - TZ=Asia/Shanghai
+      - LANG=en_US.UTF-8
+      - LC_ALL=en_US.UTF-8
+      # Database configuration
+      - MYSQL_HOST=${MYSQL_HOST:-mysql}
+      - MYSQL_PORT=${MYSQL_PORT:-3306}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-opensign}
+      - MYSQL_USERNAME=${MYSQL_USERNAME:-root}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-123456}
+      # Redis configuration
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - REDIS_DATABASE=${REDIS_DATABASE:-0}
+      # Storage configuration
+      - STORAGE_ACTIVE=${STORAGE_ACTIVE:-local}
+      - OSS_ENDPOINT=${OSS_ENDPOINT:-oss-cn-hangzhou.aliyuncs.com}
+      - OSS_ACCESSKEYID=${OSS_ACCESSKEYID:-}
+      - OSS_ACCESSKEYSECRET=${OSS_ACCESSKEYSECRET:-}
+      - OSS_PUBLICENDPOINT=${OSS_PUBLICENDPOINT:-oss-cn-hangzhou.aliyuncs.com}
+      - OSS_BUCKETNAME=${OSS_BUCKETNAME:-}
+      - MINIO_ACCESS=${MINIO_ACCESS:-}
+      - MINIO_SECRET=${MINIO_SECRET:-}
+      - MINIO_ADDRESS=${MINIO_ADDRESS:-}
+      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:-kaifangqian}
+      # PowerJob configuration - using unreachable address to skip PowerJob initialization
+      - JOB_SERVER=${JOB_SERVER:-255.255.255.255:7990}
+      - POWERJOB_APP_NAME=${POWERJOB_APP_NAME:-test-app}
+      # PDF encryption
+      - PDF_ENCRYPTION_ENABLE=false
+      - PDF_ENCRYPTION_PASSWORD=123456
+      # Office conversion
+      - OFFICE_CONVERT_ENABLE=false
+      - OFFICE_CONVERT_HOST=http://127.0.0.1:8080
+      # Service token
+      - TOKEN=${TOKEN:-iinHstP/OFm7N/W1vDaFVAZ8mmb5BtUI7YJrX4oJcZKYVl6zUijHPaGOE/7cAmQvqSBudRZSYRaVvsotD+Jdfm9DphMY/6A4JKXmSGwyJRP+qgQDA/dC1IRE+zurtfkkr8JX5xJtQxc8TutfD0Qvgt1QpBrH+TTQm8F4gridH3FdhphiO90963Cu9FtrWHgn+7tyi09DRZEJKzKr16/jxlZGlLCKBSa/he2etkQUIJSyCbt2OB8WBP2+3T5lljML0jq9y1ZzODXNU/xZY5BuaVJR9Hxqm9b7kYygEMCYUzXRpno5pMiMUtB732KFjyu8OAcTsF7X+lI9odZOl2RDzx7/Vy6eAyzGyYg5vF79leWhlP2q+EX7XBc4xC5+5c+tXIiRkf+JNqHMroFhVnvd923BYkzkDGHW9CsMzipSZRRpV5oZchhFqPwb2L0e+8zmm9idIv3xf8xHt3hGhSbrkWGebd9SzDLozES4LnQtv1sGp7WLqaOcsj8QAI7/TL6yZReCBbDnuPAchOcIRZTQohiDrn9eZyKRrZdmhhDn8Dgt1oYVhIsrQa5r5Ornxn61dGA679NgK/7vOUP5V3HfwxW3eSkYBWaH/sexEPdaHo+Oh4XGc9GtF8eni5V7+Vn82xkKosM4qDAWXvQL23w0C/SUlptsj6LB1JExb0FEkfqgtGbnc4lEF0eEx3uM+tCJPUSOTCklZV+jXzjmz/hVNhQ0yb0vw9DMzmP+S1oTP9Z/tn7izaai+QUZtmWWk7i4RUhsd1pCvVrCEsy+cWHRFdAj5ACEkKlSB2keIgKf8eBcqJpMAaSjX0l+R2fKrvLV8vsTr8hMDPnO+Fm/DGwvJxr3Kvu/Ch3gbFJ6i3GxSBK15Fi3p4GzjasN5B+Ho+gGvkVB8gGj69ZFLg0OQtfHn2n2WdpuO77JNlAGb2aav83Fajvh968N6pGhNWoNFIzDLjLJX7XmWvkqIL4j8tbC/P4OHsREuYlLRLhUOrkbp1Saj5eeIiJK0mhsDeWi7WbI}
+      # Yundun configuration
+      - YUNDUN_HOST=${YUNDUN_HOST:-https://yundun.kaifangqian.com/yundun}
+      - YD_APP_ID=${YD_APP_ID:-}
+      - YD_APP_VK=${YD_APP_VK:-}
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8899/resrun-paas/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    depends_on:
+      - mysql
+      - redis
+
+  mysql:
+    image: mysql:8.0
+    container_name: kaifangqian-mysql
+    hostname: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD:-123456}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-opensign}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      app_network:
+        aliases:
+          - mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: kaifangqian-redis
+    hostname: redis
+    command: >
+      sh -c "if [ -n '${REDIS_PASSWORD}' ]; then
+        redis-server --requirepass ${REDIS_PASSWORD};
+      else
+        redis-server;
+      fi"
+    volumes:
+      - redis_data:/data
+    networks:
+      app_network:
+        aliases:
+          - redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  storage_data:
+  mysql_data:
+  redis_data:
+
+networks:
+  app_network:
+    driver: bridge
