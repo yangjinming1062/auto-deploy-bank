@@ -1,0 +1,17 @@
+services:
+  livescript:
+    build: .
+    container_name: livescript
+    working_dir: /home/ubuntu/deploy-projects/278d562cb6f89876da396ebf
+    ports:
+      - "40640:40640"
+    environment:
+      - PORT=40640
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
