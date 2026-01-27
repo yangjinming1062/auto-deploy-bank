@@ -1,0 +1,26 @@
+services:
+  deepconf:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: deepconf-service
+    ports:
+      - "40551:8000"
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+      - PYTHONUNBUFFERED=1
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 120s

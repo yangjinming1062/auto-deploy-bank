@@ -1,0 +1,13 @@
+{
+  "service_id": "99205c4fa26dfbc0b5dda96b",
+  "repo_name": "facebookresearch/deepconf",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.92MB",
+  "language": "python",
+  "star": 330,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-01-27T07:14:26.606275"
+}
