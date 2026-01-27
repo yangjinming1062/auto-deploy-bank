@@ -1,0 +1,23 @@
+services:
+  simplify:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: simplify:latest
+    container_name: simplify-app
+    ports:
+      - "40841:8080"
+    # Volume mount for security scanning of the JAR
+    volumes:
+      - ./target.jar:/app/target.jar:ro
+    environment:
+      - JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+      - PORT=8080
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
