@@ -1,0 +1,29 @@
+services:
+  mmsegmentation:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "40694:40694"
+    volumes:
+      - ./web_server.py:/home/ubuntu/deploy-projects/7d8151a6b7c58b5c72f3d323/web_server.py
+    environment:
+      - LOCAL_RANK=0
+      - OMP_NUM_THREADS=1
+      - MKL_NUM_THREADS=1
+      - CUDA_VISIBLE_DEVICES=0
+      - PYTHONUNBUFFERED=1
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "/healthcheck.sh"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 120s
