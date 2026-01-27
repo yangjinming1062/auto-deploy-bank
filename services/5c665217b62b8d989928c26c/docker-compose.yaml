@@ -1,0 +1,35 @@
+services:
+  panopli:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: panopli-train
+    environment:
+      - PYTHONUNBUFFERED=1
+      - experiment=${experiment:-}
+      - WANDB_API_KEY=${WANDB_API_KEY:-}
+      - WANDB_RUN_ID=${WANDB_RUN_ID:-}
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-all available}
+    volumes:
+      - ./data:/app/data
+      - ./runs:/app/runs
+      - ./config/panopli.yaml:/app/config/panopli.yaml:ro
+      - ./resources/panoptic_coco_categories.json:/app/resources/panoptic_coco_categories.json:ro
+    ports:
+      - "40849:6006"
+    command: ["tensorboard", "--logdir=/app/runs", "--port=6006", "--host=0.0.0.0"]
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'python3 trainer/train_panopli_tensorf.py' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped

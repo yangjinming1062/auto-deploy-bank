@@ -1,0 +1,13 @@
+{
+  "service_id": "5c665217b62b8d989928c26c",
+  "repo_name": "nihalsid/panoptic-lifting",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "67.17MB",
+  "language": "python",
+  "star": 341,
+  "repo_flag": "PYTHON-OpenCV",
+  "uploaded_at": "2026-01-27T04:18:28.669378"
+}
