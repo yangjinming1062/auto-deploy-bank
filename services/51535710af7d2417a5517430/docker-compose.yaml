@@ -1,0 +1,26 @@
+services:
+  csv-ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: csv-ai-app
+    ports:
+      - "40406:8501"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - KMP_DUPLICATE_LIB_OK=${KMP_DUPLICATE_LIB_OK:-TRUE}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
