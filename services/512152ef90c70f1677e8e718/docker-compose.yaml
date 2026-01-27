@@ -1,0 +1,29 @@
+services:
+  imgutils-demo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: imgutils-demo
+    ports:
+      - "40701:7860"
+    environment:
+      - IU_HOME=/root/.cache/dghs-imgutils
+      - HF_TOKEN=${HF_TOKEN:-}
+      - ONNX_MODE=${ONNX_MODE:-}
+    volumes:
+      - ./demo.py:/home/ubuntu/deploy-projects/512152ef90c70f1677e8e718/demo.py:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
