@@ -1,0 +1,23 @@
+services:
+  soot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "40695:40932"
+    volumes:
+      - ./target.jar:/app/target.jar
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'java.*target.jar' && exit 0 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
