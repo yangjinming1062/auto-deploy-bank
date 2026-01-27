@@ -1,0 +1,30 @@
+services:
+  bioreason:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "40249:8888"
+    environment:
+      - CUDA_VISIBLE_DEVICES=
+      - TOKENIZERS_PARALLELISM=false
+      - DEBUG_MODE=false
+      - WANDB_PROJECT=bioreason
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+    volumes:
+      - .:/app
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/lab"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s

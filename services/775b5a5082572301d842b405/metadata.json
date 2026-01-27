@@ -1,0 +1,13 @@
+{
+  "service_id": "775b5a5082572301d842b405",
+  "repo_name": "bowang-lab/BioReason",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "3.76MB",
+  "language": "python",
+  "star": 335,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-01-27T01:49:28.291656"
+}
