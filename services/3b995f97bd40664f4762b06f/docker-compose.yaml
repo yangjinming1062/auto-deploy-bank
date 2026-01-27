@@ -1,0 +1,19 @@
+services:
+  brick-builder:
+    build: .
+    ports:
+      - "40275:40275"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:40275/Brick.ttl"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
