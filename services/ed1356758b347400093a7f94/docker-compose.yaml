@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    container_name: unist-util-visit
+    ports:
+      - "3000:3000"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
