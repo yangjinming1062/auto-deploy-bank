@@ -1,0 +1,26 @@
+services:
+  whisper-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: whisper-service
+    ports:
+      - "40797:3000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - XDG_DATA_HOME=/home/bentoml/.local/share
+      - GGML_MODEL=tiny.en
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
