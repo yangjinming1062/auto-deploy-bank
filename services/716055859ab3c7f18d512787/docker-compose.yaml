@@ -1,0 +1,23 @@
+services:
+  kotlingrad:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "40730:8080"
+    volumes:
+      - ./target.jar:/app/target.jar
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
