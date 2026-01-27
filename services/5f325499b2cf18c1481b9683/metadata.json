@@ -1,0 +1,13 @@
+{
+  "service_id": "5f325499b2cf18c1481b9683",
+  "repo_name": "lospec/pixel-editor",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "30.71MB",
+  "language": "nodejs",
+  "star": 1066,
+  "repo_flag": "NODEJS-Express",
+  "uploaded_at": "2026-01-27T17:29:40.864175"
+}
