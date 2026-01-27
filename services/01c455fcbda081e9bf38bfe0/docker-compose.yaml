@@ -1,0 +1,23 @@
+services:
+  app:
+    build: .
+    container_name: se3dif-app
+    working_dir: /home/ubuntu/deploy-projects/01c455fcbda081e9bf38bfe0
+    ports:
+      - "40866:8080"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    volumes:
+      - ./logs:/home/ubuntu/deploy-projects/01c455fcbda081e9bf38bfe0/logs

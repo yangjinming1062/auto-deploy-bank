@@ -1,0 +1,13 @@
+{
+  "service_id": "01c455fcbda081e9bf38bfe0",
+  "repo_name": "robotgradient/grasp_diffusion",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "23.43MB",
+  "language": "python",
+  "star": 338,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-01-27T03:54:38.946277"
+}
