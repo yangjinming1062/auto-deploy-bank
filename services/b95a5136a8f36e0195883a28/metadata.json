@@ -1,0 +1,13 @@
+{
+  "service_id": "b95a5136a8f36e0195883a28",
+  "repo_name": "apache/kafka",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "19.84MB",
+  "language": "java",
+  "star": 31794,
+  "repo_flag": "JAVA-SLF4J",
+  "uploaded_at": "2026-01-28T21:43:30.121832"
+}
