@@ -1,0 +1,13 @@
+{
+  "service_id": "8b895b989ec89e08e41ac32e",
+  "repo_name": "llSourcell/pose_estimation",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "3.66MB",
+  "language": "nodejs",
+  "star": 321,
+  "repo_flag": "NODEJS-TensorFlowJS",
+  "uploaded_at": "2026-01-28T03:54:26.814353"
+}
