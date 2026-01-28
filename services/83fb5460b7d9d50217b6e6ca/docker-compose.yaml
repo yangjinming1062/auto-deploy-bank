@@ -1,0 +1,30 @@
+services:
+  fakeshield:
+    build: .
+    container_name: fakeshield-web
+    ports:
+      - "41122:7860"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/home/ubuntu/deploy-projects/83fb5460b7d9d50217b6e6ca/DTE-FDM
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-}
+      - OMP_NUM_THREADS=4
+      - MKL_NUM_THREADS=4
+      - ONNX_BACKEND=${ONNX_BACKEND:-}
+      - DEBUG_COMPLETED_TIME=0
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
