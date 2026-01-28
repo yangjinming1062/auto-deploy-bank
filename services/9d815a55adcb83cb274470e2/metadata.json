@@ -1,0 +1,13 @@
+{
+  "service_id": "9d815a55adcb83cb274470e2",
+  "repo_name": "Azure/aistudio-copilot-sample",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "249KB",
+  "language": "python",
+  "star": 320,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-01-28T11:07:22.626364"
+}

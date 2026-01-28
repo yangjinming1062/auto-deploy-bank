@@ -1,0 +1,41 @@
+services:
+  copilot-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: copilot-api
+    ports:
+      - "40389:8000"
+    environment:
+      - PYTHONPATH=/home/ubuntu/deploy-projects/9d815a55adcb83cb274470e2/src
+      - OPENAI_API_TYPE=${OPENAI_API_TYPE:-azure}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_API_BASE=${OPENAI_API_BASE}
+      - OPENAI_API_VERSION=${OPENAI_API_VERSION:-2023-05-15}
+      - AZURE_AI_SEARCH_ENDPOINT=${AZURE_AI_SEARCH_ENDPOINT}
+      - AZURE_AI_SEARCH_KEY=${AZURE_AI_SEARCH_KEY}
+      - AZURE_AI_SEARCH_INDEX_NAME=${AZURE_AI_SEARCH_INDEX_NAME:-product-info}
+      - AZURE_OPENAI_CHAT_MODEL=${AZURE_OPENAI_CHAT_MODEL:-gpt-35-turbo-16k}
+      - AZURE_OPENAI_CHAT_DEPLOYMENT=${AZURE_OPENAI_CHAT_DEPLOYMENT:-gpt-35-turbo-16k-0613}
+      - AZURE_OPENAI_EVALUATION_MODEL=${AZURE_OPENAI_EVALUATION_MODEL:-gpt-35-turbo-16k}
+      - AZURE_OPENAI_EVALUATION_DEPLOYMENT=${AZURE_OPENAI_EVALUATION_DEPLOYMENT:-gpt-35-turbo-16k-0613}
+      - AZURE_OPENAI_EMBEDDING_MODEL=${AZURE_OPENAI_EMBEDDING_MODEL:-text-embedding-ada-002}
+      - AZURE_OPENAI_EMBEDDING_DEPLOYMENT=${AZURE_OPENAI_EMBEDDING_DEPLOYMENT:-text-ada-embedding-002-2}
+      - AZURE_SUBSCRIPTION_ID=${AZURE_SUBSCRIPTION_ID}
+      - HOST=0.0.0.0
+      - PORT=8000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
