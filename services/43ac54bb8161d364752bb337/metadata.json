@@ -1,0 +1,13 @@
+{
+  "service_id": "43ac54bb8161d364752bb337",
+  "repo_name": "Netflix/ndbench",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "799KB",
+  "language": "java",
+  "star": 363,
+  "repo_flag": "JAVA-CommonsLang",
+  "uploaded_at": "2026-01-28T02:42:00.846128"
+}

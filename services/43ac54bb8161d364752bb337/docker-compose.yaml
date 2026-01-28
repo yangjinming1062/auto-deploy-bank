@@ -1,0 +1,28 @@
+services:
+  ndbench:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ndbench-web
+    ports:
+      - "41010:8080"
+    environment:
+      - DISCOVERY_ENV=Local
+      - CATALINA_OPTS=-Dndbench.config.numKeys=10000 -Dndbench.config.writeRateLimit=35 -Dndbench.config.readRateLimit=45
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    volumes:
+      - ./ndbench-web/build/libs/ndbench-web.war:/usr/local/tomcat/webapps/ROOT.war
+      - ./target.jar:/app/target.jar:ro
