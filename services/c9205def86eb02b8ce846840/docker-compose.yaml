@@ -1,0 +1,27 @@
+services:
+  wener-website:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wener-website
+    ports:
+      - "40331:3000"
+    environment:
+      - TEST=${TEST:-}
+      - USE_GIT=${USE_GIT:-true}
+      - RSDOCTOR=${RSDOCTOR:-}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
