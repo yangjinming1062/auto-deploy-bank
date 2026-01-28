@@ -1,0 +1,25 @@
+services:
+  packetproxy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: packetproxy
+    ports:
+      - "44738:32349"
+    volumes:
+      - ./build/libs/PacketProxy.jar:/app/app.jar
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:32349/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
