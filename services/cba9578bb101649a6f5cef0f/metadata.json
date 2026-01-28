@@ -1,0 +1,13 @@
+{
+  "service_id": "cba9578bb101649a6f5cef0f",
+  "repo_name": "alteryx/Automated-Manual-Comparison",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "46.06MB",
+  "language": "python",
+  "star": 324,
+  "repo_flag": "PYTHON-LightGBM",
+  "uploaded_at": "2026-01-28T04:00:44.628008"
+}
