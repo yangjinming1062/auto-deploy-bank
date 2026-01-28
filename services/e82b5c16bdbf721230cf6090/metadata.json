@@ -1,0 +1,13 @@
+{
+  "service_id": "e82b5c16bdbf721230cf6090",
+  "repo_name": "yuboon/java-examples",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "4.43MB",
+  "language": "java",
+  "star": 311,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-01-28T19:59:11.175413"
+}

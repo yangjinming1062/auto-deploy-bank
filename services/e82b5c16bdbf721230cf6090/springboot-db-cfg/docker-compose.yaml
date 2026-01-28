@@ -1,0 +1,135 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: springboot-db-cfg-app
+    ports:
+      - "41322:8080"
+    environment:
+      # Server configuration
+      SERVER_PORT: 8080
+      SPRING_PROFILES_ACTIVE: development
+
+      # MySQL configuration (config database)
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: app_config
+      MYSQL_USERNAME: root
+      MYSQL_PASSWORD: root
+
+      # Redis configuration (Spring Boot 3.x uses spring.data.redis.*)
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: ""
+      SPRING_DATA_REDIS_DATABASE: 0
+
+      # Config DB (same as MySQL for this application)
+      CONFIG_DB_HOST: mysql
+      CONFIG_DB_PORT: 3306
+      CONFIG_DB_NAME: app_config
+      CONFIG_DB_USER: root
+      CONFIG_DB_PASS: root
+
+      # Spring Config DataSource (for the config database connection)
+      SPRING_CONFIG_DATASOURCE_URL: jdbc:mysql://mysql:3306/app_config?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_CONFIG_DATASOURCE_USERNAME: root
+      SPRING_CONFIG_DATASOURCE_PASSWORD: root
+
+      # Business DataSource configuration (points to same MySQL with business_db database)
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/business_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_DATASOURCE_DRIVER-CLASS-NAME: com.mysql.cj.jdbc.Driver
+
+      # HikariCP pool settings
+      SPRING_DATASOURCE_HIKARI_MAXIMUM-POOL-SIZE: 10
+      SPRING_DATASOURCE_HIKARI_MINIMUM-IDLE: 5
+      SPRING_DATASOURCE_HIKARI_CONNECTION-TIMEOUT: 30000
+
+      # Encryption key
+      CONFIG_ENCRYPTION_KEY: defaultConfigKey123
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    volumes:
+      - ./target.jar:/app/target.jar
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    networks:
+      - app-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: springboot-db-cfg-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: app_config
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: springboot-db-cfg-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  redis-data:
