@@ -1,0 +1,39 @@
+services:
+  puzzleavatar:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: puzzleavatar
+    ports:
+      - "40135:8501"
+    volumes:
+      - ./data:/app/data
+      - ./input:/app/input
+      - ./output:/app/output
+      - ./logs:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYOPENGL_PLATFORM=osmesa
+      - CUDA_HOME=/usr/local/cuda
+      - HF_HOME=/root/.cache
+      - PYTORCH_KERNEL_CACHE_PATH=/root/.cache/torch
+      - OPENCV_IO_ENABLE_OPENEXR=1
+      - KMP_DUPLICATE_LIB_OK=TRUE
+      - PYTHONPATH=/app:${PYTHONPATH}
+      - JOB_STATUS=ready
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    command: >
+      bash -c "python health_server.py"
