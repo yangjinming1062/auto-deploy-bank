@@ -4,130 +4,88 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**COMSAT** (Concurrent Scalable Web Apps) is a Java library that integrates [Quasar fibers](http://puniverse.github.io/quasar/) with various web and enterprise technologies. The project implements a **fibers-per-request model** where traditional blocking I/O operations are converted to lightweight threads, allowing thousands of concurrent requests with minimal memory overhead.
+COMSAT is a set of Java libraries that integrate [Quasar](http://puniverse.github.io/quasar/) (lightweight threads/fibers) with various web and enterprise technologies. It wraps standard APIs (Servlet, JDBC, HTTP clients, etc.) to make them fiber-blocking, enabling high concurrency with few threads.
 
-## Common Development Commands
+## Build Commands
 
-### Prerequisites
-- Java 7 minimum (Java 8 required for some features)
-- Gradle (use wrapper or install locally)
-
-### Core Operations
 ```bash
-# Install to local Maven repository (default task)
+# Build and install to local Maven repository
 gradle install
 
-# Build entire project (compile, test, package)
+# Full build with tests
 gradle build
 
-# Run all tests
-gradle test
-
-# Run tests for specific module
+# Run tests for a specific module
 gradle :comsat-servlet:test
-cd comsat-servlet && gradle test
 
-# Run single test class
-gradle test --tests co.paralleluniverse.fibers.servlet.FiberHttpServletTest
+# Run a single test class
+gradle :comsat-servlet:test --tests "*FiberHttpServletTest"
 
-# Run specific test method
-gradle test --tests "*.FiberHttpServletTest.test*"
-
-# Clean build artifacts
-gradle clean
-
-# Generate Javadoc for all modules
+# Generate Javadoc
 gradle javadoc
 
-# Check for dependency updates
-gradle dependencyUpdates
+# Check license headers
+gradle licenseMain
 
 # Apply license headers
 gradle licenseFormatMain
 ```
 
-### Testing Strategy
-- **JUnit 4.12** for all tests
-- Use Java agent for Quasar bytecode instrumentation during tests
-- Tests in `comsat-test-war` require additional server setup (Jetty/Tomcat/Undertow)
-- CI tests run when `CI=true` environment variable is set: `CI=true gradle test`
+**Note:** Tests require the Quasar javaagent (`-javaagent:path-to-quasar-jar.jar`), which is automatically configured in the test task via `configurations.quasar`.
 
 ## Architecture
 
-### Multi-Module Structure
-The project contains **24 core modules** plus **30+ Spring Boot sample applications**:
+### Module Organization
 
-**Core Web Modules:**
-- `comsat-actors-api` - Web Actors API (HTTP/SSE/WebSocket actors)
-- `comsat-actors-netty`, `comsat-actors-servlet`, `comsat-actors-undertow` - Server implementations
-- `comsat-servlet` - Servlet integration (fiber-per-request servlets)
+This is a multi-module Gradle project with integration modules that wrap standard APIs:
 
-**Framework Integrations:**
-- `comsat-jersey-server` - JAX-RS (Jersey) integration
-- `comsat-dropwizard` - Dropwizard framework integration
-- `comsat-spring-webmvc` / `comsat-spring-boot` / `comsat-spring-security` - Spring ecosystem
+**Web Framework Integrations:**
+- `comsat-servlet` - `FiberHttpServlet` extends `HttpServlet` for fiber-per-request servlets
+- `comsat-jersey-server` - Jersey `ServletContainer` for fiber-blocking JAX-RS resources
+- `comsat-spring:*` - Spring Web MVC, Boot auto-configuration, and Spring Security
+- `comsat-dropwizard` - Dropwizard integration with fiber-aware DB and HTTP client
 
 **HTTP Clients:**
-- `comsat-httpclient` - Apache HttpClient integration
-- `comsat-okhttp`, `comsat-retrofit` - Modern HTTP clients
+- `comsat-httpclient` - `FiberHttpClientBuilder` wraps Apache HttpClient
+- `comsat-jax-rs-client` - `AsyncClientBuilder` wraps Jersey JAX-RS client
+- `comsat-retrofit` - `FiberRestAdapterBuilder` wraps Retrofit
+- `comsat-okhttp` - `FiberOkHttpClient` wraps OkHttp
+- `comsat-httpkit` - Clojure Ring HTTP Kit adapter
 
-**Database:**
-- `comsat-jdbc`, `comsat-jdbi`, `comsat-jooq` - JDBC-based integrations
+**Database Access:**
+- `comsat-jdbc` - `FiberDataSource` wraps DataSources (JDBC operations run in thread pool)
+- `comsat-jdbi` - `FiberDBI` for JDBI
+- `comsat-jooq` - jOOQ integration
+- `comsat-mongodb-allanbank` - `FiberMongoFactory` for MongoDB
 
-**Other:**
-- `comsat-mongodb-allanbank`, `comsat-kafka`, `comsat-shiro` - Third-party integrations
-- `comsat-test-utils`, `comsat-test-war` - Testing infrastructure
+**Web Actors (new API):**
+- `comsat-actors-api` - Core Web Actor API (`@WebActor`, `BasicActor`, message types)
+- `comsat-actors-netty` - `WebActorHandler`/`AutoWebActorHandler` for Netty
+- `comsat-actors-undertow` - `WebActorHandler`/`AutoWebActorHandler` for Undertow
+- `comsat-actors-servlet` - Servlet-based deployment via `WebActorInitializer`
 
-### Key Technologies
-- **Quasar Fibers**: Lightweight threads (`co.paralleluniverse:quasar-core:0.7.6`)
-- **Build**: Gradle 2.x with multi-module setup
-- **Web Servers**: Jetty 9.2.14, Tomcat 8.0.33, Undertow 1.3.19
-- **Frameworks**: Jersey 2.22.2, Spring 4.2.5, Spring Boot 1.3.3, Dropwizard 0.9.2
+**Other Integrations:**
+- `comsat-kafka` - `FiberKafkaProducer` for Apache Kafka
+- `comsat-shiro` - Apache Shiro realm instrumentation
 
-### Build Configuration
-- **Root `build.gradle`** (672 lines) defines:
-  - Multi-module dependency management
-  - Quasar instrumentation setup
-  - Java agent configuration for tests
-  - Javadoc with external links (Quasar, Servlet API, Jersey, Spring)
-  - Maven publishing and artifact signing
-- **Instrumentation**: Quasar automatically instruments bytecode to convert blocking operations to fibers
-- **Test Setup**: `co.paralleluniverse:quasar-core:0.7.6:junit` added to test classpath
+**Utilities:**
+- `comsat-test-utils` - Embedded server helpers (Jetty, Tomcat, Undertow) and test utilities
 
-## Important Documentation
+### Key Patterns
 
-### Primary Sources
-- **`README.md`** - Main project documentation with module dependencies table
-- **`CONTRIBUTING.md`** - Branch strategy: `release` branch for bugfixes, `master` for features
-- **`docs/`** directory - Jekyll-based documentation site
-- **`NOTICE`** - Third-party license attributions
+1. **Fiber Wrapping**: Standard blocking APIs are wrapped with fiber-blocking versions (e.g., `FiberHttpServlet` extends `HttpServlet`, `FiberDataSource` wraps `DataSource`)
 
-### Key Release Information
-- Current version: **0.7.1-SNAPSHOT**
-- Previous releases: 0.1.0 - 0.7.0 (documented in `docs/index.md`)
-- Requires Contributor License Agreement for contributions
+2. **Suspension**: Methods that use fiber-blocking APIs must be `@Suspendable` (or declare `throws SuspendExecution`)
 
-## CI/CD & Publishing
+3. **Instrumentation**: The build uses Quasar's `scanSuspendables` task to generate `META-INF/suspendables` and `META-INF/suspendable-supers` files
 
-- **Travis CI** builds on Java 7 and Java 8
-- Auto-deploys documentation to gh-pages
-- **Maven Central** publishing via Sonatype OSSRH
-- Source/Javadoc JARs generated automatically
-- Artifact signing with GPG
+4. **Provided Dependencies**: `quasar-core` is listed as `provided` to avoid bundling it with each module
 
-## Sample Applications
+## Branch Strategy
 
-Located in the `samples/` directory, the project includes **30+ Spring Boot sample applications** demonstrating:
-- Different embedded containers (Tomcat, Jetty, Undertow)
-- SSL configuration
-- JPA integration
-- Spring Security
-- Various COMSAT modules in action
+- `master` - Feature improvements and new features
+- `release` - Bug fixes only
 
-## Development Tips
+## Contributing
 
-- **Multi-container testing**: Modules like `comsat-servlet` run parameterized tests against Jetty, Tomcat, and Undertow
-- **CI optimization**: Set `CI=true` for faster CI builds (runs only essential tests)
-- **IDE support**: Gradle IntelliJ integration via `.gradle` files
-- **Dependency management**: Uses Ben Manes Versions Plugin for update checking
-- **License compliance**: Automated header checking/formatting required
+Sign the [Contributor's Agreement](https://docs.google.com/a/paralleluniverse.co/forms/d/1U5GinUnRsYbvAP5W3-o11wmRkMmicD_WgRDS6Sy30HA/viewform) before submitting PRs.
