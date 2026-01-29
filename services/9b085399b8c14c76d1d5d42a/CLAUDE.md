@@ -2,233 +2,116 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
+## Build Commands
 
-This is the **SonarQube** repository - an open-source platform for continuous code quality inspection. SonarQube provides the capability to not only show the health of an application but also to highlight issues newly introduced.
-
-## Build System
-
-- **Build Tool**: Gradle 8.14.3
-- **Wrapper**: `./gradlew` (executable)
-- **Java Version**: JDK 17+ (required)
-- **Main Build File**: `build.gradle` at root
-- **Settings File**: `settings.gradle`
-
-## Common Development Commands
-
-### Building and Testing
+**Requirements:** JDK 21+ required to build.
 
 ```bash
-# Build the entire project (compiles, runs unit tests)
+# Build the project and run unit tests
 ./gradlew build
 
-# Build and run all tests without packaging
-./gradlew assemble
-
-# Run a specific test
-./gradlew :server:sonar-webserver:org.sonar.server.platform.monitoring.DatabaseMonitoringTest
-
-# Run tests for a specific module
-./gradlew :server:sonar-webserver:test
-
-# Run tests for sonar-main module
-./gradlew :server:sonar-main:test
-
-# Clean build artifacts
-./gradlew clean
-
-# Build for IDE (quicker build for initial IDE setup)
+# Build IDE project files (run this once before opening in IntelliJ/Eclipse)
 ./gradlew ide
-```
 
-### License and Code Style
+# Build with a custom webapp (from sonarqube-webapp repository)
+WEBAPP_BUILD_PATH=/path/to/sonarqube-webapp/server/sonar-web/build/webapp ./gradlew build
 
-```bash
-# Fix source headers by applying HEADER.txt
+# Generate license headers
 ./gradlew licenseFormat --rerun-tasks
 
-# List dependencies
+# Run a single test class
+./gradlew :server:sonar-db-dao:test --tests "org.sonar.db.permission.GroupPermissionDaoTest"
+
+# Run a single test method
+./gradlew :server:sonar-db-dao:test --tests "org.sonar.db.permission.GroupPermissionDaoTest.shouldFailToDeleteUserIfNotExists"
+
+# List all dependencies
 ./gradlew dependencies
 
-# Upgrade Gradle wrapper
-./gradlew wrapper --gradle-version 5.2.1
-```
-
-### Running SonarQube
-
-After building, the distribution is generated in `sonar-application/build/distributions/`. Unzip and start:
-
-```bash
-# Linux
-bin/linux-x86-64/sonar.sh start
-
-# macOS
-bin/macosx-universal-64/sonar.sh start
-
-# Windows
-bin\windows-x86-64\StartSonar.bat
+# Build the distribution (output in sonar-application/build/distributions/)
+./gradlew dist
 ```
 
 ## Architecture Overview
 
-### High-Level Components
+SonarQube is a modular Gradle multi-module project with these major subsystems:
 
-1. **sonar-application** - Application entry point and distribution packaging
-   - Main class: `org.sonar.application.App` (sonar-application/src/main/java/org/sonar/application/App.java:83)
-   - Packages the complete SonarQube server including:
-     - Web server components
-     - Compute Engine (CE)
-     - Elasticsearch
-     - Scanner engine
-     - Database drivers
+### Server Modules (`server/`)
 
-2. **server/** - Server-side components organized by functional area:
-   - **sonar-main** - Main process orchestration, lifecycle management
-   - **sonar-process** - Process management and inter-process communication
-   - **sonar-webserver** - HTTP web server (multiple modules):
-     - `sonar-webserver-core` - Core web server
-     - `sonar-webserver-api` - Web API infrastructure
-     - `sonar-webserver-webapi` - REST API endpoints
-     - `sonar-webserver-auth` - Authentication modules
-   - **sonar-ce** - Compute Engine (analysis processing)
-     - `sonar-ce` - CE orchestrator
-     - `sonar-ce-task` - Task execution
-     - `sonar-ce-task-projectanalysis` - Project analysis workflows
-   - **sonar-db-*** - Database layer
-     - `sonar-db-core` - Core database utilities
-     - `sonar-db-dao` - Data Access Objects
-     - `sonar-db-migration` - Schema migrations
-   - **sonar-server-common** - Shared server components
-   - **sonar-auth-*** - Authentication providers (LDAP, SAML, GitHub, GitLab, etc.)
+| Module | Purpose |
+|--------|---------|
+| `sonar-main` | Application entry point, process management, cluster health monitoring |
+| `sonar-process` | Process launching and supervision |
+| `sonar-db-dao` | Data access layer for PostgreSQL, MySQL, Oracle, SQL Server |
+| `sonar-db-migration` | Database schema migrations |
+| `sonar-ce` | Compute Engine - orchestrates code analysis tasks |
+| `sonar-ce-task` | CE task container and execution framework |
+| `sonar-ce-task-projectanalysis` | Project analysis logic executed by CE |
+| `sonar-webserver-*` | HTTP server (Tomcat embed), Web APIs, authentication, Elasticsearch integration |
+| `sonar-alm-client` | Azure DevOps, Bitbucket, GitHub, GitLab API clients |
+| `sonar-auth-*` | Authentication plugins (LDAP, SAML, GitHub, GitLab, Bitbucket) |
+| `sonar-telemetry*` | Telemetry collection |
 
-3. **sonar-core** - Core shared libraries and utilities
+### Scanner/Analysis Modules (root level)
 
-4. **sonar-scanner-engine** - Scanner engine for code analysis
-   - Analyzes projects and sends results to SonarQube server
-   - Used by SonarQube scanners (Maven, Gradle, etc.)
+| Module | Purpose |
+|--------|---------|
+| `sonar-scanner-engine` | Local analysis scanner (CLI) - downloads plugins, fetches config, reports results |
+| `sonar-scanner-protocol` | Protobuf definitions for scanner-server communication |
+| `sonar-scanner-engine-shaded` | Fat JAR distribution of scanner engine |
+| `sonar-ws` | Web service client/server (REST API) |
+| `sonar-duplications` | Code duplication detection |
+| `sonar-sarif` | SARIF report ingestion |
+| `sonar-markdown` | Markdown processing |
+| `sonar-plugin-api-impl` | Plugin API implementation |
 
-5. **sonar-plugin-api-impl** - Plugin API implementation
+### Plugin Modules (`plugins/`)
 
-6. **sonar-testing-harness** - Testing utilities and test infrastructure
+| Module | Purpose |
+|--------|---------|
+| `sonar-xoo-plugin` | Sample language plugin for testing (XOO) |
+| `sonar-education-plugin` | Education/metrics plugin |
 
-### Module Dependencies (from sonar-application/build.gradle:57-92)
+### Key Package Patterns
 
-The `sonar-application` module brings together:
-- `server:sonar-ce` - Compute Engine
-- `server:sonar-main` - Main process
-- `server:sonar-process` - Process management
-- `server:sonar-webserver` - Web server
-- `sonar-core` - Core utilities
-- `sonar-plugin-api-impl` - Plugin system
-- `sonar-scanner-engine-shaded` - Scanner engine (shaded JAR)
-- `sonar-shutdowner` - Shutdown handler
+- **`org.sonar.server.*`** - Server-side components follow domain-driven patterns with packages like `component`, `issue`, `qualitygate`, `qualityprofile`
+- **`org.sonar.ce.task.projectanalysis.*`** - Analysis steps organized into `step/` package with implementations for different analyses
+- **`org.sonar.batch.bootstrapper`** - Scanner entry point that bootstraps the analysis
+- **`org.sonar.scanner.*`** - Scanner-side components for local analysis
+- **`org.sonar.db.*`** - DAO pattern with `dialect/` for database abstraction
 
-### Key Configuration
-
-- **Main Manifest**: `sonar-application/build.gradle:53` specifies Main-Class as `org.sonar.application.App`
-- **BlackBoxTest**: `buildSrc/src/main/groovy/org.sonar.build/BlackBoxTest.groovy` - Base class for integration tests
-- **Testing**: Uses JUnit Jupiter (JUnit 5) - see `server:sonar-process/build.gradle:43-46`
-
-### UI/Webapp Notes
-
-The UI is **NOT** part of this repository. It lives in a separate repository: [sonarqube-webapp](https://github.com/SonarSource/sonarqube-webapp).
-
-When building locally, the webapp is downloaded from Maven Central. For UI changes:
-
-```bash
-# Build UI changes
-cd /path/to/sonarqube-webapp/server/sonar-web
-yarn install  # first time only
-yarn build
-
-# Build sonarqube using custom webapp
-cd /path/to/sonarqube
-WEBAPP_BUILD_PATH=/path/to/sonarqube-webapp/server/sonar-web/build/webapp ./gradlew build
-```
-
-## Development Environment
-
-### IDE Setup
-
-1. Build first: `./gradlew build` or quick build: `./gradlew ide`
-2. Open `build.gradle` as a project in IntelliJ or Eclipse
-
-### Gradle Tasks
-
-```bash
-# See all available tasks
-./gradlew tasks
-
-# See all tasks (including advanced ones)
-./gradlew tasks --all
-
-# Code coverage verification
-./gradlew jacocoTestCoverageVerification
-
-# Generate coverage report
-./gradlew jacocoTestReport
-```
-
-### Test Types
-
-- **Unit Tests**: Standard JUnit tests in `src/test/java/`
-- **BlackBox Tests**: Integration tests extending `BlackBoxTest` (in buildSrc)
-- **Integration Tests**: Files ending with `IT.java` or tests in `it/` directories
-
-## Module Structure Summary
+## Source Structure
 
 ```
-sonarqube/
-├── build.gradle              # Root build configuration
-├── buildSrc/                 # Custom Gradle plugins and tasks
-├── server/                   # Server-side components
-│   ├── sonar-main/           # Application orchestration
-│   ├── sonar-process/        # Process management
-│   ├── sonar-webserver/      # HTTP server & web API
-│   │   ├── sonar-webserver-core/
-│   │   ├── sonar-webserver-webapi/
-│   │   └── sonar-webserver-auth/
-│   ├── sonar-ce/             # Compute Engine
-│   ├── sonar-db-*/           # Database layer
-│   └── sonar-server-common/  # Shared components
-├── sonar-application/        # Distribution packaging & entry point
-├── sonar-core/               # Core utilities
-├── sonar-scanner-engine/     # Scanner engine for code analysis
-├── sonar-plugin-api-impl/    # Plugin API implementation
-└── sonar-testing-harness/    # Testing utilities
+src/
+  main/java/          # Java sources
+  main/protobuf/      # Protocol Buffer definitions
+  test/java/          # JUnit tests
+  test/resources/     # Test fixtures and data
+  it/java/            # Integration tests
+  it/resources/       # Integration test resources
+  bbt/java/           # Black-box tests
+  bbt/resources/      # Black-box test resources
 ```
 
-## Key Entry Points
+## Key Technologies
 
-- **Main Application**: `org.sonar.application.App.start()` (sonar-application/src/main/java/org/sonar/application/App.java:41)
-  - Loads settings
-  - Configures logging
-  - Initializes file system
-  - Creates and schedules processes (Web server, Compute Engine)
-  - Waits for termination signals
+- **Java 21** (scanner-engine produces Java 17 bytecode for compatibility)
+- **Gradle 8.14** with Kotlin DSL
+- **Spring 7.x** (context, webmvc, security-saml2)
+- **Elasticsearch 8.x** for issue/index storage
+- **MyBatis** for database access
+- **JUnit 5** (migration from JUnit 4 in progress)
+- **Protocol Buffers** for scanner-server communication
+- **Tomcat 11** embedded servlet container
 
-## Important Notes
+## License Headers
 
-1. **JDK Requirement**: JDK 17+ is required (build.gradle:19-21)
-2. **CI Integration**: Uses Cirrus CI (see `.cirrus/` directory)
-3. **SonarQube Plugin**: Uses `org.sonarqube` Gradle plugin
-4. **Shadow JAR**: Uses Shadow plugin to create fat JARs for distribution
-5. **Elasticsearch**: Includes embedded Elasticsearch server
-6. **ServiceLoader**: Uses SPI (Service Loader) for extensibility
-7. **Clustering**: Supports cluster deployments (see `server/sonar-main/src/main/java/org/sonar/application/cluster/`)
+All source files must include the LGPL-3.0 license header from `HEADER`. Run `./gradlew licenseFormat --rerun-tasks` to apply headers.
 
-## External Dependencies
+## Contributing
 
-- **Elasticsearch**: Search and indexing
-- ** Hazelcast**: Clustering support
-- **H2/PostgreSQL/MS SQL**: Database drivers
-- **Logback**: Logging
-- **Spring**: Dependency injection and web infrastructure
-- **Guava**: Google utilities
-- **Protobuf**: Serialization
-
-## Additional Resources
-
-- [Project Documentation](https://docs.sonarsource.com/sonarqube)
-- [Contributing Guide](docs/contributing.md)
-- [Code Style](https://github.com/SonarSource/sonar-developer-toolset#code-style)
+- External contributions are limited to minor cosmetic changes and typo fixes
+- Follow SonarSource code style: https://github.com/SonarSource/sonar-developer-toolset#code-style
+- Pre-commit hooks run secrets detection via sonar-secrets-pre-commit
+- Pull requests are reviewed but may be closed if not aligned with roadmap

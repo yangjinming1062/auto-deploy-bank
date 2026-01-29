@@ -5,9 +5,9 @@
   "ref": null,
   "version": "",
   "status": "stopped",
-  "package_size": "17.72MB",
+  "package_size": "17.82MB",
   "language": "java",
-  "star": 10092,
-  "repo_flag": "JAVA-Logback",
-  "uploaded_at": "2026-01-02T15:04:44.147681"
+  "star": 10190,
+  "repo_flag": "JAVA-SLF4J",
+  "uploaded_at": "2026-01-29T01:11:09.108595"
 }
