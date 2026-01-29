@@ -1,0 +1,13 @@
+{
+  "service_id": "7a2856f398ffed79e53aa5bc",
+  "repo_name": "krlvm/PowerTunnel",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.40MB",
+  "language": "java",
+  "star": 1378,
+  "repo_flag": "JAVA-SLF4J",
+  "uploaded_at": "2026-01-29T00:57:19.955357"
+}

@@ -1,0 +1,34 @@
+services:
+  powertunnel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: powertunnel
+    volumes:
+      - ./target.jar:/app/target.jar
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+
+  web:
+    image: nginx:alpine
+    container_name: powertunnel-web
+    ports:
+      - "41205:80"
+    volumes:
+      - ./web/index.html:/usr/share/nginx/html/index.html:ro
+    depends_on:
+      - powertunnel
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
