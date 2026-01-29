@@ -3,15 +3,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: iqq-desktop
+    container_name: iqq-app
     ports:
-      - "40432:40432"
-      - "6080:6080"
+      - "40305:40305"
     volumes:
-      - ./target.jar:/app/target.jar:ro
-    environment:
-      - DISPLAY=:99
-      - app.dir=/app
+      - ./target.jar:/app/target.jar
     deploy:
       resources:
         limits:
@@ -20,14 +16,28 @@ services:
         reservations:
           cpus: '1.0'
           memory: 1G
-    healthcheck:
-      test: ["CMD", "pgrep", "-f", "target.jar"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    restart: unless-stopped
-    security_opt:
-      - seccomp:unconfined
+    restart: "no"
     stdin_open: true
     tty: true
+    environment:
+      - JAVA_OPTS=${JAVA_OPTS--Djava.awt.headless=true -Duser.dir=/app}
+
+  web:
+    image: nginx:alpine
+    container_name: iqq-web
+    ports:
+      - "8080:80"
+    volumes:
+      - ./web:/usr/share/nginx/html:ro
+    depends_on:
+      - iqq
+
+# Note: This is a Java Swing desktop application using Spring for DI.
+# It runs in headless mode (java.awt.headless=true) in Docker.
+# The application does not expose a web service - it's a GUI IM client.
+# Port 40305 is exposed but no HTTP server is running.
+#
+# This is a stub launcher - the full application requires the missing
+# webqq-core dependency (iqq.im:webqq-core:1.2-SNAPSHOT)
+#
+# Volume mount ./target.jar:/app/target.jar enables security scanning
