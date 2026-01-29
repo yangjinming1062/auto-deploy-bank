@@ -1,0 +1,30 @@
+services:
+  elasticsearch-hadoop:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: elasticsearch-hadoop
+    ports:
+      - "41038:8080"
+    environment:
+      - SPARK_USER=root
+      - JAVA_HOME=/opt/java/openjdk
+      - RUNTIME_JAVA_HOME=/opt/java/openjdk
+      - HADOOP_CONF_DIR=/etc/hadoop/conf
+      - SPARK_HOME=/opt/spark
+    volumes:
+      - ./target.jar:/app/target.jar
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "tail", "-f", "/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s

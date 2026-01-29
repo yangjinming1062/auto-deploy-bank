@@ -1,0 +1,13 @@
+{
+  "service_id": "1d40562d84954b7345caca35",
+  "repo_name": "elastic/elasticsearch-hadoop",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.60MB",
+  "language": "java",
+  "star": 2051,
+  "repo_flag": "JAVA-SLF4J",
+  "uploaded_at": "2026-01-29T00:27:56.456703"
+}
