@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  ui-tars:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ui-tars-service
+    ports:
+      - "53000:53000"
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+      - CUDA_GRAPHS=0
+      - PAYLOAD_LIMIT=8000000
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:53000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G

@@ -1,0 +1,18 @@
+services:
+  ui-tars:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ui-tars-service
+    ports:
+      - "52965:52965"
+    healthcheck:
+      test: ["NONE"]
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
