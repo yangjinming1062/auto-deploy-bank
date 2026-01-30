@@ -1,0 +1,26 @@
+services:
+  dolphin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dolphin-parser
+    ports:
+      - "46975:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./hf_model:/home/ubuntu/deploy-projects/aba058e690d69492fdde366c/hf_model:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
