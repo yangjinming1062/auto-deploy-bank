@@ -1,0 +1,13 @@
+{
+  "service_id": "60da5e059de74c082aaeda3b",
+  "repo_name": "bytedance/xgplayer",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "3.74MB",
+  "language": "nodejs",
+  "star": 9114,
+  "repo_flag": "ByteDance-SRC-1",
+  "uploaded_at": "2026-01-30T19:27:22.275243"
+}
