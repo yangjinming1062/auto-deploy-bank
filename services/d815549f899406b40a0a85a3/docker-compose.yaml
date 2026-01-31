@@ -1,0 +1,22 @@
+services:
+  arco-design-web-react:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: arco-design-web-react
+    ports:
+      - "44769:80"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/index.min.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
