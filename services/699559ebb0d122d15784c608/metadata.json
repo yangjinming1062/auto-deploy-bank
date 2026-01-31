@@ -1,0 +1,13 @@
+{
+  "service_id": "699559ebb0d122d15784c608",
+  "repo_name": "web-infra-dev/rsbuild",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "2.72MB",
+  "language": "nodejs",
+  "star": 3165,
+  "repo_flag": "ByteDance-SRC-1",
+  "uploaded_at": "2026-01-31T23:32:14.578900"
+}
