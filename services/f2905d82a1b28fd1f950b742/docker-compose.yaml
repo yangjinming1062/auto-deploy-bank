@@ -1,0 +1,30 @@
+services:
+  gradio-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: depth-anything-v2
+    ports:
+      - "53397:7860"
+    environment:
+      - LOCAL_RANK=0
+      - MASTER_ADDR=127.0.0.1
+      - MASTER_PORT=29500
+      - RANK=0
+      - WORLD_SIZE=1
+      - GRADIO_SERVER_NAME=0.0.0.0
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
