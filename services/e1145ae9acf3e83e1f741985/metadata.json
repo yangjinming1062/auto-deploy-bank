@@ -1,0 +1,13 @@
+{
+  "service_id": "e1145ae9acf3e83e1f741985",
+  "repo_name": "web-infra-dev/modern.js",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "5.01MB",
+  "language": "nodejs",
+  "star": 4941,
+  "repo_flag": "ByteDance-SRC-1",
+  "uploaded_at": "2026-01-31T14:46:03.575340"
+}
