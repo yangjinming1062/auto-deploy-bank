@@ -1,0 +1,13 @@
+{
+  "service_id": "3b8b528da80a8416e0f4414d",
+  "repo_name": "bytedance/MegaTTS3",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.12MB",
+  "language": "python",
+  "star": 6066,
+  "repo_flag": "ByteDance-SRC-1",
+  "uploaded_at": "2026-01-31T08:43:47.741237"
+}
