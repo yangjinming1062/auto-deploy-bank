@@ -1,0 +1,32 @@
+services:
+  magicanimate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: magicanimate-app
+    ports:
+      - "48028:7860"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MASTER_ADDR=localhost
+      - MASTER_PORT=12355
+      - CUDA_VISIBLE_DEVICES=0
+    volumes:
+      - ./pretrained_models:/app/pretrained_models
+      - ./demo/outputs:/app/demo/outputs
+      - ./inputs:/app/inputs
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    restart: unless-stopped
