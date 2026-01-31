@@ -1,0 +1,30 @@
+services:
+  web:
+    build: .
+    container_name: var-web
+    working_dir: /home/ubuntu/deploy-projects/60995b4b9b1e1d6242168d2e
+    command: ["python", "web_server.py"]
+    ports:
+      - "8081:8080"
+    environment:
+      - PORT=8080
+    tty: true
+    stdin_open: true
+
+  train:
+    build: .
+    container_name: var-training
+    working_dir: /home/ubuntu/deploy-projects/60995b4b9b1e1d6242168d2e
+    command: ["sh", "-c", "python train.py --local_debug=True; tail -f /dev/null"]
+    environment:
+      - OMP_NUM_THREADS=2
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 8G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+    tty: true
+    stdin_open: true
