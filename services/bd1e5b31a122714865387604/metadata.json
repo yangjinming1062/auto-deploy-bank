@@ -1,0 +1,13 @@
+{
+  "service_id": "bd1e5b31a122714865387604",
+  "repo_name": "bytedance/LatentSync",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "8.16MB",
+  "language": "python",
+  "star": 5381,
+  "repo_flag": "ByteDance-SRC-1",
+  "uploaded_at": "2026-01-31T14:13:42.100552"
+}
