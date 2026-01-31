@@ -1,0 +1,35 @@
+services:
+  gradio-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: depth-anything-3-gradio
+    ports:
+      - "40129:7860"
+      - "8008:8008"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+      - DA3_LOG_LEVEL=INFO
+      - DA3_WORKSPACE_DIR=gradio_workspace
+      - DA3_MODEL_DIR=depth-anything/DA3NESTED-GIANT-LARGE
+      - DA3_GALLERY_DIR=workspace/gallery
+      - CUDA_VISIBLE_DEVICES=
+    volumes:
+      - ./gradio_workspace:/home/ubuntu/deploy-projects/ea1c5487afd535cc6b3974de/gradio_workspace
+      - ./workspace/gallery:/home/ubuntu/deploy-projects/ea1c5487afd535cc6b3974de/workspace/gallery
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
+      interval: 30s
+      timeout: 30s
+      start_period: 60s
+      retries: 3
