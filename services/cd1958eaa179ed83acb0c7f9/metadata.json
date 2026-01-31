@@ -1,0 +1,13 @@
+{
+  "service_id": "cd1958eaa179ed83acb0c7f9",
+  "repo_name": "web-infra-dev/rspress",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "2.23MB",
+  "language": "nodejs",
+  "star": 2059,
+  "repo_flag": "ByteDance-SRC-1",
+  "uploaded_at": "2026-01-31T19:35:59.515079"
+}
