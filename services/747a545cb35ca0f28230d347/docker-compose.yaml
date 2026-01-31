@@ -1,0 +1,32 @@
+services:
+  yolox:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: yolox-service
+    ports:
+      - "46685:46685"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - YOLOX_DATADIR=
+      - NCCL_LAUNCH_MODE=PARALLEL
+      - NCCL_IB_GID_INDEX=3
+      - NCCL_IB_TC=106
+      - OPENCV_OPENCL_RUNTIME=disabled
+    volumes:
+      - ./videos:/home/ubuntu/deploy-projects/747a545cb35ca0f28230d347/videos
+      - ./datasets:/home/ubuntu/deploy-projects/747a545cb35ca0f28230d347/datasets
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import yolox"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
