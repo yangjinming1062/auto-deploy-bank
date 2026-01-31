@@ -1,0 +1,13 @@
+{
+  "service_id": "aece59c0bda9e5d51f212cc9",
+  "repo_name": "volcengine/verl",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "2.43MB",
+  "language": "python",
+  "star": 18815,
+  "repo_flag": "ByteDance-SRC-1",
+  "uploaded_at": "2026-01-31T02:42:58.818349"
+}

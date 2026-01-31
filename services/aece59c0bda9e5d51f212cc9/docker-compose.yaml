@@ -1,0 +1,45 @@
+services:
+  verl-train:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: verl-training
+    environment:
+      - RANK=0
+      - LOCAL_RANK=0
+      - WORLD_SIZE=1
+      - LOCAL_WORLD_SIZE=1
+      - MASTER_ADDR=localhost
+      - MASTER_PORT=12355
+      - CUDA_VISIBLE_DEVICES=
+      - NCCL_DEBUG=WARN
+      - PYTHONUNBUFFERED=1
+      - TOKENIZERS_PARALLELISM=true
+      # Disable Ray GPU detection
+      - CUDA_VISIBLE_DEVICES=
+      - RAY_DISABLE_AUTO_GPU_DETECTION=1
+      - RAY_EXPERIMENTAL_ENABLE_GET_NODES_CACHED_IN_OBJECT_STORE=0
+      # Experiment tracking (optional)
+      - WANDB_ENTITY=${WANDB_ENTITY:-}
+      - WANDB_API_KEY=${WANDB_API_KEY:-}
+      - MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI:-sqlite:////tmp/mlruns.db}
+      - TENSORBOARD_DIR=tensorboard_log
+    volumes:
+      - .:/home/ubuntu/deploy-projects/aece59c0bda9e5d51f212cc9
+    ports:
+      - "5000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import verl; print('OK')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    command: python web_server.py
