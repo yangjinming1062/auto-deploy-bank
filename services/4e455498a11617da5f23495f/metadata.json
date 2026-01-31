@@ -1,0 +1,13 @@
+{
+  "service_id": "4e455498a11617da5f23495f",
+  "repo_name": "bytedance/trae-agent",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "4.25MB",
+  "language": "python",
+  "star": 10687,
+  "repo_flag": "ByteDance-SRC-1",
+  "uploaded_at": "2026-01-31T05:54:11.087557"
+}

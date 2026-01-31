@@ -1,0 +1,38 @@
+services:
+  trae-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: trae-agent
+    ports:
+      - "48033:48033"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - ANTHROPIC_BASE_URL=${ANTHROPIC_BASE_URL:-https://api.anthropic.com}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://localhost:11434/v1}
+      - OPENROUTER_BASE_URL=${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
+      - TRAE_CONFIG_FILE=${TRAE_CONFIG_FILE:-trae_config.yaml}
+    env_file:
+      - .env
+    volumes:
+      - ./trae_config.yaml:/home/ubuntu/deploy-projects/4e455498a11617da5f23495f/trae_config.yaml:ro
+      - ./trae_config.json:/home/ubuntu/deploy-projects/4e455498a11617da5f23495f/trae_config.json:ro
+      - ${WORKSPACE_DIR:-./workspace}:/home/ubuntu/deploy-projects/4e455498a11617da5f23495f/workspace
+    working_dir: /home/ubuntu/deploy-projects/4e455498a11617da5f23495f
+    healthcheck:
+      test: ["CMD", "trae-cli", "--help"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    stdin_open: true
+    tty: true
