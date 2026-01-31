@@ -1,0 +1,87 @@
+# Copyright (c) 2025 Beijing Volcano Engine Technology Co., Ltd.
+# SPDX-License-Identifier: Apache-2.0
+#
+# OpenContext Docker Compose Configuration
+
+services:
+  # Qdrant Vector Database (internal service)
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: opencontext-qdrant
+    restart: unless-stopped
+    expose:
+      - "6333"  # REST API port (internal only)
+    volumes:
+      - qdrant_data:/qdrant/storage
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'cat < /dev/null > /dev/tcp/127.0.0.1/6333'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # OpenContext Application
+  opencontext:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: opencontext-app
+    restart: unless-stopped
+    ports:
+      - "1733:1733"  # Web server port
+    environment:
+      - CONTEXT_PATH=/app
+      - PYTHONPATH=/app
+      - LLM_BASE_URL=${LLM_BASE_URL:-}
+      - LLM_API_KEY=${LLM_API_KEY:-}
+      - LLM_MODEL=${LLM_MODEL:-}
+      - EMBEDDING_BASE_URL=${EMBEDDING_BASE_URL:-}
+      - EMBEDDING_API_KEY=${EMBEDDING_API_KEY:-}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-}
+      - QDRANT_API_KEY=${QDRANT_API_KEY:-}
+      - CONTEXT_API_KEY=${CONTEXT_API_KEY:-test}
+    volumes:
+      - opencontext_data:/app/persist
+      - opencontext_logs:/app/logs
+      - opencontext_screenshots:/app/screenshots
+      - ./config/docker-config.yaml:/app/config/config.yaml:ro
+    depends_on:
+      qdrant:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:1733/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  # Persistent data volumes
+  qdrant_data:
+    driver: local
+  opencontext_data:
+    driver: local
+  opencontext_logs:
+    driver: local
+  opencontext_screenshots:
+    driver: local
+
+networks:
+  default:
+    name: opencontext-network
