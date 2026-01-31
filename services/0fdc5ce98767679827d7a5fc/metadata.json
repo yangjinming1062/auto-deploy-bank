@@ -1,0 +1,13 @@
+{
+  "service_id": "0fdc5ce98767679827d7a5fc",
+  "repo_name": "web-infra-dev/garfish",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.07MB",
+  "language": "nodejs",
+  "star": 2885,
+  "repo_flag": "ByteDance-SRC-1",
+  "uploaded_at": "2026-01-31T17:29:24.458915"
+}
