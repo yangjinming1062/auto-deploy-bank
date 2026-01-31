@@ -1,0 +1,13 @@
+{
+  "service_id": "9db55f1f951cb71d34366c8d",
+  "repo_name": "bytedance/flowgram.ai",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "41.98MB",
+  "language": "nodejs",
+  "star": 7638,
+  "repo_flag": "ByteDance-SRC-1",
+  "uploaded_at": "2026-01-31T15:33:44.349606"
+}
