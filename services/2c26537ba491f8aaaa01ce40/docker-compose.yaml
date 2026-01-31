@@ -1,0 +1,30 @@
+services:
+  gatsby-doc:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gatsby-doc
+    ports:
+      - "49165:3666"
+    environment:
+      - NODE_ENV=development
+      - PORT=3666
+      - HOST=0.0.0.0
+      - CDN_OUTER_CN=
+      - CDN_INNER_CN=
+      - CDN_PATH_PREFIX=
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3666/"]
+      interval: 30s
+      timeout: 10s
+      start_period: 120s
+      retries: 3
