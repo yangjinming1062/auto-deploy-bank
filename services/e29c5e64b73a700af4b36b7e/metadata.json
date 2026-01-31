@@ -1,0 +1,13 @@
+{
+  "service_id": "e29c5e64b73a700af4b36b7e",
+  "repo_name": "bytedance/UI-TARS-desktop",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "32.28MB",
+  "language": "nodejs",
+  "star": 25006,
+  "repo_flag": "ByteDance-SRC-1",
+  "uploaded_at": "2026-01-31T18:26:54.396382"
+}

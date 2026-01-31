@@ -1,0 +1,87 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tars-agent-server
+    ports:
+      - "46735:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - MONGO_URI=mongodb://mongodb:27017
+      - MONGO_DB_NAME=tars_agent
+      - VLM_PROVIDER=${VLM_PROVIDER:-openai}
+      - VLM_BASE_URL=${VLM_BASE_URL:-}
+      - VLM_API_KEY=${VLM_API_KEY:-}
+      - VLM_MODEL_NAME=${VLM_MODEL_NAME:-}
+      - SHARE_PROVIDER=${SHARE_PROVIDER:-}
+      - AGENT_DEBUG=${AGENT_DEBUG:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - GOOGLE_MCP_URL=${GOOGLE_MCP_URL:-}
+      - OMNI_TARS_BASE_URL=${OMNI_TARS_BASE_URL:-}
+      - OMNI_TARS_API_KEY=${OMNI_TARS_API_KEY:-}
+      - SANDBOX_BASE_URL=${SANDBOX_BASE_URL:-}
+      - SANDBOX_JWT_URL=${SANDBOX_JWT_URL:-}
+      - SANDBOX_JWT_TOKEN=${SANDBOX_JWT_TOKEN:-}
+      - WEBUI_REMOTE_URL=${WEBUI_REMOTE_URL:-}
+      - NATIVE_THINKING=${NATIVE_THINKING:-}
+      - AIO_SANDBOX_URL=${AIO_SANDBOX_URL:-}
+      - LINK_READER_URL=${LINK_READER_URL:-}
+      - LINK_READER_AK=${LINK_READER_AK:-}
+      - ACCESS_ALLOW_ORIGIN=${ACCESS_ALLOW_ORIGIN:-*}
+      - AUTH_DISABLED=${AUTH_DISABLED:-true}
+      - WORKSPACE=/workspace
+    volumes:
+      - workspace_data:/workspace
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3000/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    networks:
+      - tars-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  mongodb:
+    image: mongo:7
+    container_name: tars-mongodb
+    environment:
+      - MONGO_INITDB_DATABASE=tars_agent
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - tars-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+networks:
+  tars-network:
+    driver: bridge
+
+volumes:
+  workspace_data:
+  mongodb_data:
