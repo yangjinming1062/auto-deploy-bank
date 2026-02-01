@@ -1,0 +1,117 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: read-app
+    ports:
+      - "43150:8080"
+    volumes:
+      - ./target.jar:/app/target.jar
+    environment:
+      - solon.dataSources.db.driverClassName=com.mysql.cj.jdbc.Driver
+      - solon.dataSources.db.jdbcUrl=jdbc:mysql://mysql:3306/reader?characterEncoding=UTF-8&allowMultiQueries=true&serverTimezone=UTC
+      - solon.dataSources.db.username=root
+      - solon.dataSources.db.password=
+      - solon.dataSources.db.maxPoolSize=10
+      - admin.username=admin
+      - admin.password=adminadmin
+      - admin.code=
+      - admin.gonggao=
+      - admin.update=false
+      - user.allowchange=false
+      - user.allowuptxt=false
+      - user.allowcache=true
+      - user.allowimg=false
+      - user.allowcheck=false
+      - user.source=0
+      - user.maxsource=0
+      - user.timeout=0
+      - user.proxypng=false
+      - user.index=0
+      - cache.driverType=redis
+      - cache.server=redis:6379
+      - cache.db=0
+      - cache.defSeconds=600
+      - server.http.coreThreads=x5
+      - server.http.maxThreads=x10
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  mysql:
+    image: mysql:8.0
+    container_name: read-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=
+      - MYSQL_DATABASE=reader
+      - MYSQL_ALLOW_EMPTY_PASSWORD=true
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  redis:
+    image: redis:7-alpine
+    container_name: read-redis
+    command: redis-server --appendonly no
+    volumes:
+      - redis-data:/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+    driver: local
+  redis-data:
+    driver: local
