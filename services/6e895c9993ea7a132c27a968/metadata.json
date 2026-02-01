@@ -1,0 +1,13 @@
+{
+  "service_id": "6e895c9993ea7a132c27a968",
+  "repo_name": "bytedance/memory-leak-detector",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.26MB",
+  "language": "java",
+  "star": 1170,
+  "repo_flag": "ByteDance-SRC-1",
+  "uploaded_at": "2026-02-01T05:51:00.113995"
+}
