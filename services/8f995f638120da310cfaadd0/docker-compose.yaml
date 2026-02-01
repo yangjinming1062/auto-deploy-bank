@@ -1,0 +1,29 @@
+services:
+  infinity:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: infinity-service
+    ports:
+      - "45819:8000"
+    environment:
+      - HF_TOKEN=${HF_TOKEN:-[YOUR HF_TOKEN]}
+      - HF_HOME=${HF_HOME:-[YOUR HF_HOME]}
+      - GPT_AK=${GPT_AK:-[YOUR GPT_AK]}
+      - TOKENIZERS_PARALLELISM=false
+      - WORLD_SIZE=
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
