@@ -1,0 +1,13 @@
+{
+  "service_id": "54a555f2b47a82164d08de63",
+  "repo_name": "OpenTSDB/asynchbase",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "508KB",
+  "language": "java",
+  "star": 608,
+  "repo_flag": "JAVA-SLF4J",
+  "uploaded_at": "2026-02-01T15:56:30.574799"
+}

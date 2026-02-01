@@ -1,0 +1,81 @@
+services:
+  asynchbase:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: asynchbase
+    environment:
+      - HBASE_HOME=/opt/hbase
+      - TEST_NO_TRUNCATE=false
+      - hbase.zookeeper.quorum=zookeeper
+      - hbase.zookeeper.znode.parent=/hbase
+      - hbase.security.auth.enable=false
+      - hbase.security.authentication=simple
+      - hbase.security.simple.username=asynchbase
+      - hbase.ipc.client.socket.timeout.connect=5000
+      - hbase.client.retries.number=10
+    volumes:
+      - ./target.jar:/app/target.jar
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "tail", "-f", "/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  zookeeper:
+    image: zookeeper:3.8
+    container_name: zookeeper
+    expose:
+      - 2181
+      - 2888
+      - 3888
+    environment:
+      - ZOO_MY_ID=1
+      - ZOO_SERVERS=server.1=zookeeper:2888:3888
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f QuorumPeerMain"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 45s
+
+  hbase:
+    image: harisekhon/hbase:latest
+    container_name: hbase
+    ports:
+      - "40140:16010"
+    expose:
+      - 16000
+      - 16020
+      - 16030
+    environment:
+      - HBASE_HOME=/opt/hbase
+      - hbase.zookeeper.quorum=zookeeper
+      - hbase.zookeeper.znode.parent=/hbase
+      - hbase.security.auth.enable=false
+      - hbase.security.authentication=simple
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f HMaster"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+networks:
+  default:
+    name: asynchbase_network
