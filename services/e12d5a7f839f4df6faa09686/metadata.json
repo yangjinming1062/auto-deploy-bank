@@ -1,0 +1,13 @@
+{
+  "service_id": "e12d5a7f839f4df6faa09686",
+  "repo_name": "web-infra-dev/rslib",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "2.03MB",
+  "language": "nodejs",
+  "star": 969,
+  "repo_flag": "ByteDance-SRC-1",
+  "uploaded_at": "2026-02-01T06:05:47.434815"
+}
