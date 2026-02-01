@@ -1,0 +1,23 @@
+services:
+  vescale:
+    build: .
+    container_name: vescale-service
+    ports:
+      - "41495:41676"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/home/ubuntu/deploy-projects/c1795bfb8d55a1bcb611e92e
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:41676/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
