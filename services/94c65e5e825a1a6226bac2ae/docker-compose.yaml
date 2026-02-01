@@ -1,0 +1,36 @@
+services:
+  veomni:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: veomni-service
+    ports:
+      - "42328:8000"
+    environment:
+      - CACHE_DIR=~/.cache/veomni
+      - VEOMNI_VERBOSITY=warn
+      - MODELING_BACKEND=hf
+      - USE_LIGER_KERNEL=0
+      - DISABLE_WARNINGS=0
+      - INTERNAL_PORT=8000
+      - MASTER_ADDR=localhost
+      - LOCAL_RANK=-1
+      - RANK=
+      - WORLD_SIZE=
+      - MASTER_PORT=
+      - NCCL_TIMEOUT=
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
