@@ -1,0 +1,82 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: twentyonepoints-app
+    ports:
+      - "40261:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgresql:5432/twentyonepoints
+      - SPRING_DATASOURCE_USERNAME=twentyonepoints
+      - SPRING_DATASOURCE_PASSWORD=21points
+      - SPRING_JPA_DATABASE_PLATFORM=tech.jhipster.domain.util.FixedPostgreSQL10Dialect
+      - SPRING_ELASTICSEARCH_URIS=http://elasticsearch:9200
+      - SERVER_PORT=8080
+      - JHIPSTER_SECURITY_AUTHENTICATION_JWT_BASE64_SECRET=YjAwZDU2ODI3NzNjZjk0NjVhY2UzNGViZmY0YjY1ZGY2MDI5MTc5Y2FlZWYxNzE5Yjg5ZjMxOGZhZTgwZjA5NTFkN2VmNDM3ZGMyZDNjZTViNDAwYTg4NmNlMmM2ZDkxZTMwMDk5YmUxNWNkZmE0YTNiNDlhMGNhZmM4OTk1NmQ=
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/management/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  postgresql:
+    image: postgres:15-alpine
+    container_name: twentyonepoints-postgresql
+    environment:
+      - POSTGRES_USER=twentyonepoints
+      - POSTGRES_PASSWORD=21points
+      - POSTGRES_DB=twentyonepoints
+    volumes:
+      - postgresql-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U twentyonepoints -d twentyonepoints"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.9
+    container_name: twentyonepoints-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgresql-data:
+  elasticsearch-data:
