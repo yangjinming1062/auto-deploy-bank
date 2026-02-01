@@ -1,0 +1,13 @@
+{
+  "service_id": "12fd5f81a865c2fec654059c",
+  "repo_name": "bytedance/music_source_separation",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "1.03MB",
+  "language": "python",
+  "star": 1382,
+  "repo_flag": "ByteDance-SRC-1",
+  "uploaded_at": "2026-02-01T07:10:19.689389"
+}
