@@ -1,0 +1,53 @@
+services:
+  app:
+    build: .
+    ports:
+      - "40428:5000"
+    environment:
+      - DATABASE_HOST=db
+      - DB_NAME=qa_pilot_chatsession_db
+      - DB_USER=qa_pilot_user
+      - DB_PASSWORD=qa_pilot_p
+      - DB_PORT=5432
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./config/config.ini:/home/ubuntu/deploy-projects/67be57818b87a6a48a1e1b47/config/config.ini:rw
+      - ./config/prompt_templates.ini:/home/ubuntu/deploy-projects/67be57818b87a6a48a1e1b47/config/prompt_templates.ini:rw
+      - ./projects:/home/ubuntu/deploy-projects/67be57818b87a6a48a1e1b47/projects
+      - ./VectorStore:/home/ubuntu/deploy-projects/67be57818b87a6a48a1e1b47/VectorStore
+      - ./sessions:/home/ubuntu/deploy-projects/67be57818b87a6a48a1e1b47/sessions
+      - ./llamacpp_models:/home/ubuntu/deploy-projects/67be57818b87a6a48a1e1b47/llamacpp_models
+      - ./.env:/home/ubuntu/deploy-projects/67be57818b87a6a48a1e1b47/.env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=qa_pilot_chatsession_db
+      - POSTGRES_USER=qa_pilot_user
+      - POSTGRES_PASSWORD=qa_pilot_p
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U qa_pilot_user -d qa_pilot_chatsession_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
