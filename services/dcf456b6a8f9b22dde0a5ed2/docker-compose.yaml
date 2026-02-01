@@ -1,0 +1,44 @@
+services:
+  protenix:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: protenix
+    ports:
+      - "42836:42836"
+    environment:
+      - PROTENIX_DATA_ROOT_DIR=/af3-dev/release_data
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-""}
+      - CUDA_DEVICE_ORDER=PCI_BUS_ID
+      - CUTLASS_PATH=${CUTLASS_PATH:-""}
+      - LAYERNORM_TYPE=${LAYERNORM_TYPE:-""}
+      - TRIANGLE_ATTENTION=${TRIANGLE_ATTENTION:-""}
+      - TRIANGLE_MULTIPLICATIVE=${TRIANGLE_MULTIPLICATIVE:-""}
+      - RANK=0
+      - LOCAL_RANK=0
+      - WORLD_SIZE=1
+      - LOCAL_WORLD_SIZE=1
+      - NCCL_TIMEOUT_SECOND=600
+      - WANDB_API_KEY=${WANDB_API_KEY:-""}
+      - WANDB_CONSOLE=off
+      - MMSEQS_SERVICE_HOST_URL=https://protenix-server.com/api/msa
+    volumes:
+      - ./input:/app/input
+      - ./output:/app/output
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:42836/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    stdin_open: true
+    tty: true
+    command: ["python", "-m", "protenix.web_server"]
