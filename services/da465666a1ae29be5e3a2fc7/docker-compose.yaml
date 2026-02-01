@@ -1,0 +1,30 @@
+services:
+  clevrr-computer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: clevrr-computer
+    ports:
+      - "40341:40341"
+    environment:
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY:-}
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT:-}
+      - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION:-}
+      - AZURE_OPENAI_CHAT_DEPLOYMENT_NAME=${AZURE_OPENAI_CHAT_DEPLOYMENT_NAME:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - PYTHONUNBUFFERED=1
+      - DISPLAY=:99
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'python main.py' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
