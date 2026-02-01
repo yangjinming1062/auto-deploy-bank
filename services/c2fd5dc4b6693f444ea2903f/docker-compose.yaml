@@ -1,0 +1,20 @@
+services:
+  video-depth-app:
+    build: .
+    container_name: video-depth-service
+    ports:
+      - "41214:7860"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
