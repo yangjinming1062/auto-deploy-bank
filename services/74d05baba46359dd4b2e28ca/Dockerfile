@@ -1,51 +1,38 @@
-# Stage 1: Build with Maven
-FROM maven:3.9-eclipse-temurin-17 AS builder
+# Stage 1: Build stage
+FROM maven:3.9-eclipse-temurin-8 AS builder
 
+# Set working directory
 WORKDIR /app
 
-# Copy pom.xml, source, and libs first
+# Copy pom.xml first for dependency caching
 COPY pom.xml .
-COPY maven-settings.xml .
+
+# Copy source code
 COPY src ./src
-COPY libs ./libs
 
-# Install the local algorithmfoundry JAR into Maven local repository
-RUN mvn install:install-file -Dfile=libs/algorithmfoundry-shade-culled-1.3.jar \
-    -DgroupId=algorithmfoundry \
-    -DartifactId=algorithmfoundry-shade-culled \
-    -Dversion=1.3 \
-    -Dpackaging=jar \
-    -B
+# Install the local JAR dependency from libs/
+COPY libs/algorithmfoundry-shade-culled-1.3.jar /tmp/algorithmfoundry-shade-culled-1.3.jar
+RUN mvn install:install-file -DgroupId=algorithmfoundry -DartifactId=algorithmfoundry-shade-culled \
+    -Dversion=1.3 -Dpackaging=jar -Dfile=/tmp/algorithmfoundry-shade-culled-1.3.jar -B
 
-# Build the project with custom settings to allow HTTP repositories
-RUN mvn clean package -DskipTests -B -s maven-settings.xml
+# Build the JAR (skip tests for faster build)
+RUN mvn clean package -DskipTests -B
 
-# Stage 2: Runtime image
-FROM eclipse-temurin:17-jre-alpine
+# Stage 2: Runtime stage
+FROM eclipse-temurin:8-jre-alpine
 
+# Set working directory
 WORKDIR /app
 
-# Install Python for simple HTTP server
-RUN apk add --no-cache python3
+# Install required utilities for healthcheck
+RUN apk add --no-cache curl
 
-# Create a health check endpoint and HTML page
-RUN echo '<!DOCTYPE html>\
-<html><head><title>HTM.java Service</title></head>\
-<body><h1>HTM.java - Hierarchical Temporal Memory Library</h1>\
-<p>Status: Running</p>\
-<p>JAR: target.jar</p>\
-<p>Version: 0.6.13</p>\
-</body></html>' > /app/index.html
+# Create non-root user for security
+RUN addgroup -S app && adduser -S app -G app
+USER app
 
-# Copy the built JAR from builder stage, renamed to target.jar
-COPY --from=builder /app/target/htm.java-*.jar target.jar
+# Copy the built JAR from builder stage and rename to target.jar for security scanning
+COPY --from=builder /app/target/htm.java-*.jar /app/target.jar
 
-# Create non-root user
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup && chown -R appuser:appgroup /app
-USER appuser
-
-# Expose the port
-EXPOSE 40922
-
-# Run Python HTTP server directly
-CMD ["python3", "-m", "http.server", "40922"]
+# Set the entry point to run the Java application with JAVA_OPTS
+CMD ["sh", "-c", "java $JAVA_OPTS -jar /app/target.jar"]

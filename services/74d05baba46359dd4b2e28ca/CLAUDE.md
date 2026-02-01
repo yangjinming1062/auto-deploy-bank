@@ -4,83 +4,139 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-htm.java is a Java implementation of Hierarchical Temporal Memory (HTM), a computational theory of intelligence. It's a community-supported port of Numenta's NuPIC (Python) project. The library provides algorithms for learning temporal patterns and making predictions using Sparse Distributed Representations (SDR).
+htm.java is a Java implementation of Hierarchical Temporal Memory (HTM), ported from Numenta's NuPIC Python project. It implements the core HTM algorithms for building sensorimotor inference systems.
+
+**Minimum Java version:** 8
 
 ## Build Commands
 
 ```bash
-# Quick sanity check (runs tests without benchmarks)
-gradle -Pskipbench check
-
-# Full build with benchmarks
+# Run all tests and benchmarks
 gradle check
 
-# Create fat JAR with all dependencies
-gradle fatJar
+# Run tests without benchmarks (faster)
+gradle -Pskipbench check
 
-# Run single test class
-gradle test --tests "SpatialPoolerTest"
-
-# Maven equivalent
-mvn test
+# Maven commands
+mvn clean test              # Run tests with JaCoCo coverage
+mvn clean verify            # Full verification including tests
 ```
 
 ## Architecture
 
-### Data Flow
+### Core HTM Algorithms (`src/main/java/org/numenta/nupic/algorithms/`)
+
+| Class | Purpose |
+|-------|---------|
+| `SpatialPooler` | Learns spatial patterns from input; initializes with `init(Connections)` |
+| `TemporalMemory` | Learns temporal sequences; uses same `Connections` object as SpatialPooler |
+| `SDRClassifier` | Supervised learning for classification/regression on SDRs |
+| `CLAClassifier` | CLA (Convolutional List Attention) classifier variant |
+| `AnomalyLikelihood` | Statistical anomaly detection |
+| `Anomaly` | Real-time anomaly scoring |
+
+### Network API (`src/main/java/org/numenta/nupic/network/`)
+
+The high-level fluent API for building HTM networks:
+
+```java
+Network network = Network.create("name", parameters)
+    .add(Network.createRegion("r1")
+        .add(Network.createLayer("l1", parameters)
+            .add(new SpatialPooler())
+            .add(new TemporalMemory())
+            .add(Sensor.create(...))));
 ```
-Input → Encoders → SpatialPooler → TemporalMemory → Classifier
-                ↓                    ↓
-           (feed-forward)     (temporal memory)
+
+Key classes:
+- `Network` - Top-level container; creates Regions and Layers
+- `Region` - Container for Layers; manages inter-layer connections
+- `Layer` - Contains algorithmic components (SP, TM, classifiers, sensors)
+- `ManualInput` - Low-level API for manual data injection
+- `Persistence` - Network serialization/deserialization
+
+### Encoders (`src/main/java/org/numenta/nupic/encoders/`)
+
+Convert raw data into Sparse Distributed Representations (SDRs):
+
+| Encoder | Use Case |
+|---------|----------|
+| `ScalarEncoder` | Continuous numeric values |
+| `DateEncoder` | Date/time features (day of week, time of day, etc.) |
+| `CategoryEncoder` | Discrete categories |
+| `MultiEncoder` | Combines multiple encoders |
+| `RandomDistributedScalarEncoder` | Random binary SDRs for scalars |
+| `CoordinateEncoder` / `GeospatialCoordinateEncoder` | Spatial coordinates |
+
+Base class: `Encoder` with generic `encode()` method producing `int[]` SDRs.
+
+### Model Data Structures (`src/main/java/org/numenta/nupic/model/`)
+
+| Class | Purpose |
+|-------|---------|
+| `Connections` | Central configuration/state object shared by SP and TM |
+| `Column` | Contains cells; receives input via proximal dendrite |
+| `Cell` | HTM cell with dendrite segments |
+| `Synapse` | Connection between cells |
+| `Segment` | Collection of synapses on a cell's dendrite |
+| `Pool` | Permanence tracking for synapses |
+| `SDR` | Immutable sparse distributed representation |
+
+### Utilities (`src/main/java/org/numenta/nupic/util/`)
+
+Key utilities:
+- `SparseMatrix`, `SparseBinaryMatrix`, `SparseObjectMatrix` - Efficient sparse data structures
+- `ArrayUtils` - Array manipulation helpers
+- `Topology` - Grid/layout utility
+- `GroupBy2` - Grouping/iteration utility
+
+## Parameters
+
+`Parameters.java` defines configuration keys:
+```java
+Parameters.KEY.COLUMN_DIMENSIONS
+Parameters.KEY.CELLS_PER_COLUMN
+Parameters.KEY.INPUT_DIMENSIONS
+Parameters.KEY.POTENTIAL_PCT
+Parameters.KEY.SYNAPE_PERMANENCE_DECCREMENT
+Parameters.KEY.SYNAPE_PERMANENCE_INCREMENT
+// ... and many more
 ```
 
-### Core Components
+Use `Parameters.getDefaultParameters()` as base and `union()` to combine.
 
-**Encoders** (`src/main/java/org/numenta/nupic/encoders/`): Convert raw input data (scalars, categories, dates, coordinates) into Sparse Distributed Representations (SDR). Key encoders include:
-- `ScalarEncoder` - for continuous values
-- `CategoryEncoder` - for discrete categories
-- `DateEncoder` - extracts time-based features
-- `MultiEncoder` - combines multiple encoders
+## Tests
 
-**Algorithms** (`src/main/java/org/numenta/nupic/algorithms/`): Core HTM algorithms:
-- `SpatialPooler` - learns feed-forward connections, produces stable SDR output
-- `TemporalMemory` - learns temporal sequences via cell/segment/synapse structures
-- `SDRClassifier` - pattern classification using softmax over SDR bits
+90+ JUnit tests in `src/test/java/org/numenta/nupic/`
 
-**Model** (`src/main/java/org/numenta/nupic/model/`): Data structures separating state from logic:
-- `Connections` - centralized state container for SP and TM (the "single source of truth")
-- `Cell`, `Column`, `Segment`, `Synapse` - HTM structural elements
-- `Pool` - tracks synapse permanences and connected inputs
+Test structure mirrors source:
+- `algorithms/` - SP, TM, classifier tests
+- `encoders/` - Encoder tests
+- `network/` - Network API tests
+- `integration/` - Full integration tests
 
-**Network API** (`src/main/java/org/numenta/nupic/network/`): Fluent API for composing HTM networks:
-- `Network` - top-level container holding Regions
-- `Region` - container for Layers
-- `Layer` - holds algorithm components (Sensor, SpatialPooler, TemporalMemory, Classifier)
-- Uses RxJava Observables for reactive stream processing via `observe()` and `subscribe()`
+Run specific test:
+```bash
+mvn test -Dtest=SpatialPoolerTest
+```
 
-### Configuration
+## Benchmarks
 
-`Parameters.java` uses enum-based keys (`Parameters.KEY`) for all configuration:
-- `KEY.COLUMN_DIMENSIONS`, `KEY.CELLS_PER_COLUMN` - TM topology
-- `KEY.ACTIVATION_THRESHOLD`, `KEY.MIN_THRESHOLD` - TM learning thresholds
-- `KEY.POTENTIAL_PCT`, `KEY.GLOBAL_INHIBITION` - SP parameters
+JMH benchmarks in `src/jmh/` - run automatically with `gradle check`.
 
-## Key Design Patterns
+## Packaging
 
-1. **Separation of data and logic**: `Connections` holds all state; algorithms operate on it
-2. **Observable streams**: `network.observe()` returns `Observable<Inference>` for reactive programming
-3. **Fluent builder API**: `Network.create(...).add(Region.create().add(Layer.create()...))`
-4. **Sparse matrices**: Custom `SparseMatrix` implementations for memory-efficient large arrays
+Both Gradle and Maven builds produce:
+- Main JAR (`htm.java-0.6.13.jar`)
+- Fat/uber JAR with all dependencies
+- Javadoc JAR
+- Sources JAR
 
-## Testing
+Publish to Sonatype OSSRH for Maven Central deployment.
 
-- Tests use JUnit 4
-- Test patterns mirror NuPIC Python tests for compatibility verification
-- Integration tests in `integration/` package test complete network pipelines
-- 92 test files covering encoders, algorithms, network API, and serialization
+## Key Files
 
-## Important Notes
-
-- Minimum Java 8
-- Uses Apache GNU Affero Public License (AGPL)
-- Synchronized with NuPIC Python algorithms; check README versioning table for sync status
+- `build.gradle` - Gradle build with JMH benchmarking
+- `pom.xml` - Maven build with JaCoCo coverage
+- `EclipseFormatRules.xml` - Code formatting rules
+- `.travis.yml` - CI configuration (Maven + JaCoCo + Coveralls)

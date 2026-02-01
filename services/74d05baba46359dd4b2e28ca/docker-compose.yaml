@@ -3,11 +3,19 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: htm-java-service
+    container_name: htm-java
     ports:
-      - "40922:40922"
+      - "41990:40417"
     volumes:
-      - ./target.jar:/app/target.jar
+      - ./target/htm.java-0.6.13.jar:/app/target.jar
+    environment:
+      - JAVA_OPTS=-Dserver.port=40417 -Dserver.servlet.context-path=/
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:40417/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
     deploy:
       resources:
         limits:
@@ -16,10 +24,4 @@ services:
         reservations:
           cpus: '1.0'
           memory: 1G
-    healthcheck:
-      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:40922/')"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-    restart: unless-stopped
+    restart: on-failure
