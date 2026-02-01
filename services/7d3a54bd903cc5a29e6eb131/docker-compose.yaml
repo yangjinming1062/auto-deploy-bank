@@ -1,0 +1,27 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: llamagen-gradio
+    ports:
+      - "40093:7860"
+    environment:
+      - CUDA_VISIBLE_DEVICES=
+      - FORCE_CPU=1
+      - TOKENIZERS_PARALLELISM=false
+      - VLLM_USE_CPU=1
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s

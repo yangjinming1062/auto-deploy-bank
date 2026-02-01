@@ -1,0 +1,13 @@
+{
+  "service_id": "7d3a54bd903cc5a29e6eb131",
+  "repo_name": "FoundationVision/LlamaGen",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "5.52MB",
+  "language": "python",
+  "star": 1924,
+  "repo_flag": "ByteDance-SRC-1",
+  "uploaded_at": "2026-02-01T03:43:03.695564"
+}
