@@ -1,0 +1,33 @@
+services:
+  paper-agent:
+    build: .
+    container_name: paper-agent
+    environment:
+      - GOOGLE_KEY=${GOOGLE_KEY:-}
+      - WANDB_API_KEY=${WANDB_API_KEY:-}
+      - HF_TOKEN=${HF_TOKEN:-}
+      - PORT=8888
+    volumes:
+      - ./data:/app/data
+      - ./results:/app/results
+      - ./checkpoints:/app/checkpoints
+    ports:
+      - "8888:8888"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import transformers; import torch; import arxiv; print('Dependencies OK')\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    # Note: For full functionality, model checkpoints must be provided in ./checkpoints/
+    # - pasa-7b-crawler (crawler model)
+    # - pasa-7b-selector (selector model)
+    command: ["python", "web_server.py"]
