@@ -1,0 +1,139 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: fedlearner_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: fedlearner
+      MYSQL_USER: fedlearner
+      MYSQL_PASSWORD: fedlearner
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - fedlearner_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.11.0
+    container_name: fedlearner_elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - ELASTICSEARCH_USERNAME=elastic
+      - ELASTICSEARCH_PASSWORD=Fedlearner123
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - fedlearner_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  etcd:
+    image: quay.io/coreos/etcd:v3.5.0
+    container_name: fedlearner_etcd
+    command: etcd --data-dir=/etcd-data --listen-client-urls=http://0.0.0.0:2379 --advertise-client-urls=http://0.0.0.0:2379
+    volumes:
+      - etcd_data:/etcd-data
+    networks:
+      - fedlearner_network
+    healthcheck:
+      test: ["CMD", "etcdctl", "endpoint", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web_console_api:
+    build:
+      context: ./web_console_v2/api
+      dockerfile: Dockerfile
+    container_name: fedlearner_webconsole_api
+    ports:
+      - "1991:1991"
+    environment:
+      - TZ=UTC
+      - FLASK_ENV=development
+      - LOG_LEVEL=INFO
+      - DEBUG=false
+      - START_COMPOSER=true
+      # Database Configuration
+      - SQLALCHEMY_DATABASE_URI=mysql+pymysql://fedlearner:fedlearner@mysql:3306/fedlearner?charset=utf8mb4
+      - SQLALCHEMY_TRACK_MODIFICATIONS=false
+      # JWT Configuration
+      - JWT_SECRET_KEY=your-jwt-secret-key-change-in-production
+      # Elasticsearch Configuration
+      - ES_HOST=elasticsearch
+      - ES_READ_HOST=elasticsearch
+      - ES_PORT=9200
+      - ES_USERNAME=elastic
+      - ES_PASSWORD=Fedlearner123
+      - ES_INDEX=filebeat-*
+      # Kibana Configuration
+      - KIBANA_SERVICE_ADDRESS=http://elasticsearch:9200
+      - KIBANA_ADDRESS=localhost:1993
+      - KIBANA_ALLOWED_FIELDS=*
+      # Kubernetes Configuration
+      - K8S_NAMESPACE=default
+      - K8S_LABEL_INFO={}
+      - FEDLEARNER_WEBCONSOLE_LOG_DIR=/var/log/fedlearner_webconsole
+      # Storage Configuration
+      - STORAGE_ROOT=/data
+      # Feature Flags
+      - FEATURE_MODEL_K8S_HOOK=
+      - FEATURE_MODEL_WORKFLOW_HOOK=
+      - DATA_MODULE_BETA=
+    volumes:
+      - ./web_console_v2/api/logs:/var/log/fedlearner_webconsole
+    depends_on:
+      mysql:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      etcd:
+        condition: service_healthy
+    networks:
+      - fedlearner_network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:1991/api/v2/projects", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+
+  nginx:
+    image: nginx:alpine
+    container_name: fedlearner_nginx
+    ports:
+      - "43120:80"
+    volumes:
+      - ./web_console_v2/client/build:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - web_console_api
+    networks:
+      - fedlearner_network
+
+networks:
+  fedlearner_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  es_data:
+  etcd_data:
