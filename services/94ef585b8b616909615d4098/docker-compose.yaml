@@ -1,24 +1,24 @@
-version: '3.8'
-
 services:
-  whylogs:
+  whylogs-api:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: whylogs-api
     ports:
-      - "40553:8000"
+      - "42146:8080"
     environment:
+      - WHYLABS_API_ENDPOINT=${WHYLABS_API_ENDPOINT:-https://api.whylabsapp.com}
+      - WHYLABS_DEFAULT_ORG_ID=${WHYLABS_DEFAULT_ORG_ID:-}
+      - WHYLABS_DEFAULT_DATASET_ID=${WHYLABS_DEFAULT_DATASET_ID:-}
+      - WHYLABS_API_KEY=${WHYLABS_API_KEY:-}
+      - WHYLABS_SESSION_ID=${WHYLABS_SESSION_ID:-}
       - PYTHONUNBUFFERED=1
-      - WHYLOGS_NO_ANALYTICS=False
-      # - WHYLABS_API_KEY=your_api_key_here
-      # - WHYLABS_ORG_ID=your_org_id_here
-      # - WHYLABS_DEFAULT_DATASET_ID=your_dataset_id_here
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 10s
     deploy:
       resources:
         limits:
