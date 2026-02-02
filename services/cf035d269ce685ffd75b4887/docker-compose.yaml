@@ -1,0 +1,85 @@
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: lib-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 12345
+      MYSQL_DATABASE: lib
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - lib-network
+    # MySQL is internal only, no port exposure
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p12345"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  web:
+    build: .
+    container_name: lib-web
+    restart: on-failure
+    ports:
+      - "41770:8080"
+    environment:
+      # Database connection settings
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: lib
+      DB_USERNAME: root
+      DB_PASSWORD: 12345
+      # File storage root path
+      ROOT_PATH: /data
+      # Mail server settings
+      MAIL_HOST: smtp.qq.com
+      MAIL_PORT: 587
+      # MAIL_USER and MAIL_PASSWORD should be set via secrets or env vars
+      # MAIL_USER: your-email@example.com
+      # MAIL_PASSWORD: your-password
+      # Mahout server name
+      SERVER_NAME: localhost
+      # LibreOffice home for JodConverter
+      officeHome: /usr/lib/libreoffice
+    volumes:
+      # Mount target.jar for security scanning
+      - ./target.jar:/app/target.jar
+      # Mount data volume for file storage
+      - lib_data:/data
+      # Mount custom jdbc.properties to use internal MySQL hostname
+      - ./docker-config/jdbc.properties:/app/src/main/resources/jdbc.properties:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - lib-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/login"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+networks:
+  lib-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  lib_data:
