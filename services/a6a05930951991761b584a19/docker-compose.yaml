@@ -1,0 +1,118 @@
+services:
+  cloudbreak:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cloudbreak
+    hostname: cloudbreak
+    ports:
+      - "40533:8080"
+    environment:
+      # Database Configuration
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - CB_DB_ENV_USER=postgres
+      - CB_DB_ENV_PASS=${DB_PASSWORD:-postgres}
+      - CB_DB_ENV_DB=cbdb
+
+      # Vault Configuration
+      - VAULT_ADDR=http://vault:8200
+      - VAULT_TOKEN=${VAULT_TOKEN:-root}
+      - secret.application=cb/shared
+
+      # AWS Configuration (optional)
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+
+      # Azure Configuration (optional)
+      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID:-}
+      - AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET:-}
+      - AZURE_TENANT_ID=${AZURE_TENANT_ID:-}
+
+      # GCP Configuration (optional)
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS:-}
+
+      # UMS Configuration (optional)
+      - ALTUS_UMS_HOST=${ALTUS_UMS_HOST:-localhost}
+
+      # Spring Configuration
+      - SPRING_PROFILES_ACTIVE=dev
+      - spring.config.additional-location=optional:file:./config/
+
+    volumes:
+      - ./core/build/libs/target.jar:/app/target.jar
+    depends_on:
+      db:
+        condition: service_healthy
+      vault:
+        condition: service_healthy
+    networks:
+      - cloudbreak-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/cb/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    container_name: cloudbreak-db
+    hostname: db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
+      - POSTGRES_DB=cbdb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - cloudbreak-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  vault:
+    image: hashicorp/vault:1.20
+    container_name: cloudbreak-vault
+    hostname: vault
+    environment:
+      - VAULT_ADDR=http://0.0.0.0:8200
+      - VAULT_DEV_ROOT_TOKEN_ID=root
+      - VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200
+    command: server -dev
+    volumes:
+      - vault_data:/vault/data
+    cap_add:
+      - IPC_LOCK
+    networks:
+      - cloudbreak-network
+    healthcheck:
+      test: ["CMD", "sh", "-c", "vault status > /dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+networks:
+  cloudbreak-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  vault_data:

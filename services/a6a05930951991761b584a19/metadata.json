@@ -1,0 +1,13 @@
+{
+  "service_id": "a6a05930951991761b584a19",
+  "repo_name": "hortonworks/cloudbreak",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "50.55MB",
+  "language": "java",
+  "star": 362,
+  "repo_flag": "JAVA",
+  "uploaded_at": "2026-02-02T18:43:47.593405"
+}
