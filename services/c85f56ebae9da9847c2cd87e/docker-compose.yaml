@@ -1,0 +1,34 @@
+services:
+  sc2-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sc2-starbot-service
+    ports:
+      - "42368:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - TOKENIZERS_PARALLELISM=false
+      - KMP_DUPLICATE_LIB_OK=True
+      - HF_HOME=/tmp/huggingface
+      - TRANSFORMERS_CACHE=/tmp/transformers
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+      - HF_TOKEN=${HF_TOKEN:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_API_BASE=${OPENAI_API_BASE:-http://172.18.116.172:8000/v1}
+    volumes:
+      - ./:/home/ubuntu/deploy-projects/c85f56ebae9da9847c2cd87e
+      - /tmp/huggingface:/tmp/huggingface
+      - /tmp/transformers:/tmp/transformers
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
