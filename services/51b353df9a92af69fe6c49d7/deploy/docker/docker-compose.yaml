@@ -1,0 +1,235 @@
+services:
+  # MySQL Database - Internal only (no host port exposure)
+  bytedesk-mysql:
+    image: mysql:latest
+    container_name: mysql-bytedesk
+    environment:
+      MYSQL_DATABASE: bytedesk
+      MYSQL_ROOT_PASSWORD: r8FqfdbWUaN3
+      TZ: Asia/Shanghai
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - bytedesk-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pr8FqfdbWUaN3"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # Redis - Internal only (no host port exposure)
+  bytedesk-redis:
+    image: redis/redis-stack-server:latest
+    container_name: redis-bytedesk
+    environment:
+      - REDIS_ARGS=--requirepass qfRxz3tVT8Nh
+    volumes:
+      - redis_data:/data
+    networks:
+      - bytedesk-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "qfRxz3tVT8Nh", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ActiveMQ Artemis - Internal only (no host port exposure)
+  bytedesk-artemis:
+    image: apache/activemq-artemis:latest
+    container_name: artemis-bytedesk
+    environment:
+      - ARTEMIS_USER=admin
+      - ARTEMIS_PASSWORD=admin
+      - ANONYMOUS_LOGIN=false
+      - EXTRA_ARGS=--http-host 0.0.0.0 --relax-jolokia
+    volumes:
+      - artemis_data:/var/lib/artemis/data
+    networks:
+      - bytedesk-network
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "-u", "admin:admin", "http://localhost:8161/console/jolokia/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # Elasticsearch - Internal only (no host port exposure)
+  bytedesk-elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.18.0
+    container_name: elasticsearch-bytedesk
+    environment:
+      - node.name=bytedesk-es01
+      - cluster.name=bytedesk-es-cluster
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=true
+      - ELASTIC_PASSWORD=bytedesk123
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - bytedesk-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  # MinIO Object Storage - Internal only (no host port exposure)
+  bytedesk-minio:
+    image: minio/minio:latest
+    container_name: minio-bytedesk
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin123
+      - TZ=Asia/Shanghai
+    command: minio server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - bytedesk-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Main Application Service
+  bytedesk:
+    build:
+      context: ../../
+      dockerfile: Dockerfile
+    container_name: bytedesk
+    depends_on:
+      bytedesk-mysql:
+        condition: service_healthy
+      bytedesk-redis:
+        condition: service_healthy
+      bytedesk-elasticsearch:
+        condition: service_healthy
+      bytedesk-artemis:
+        condition: service_healthy
+      bytedesk-minio:
+        condition: service_healthy
+    environment:
+      TZ: Asia/Shanghai
+      SERVER_PORT: 9003
+      # Application configuration
+      BYTEDESK_DEBUG: "false"
+      BYTEDESK_VERSION: 0.9.8
+      BYTEDESK_LICENSE_KEY:
+      BYTEDESK_CUSTOM_ENABLED: "false"
+      BYTEDESK_CUSTOM_ALLOW_REGISTER: "true"
+      BYTEDESK_ADMIN_EMAIL: admin@email.com
+      BYTEDESK_ADMIN_PASSWORD: admin
+      BYTEDESK_ADMIN_NICKNAME: SuperAdmin
+      BYTEDESK_ADMIN_MOBILE: 13345678000
+      BYTEDESK_ADMIN_VALIDATE_CODE: 123456
+      BYTEDESK_MEMBER_PASSWORD: 123456
+      BYTEDESK_ORGANIZATION_NAME: MyCompany
+      BYTEDESK_ORGANIZATION_CODE: bytedesk
+      BYTEDESK_FEATURES_JAVA_AI: "true"
+      BYTEDESK_FEATURES_EMAIL_TYPE: javamail
+      BYTEDESK_FEATURES_AVATAR_BASE_URL: http://127.0.0.1:40210
+      # JWT config
+      BYTEDESK_JWT_SECRET_KEY: 1dfaf8d004207b628a9a6b859c429f49a9a7ead9fd8161c1e60847aeef06dbd2
+      BYTEDESK_JWT_EXPIRATION: 2592000000
+      BYTEDESK_JWT_REFRESH_TOKEN_EXPIRATION: 5184000000
+      # Database configuration (use service names for internal communication)
+      SPRING_DATASOURCE_URL: jdbc:mysql://bytedesk-mysql:3306/bytedesk?useUnicode=true&characterEncoding=UTF-8&serverTimezone=GMT%2B8&nullCatalogMeansCurrent=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: r8FqfdbWUaN3
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      # Disable Liquibase to avoid migration issues - rely on Hibernate for schema creation
+      SPRING_LIQUIBASE_ENABLED: false
+      # Redis configuration (use service name for internal communication)
+      SPRING_DATA_REDIS_DATABASE: 0
+      SPRING_DATA_REDIS_HOST: bytedesk-redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: qfRxz3tVT8Nh
+      SPRING_DATA_REDIS_TIMEOUT: 10000
+      SPRING_DATA_REDIS_REPOSITORIES_ENABLED: "false"
+      # Cache config
+      BYTEDESK_CACHE_LEVEL: 0
+      BYTEDESK_CACHE_PREFIX: bytedeskim
+      # Upload config
+      BYTEDESK_UPLOAD_TYPE: local
+      BYTEDESK_UPLOAD_DIR: /app/uploads
+      BYTEDESK_UPLOAD_URL: http://127.0.0.1:40210
+      # MinIO configuration
+      BYTEDESK_MINIO_ENABLED: "false"
+      BYTEDESK_MINIO_ENDPOINT: http://bytedesk-minio:9000
+      BYTEDESK_MINIO_ACCESS_KEY: minioadmin
+      BYTEDESK_MINIO_SECRET_KEY: minioadmin123
+      BYTEDESK_MINIO_BUCKET_NAME: bytedesk
+      # Knowledge base config
+      BYTEDESK_KBASE_API_URL: http://127.0.0.1:40210
+      # Socket/WebSocket config
+      BYTEDESK_SOCKET_HOST: 0.0.0.0
+      BYTEDESK_SOCKET_WEBSOCKET_PORT: 9885
+      # Druid config
+      SPRING_DATASOURCE_DRUID_STAT_VIEW_SERVLET_LOGIN_USERNAME: admin@email.com
+      SPRING_DATASOURCE_DRUID_STAT_VIEW_SERVLET_LOGIN_PASSWORD: admin
+      # Actuator config
+      MANAGEMENT_ENDPOINTS_WEB_BASE_PATH: /actuator
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,metrics,prometheus
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: always
+      # Elasticsearch config
+      SPRING_ELASTICSEARCH_URIS: http://bytedesk-elasticsearch:9200
+      SPRING_ELASTICSEARCH_USERNAME: elastic
+      SPRING_ELASTICSEARCH_PASSWORD: bytedesk123
+      # Artemis JMS config
+      SPRING_ARTEMIS_MODE: native
+      SPRING_ARTEMIS_BROKER_URL: tcp://bytedesk-artemis:61616
+      SPRING_ARTEMIS_USER: admin
+      SPRING_ARTEMIS_PASSWORD: admin
+      # Logging config
+      LOGGING_LEVEL_COM_BYTEDESK_CORE: DEBUG
+      LOGGING_LEVEL_COM_BYTEDESK_SERVICE: DEBUG
+      LOGGING_LEVEL_COM_BYTEDESK_STARTER: DEBUG
+    ports:
+      - "40819:9003"  # Main HTTP port (mapped to host port 40819)
+      - "40820:9885"  # WebSocket port
+    volumes:
+      - upload_data:/app/uploads
+      - ../../target.jar:/app/target.jar:ro  # Mount JAR for security scanning
+    networks:
+      - bytedesk-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9003/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+volumes:
+  mysql_data:
+    name: bytedesk_mysql_data
+  redis_data:
+    name: bytedesk_redis_data
+  elasticsearch_data:
+    name: bytedesk_elasticsearch_data
+  upload_data:
+    name: bytedesk_upload_data
+  artemis_data:
+    name: bytedesk_artemis_data
+  minio_data:
+    name: bytedesk_minio_data
+
+networks:
+  bytedesk-network:
+    driver: bridge
