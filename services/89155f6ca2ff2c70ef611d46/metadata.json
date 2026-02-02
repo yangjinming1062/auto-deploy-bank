@@ -1,0 +1,13 @@
+{
+  "service_id": "89155f6ca2ff2c70ef611d46",
+  "repo_name": "qunarcorp/qconfig",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "2.86MB",
+  "language": "java",
+  "star": 288,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-02-02T17:23:20.006955"
+}

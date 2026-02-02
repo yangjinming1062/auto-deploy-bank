@@ -1,0 +1,65 @@
+services:
+
+  qconfig-mysql:
+    image: mysql:5.7
+    container_name: qconfig-mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+      MYSQL_DATABASE: qconfig
+      TZ: Asia/Shanghai
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./scripts/docker/sql:/docker-entrypoint-initdb.d
+    networks:
+      - qconfig-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  qconfig-admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: qconfig-admin
+    depends_on:
+      qconfig-mysql:
+        condition: service_healthy
+    environment:
+      jdbc.driverClassName: com.mysql.jdbc.Driver
+      jdbc.url: jdbc:mysql://qconfig-mysql:3306/qconfig?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      jdbc.username: root
+      jdbc.password: ''
+      qconfig.server.host: qconfig-server:8080
+      SLEEP_SECOND: 10
+    ports:
+      - "41032:8080"
+    volumes:
+      - ./admin/target/ROOT.war:/app/ROOT.war
+      - ./admin/target/ROOT.war:/app/target.jar
+    networks:
+      - qconfig-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/ > /dev/null 2>&1 || exit 0"]
+      start_period: 60s
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  qconfig-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
