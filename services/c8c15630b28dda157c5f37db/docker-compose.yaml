@@ -1,0 +1,37 @@
+services:
+  vader-modelscope:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vader-modelscope
+    environment:
+      - HF_TOKEN=${HF_TOKEN:-}
+      - WANDB_API_KEY=${WANDB_API_KEY:-}
+      - WANDB_ENTITY=${WANDB_ENTITY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - HF_ENDPOINT=${HF_ENDPOINT:-}
+      - WORLD_SIZE=${WORLD_SIZE:-1}
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-all}
+      - PYTHONUNBUFFERED=1
+      - HF_HOME=${HF_HOME:-}
+      - HOME=${HOME:-}
+    volumes:
+      - ./VADER-ModelScope:/home/ubuntu/deploy-projects/c8c15630b28dda157c5f37db/VADER-ModelScope
+      - ./Core:/home/ubuntu/deploy-projects/c8c15630b28dda157c5f37db/Core
+    ports:
+      - "40880:8080"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    command: ["python", "/home/ubuntu/deploy-projects/c8c15630b28dda157c5f37db/web_server.py"]
