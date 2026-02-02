@@ -1,0 +1,151 @@
+services:
+  # Application Service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wego-app
+    ports:
+      - "42304:8081"
+    environment:
+      - SERVER_PORT=8081
+      # MySQL configuration - using Docker service name
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/wego?characterEncoding=utf-8&serverTimezone=GMT%2B8
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=123456
+      - SPRING_DATASOURCE_TYPE=com.alibaba.druid.pool.DruidDataSource
+      # Redis configuration - using Docker service name
+      - SPRING_REDIS_HOST=redis
+      - SPRING_REDIS_PORT=6379
+      - SPRING_REDIS_TIMEOUT=1000
+      # Elasticsearch configuration - using Docker service name
+      - SPRING_DATA_ELASTICSEARCH_CLUSTER_NAME=elasticsearch-cluster
+      - SPRING_DATA_ELASTICSEARCH_CLUSTER_NODES=elasticsearch:9300
+      # OAuth configurations
+      - GITHUB.OAUTH.CLIENT-ID=c98b1c698635496d6b8e
+      - GITHUB.OAUTH.CLIENT-SECRET=69e888393fdfec844a1894db6a8e3624e777cb2d
+      - GITHUB.OAUTH.CALLBACK=http://38617112yi.zicp.vip/oauth.githubLogin
+      - QQ.OAUTH.APP-ID=101944926
+      - QQ.OAUTH.APP-KEY=7914276030f202292e7df758a1b825c6
+      # Qiniu Cloud configuration
+      - QINIUYUN.ACCESSKEY=pZQHRPGQcHbonZkHxjqbIiZ1kHVjKC3aQN_gwyxJ
+      - QINIUYUN.SECRETKEY=KIE1hdGOUEk8fEnTN1Jt0kQ31mlxy9CEar5LB_Tw
+      - QINIUYUN.BUCKET=images-storage-wego
+      - QINIUYUN.DOMAIN.NAME=http://wegocoder.top
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    volumes:
+      # Volume mount for security scanning
+      - ./target.jar:/app/target.jar
+      # Mount WAR for running the application
+      - ./target/wego-0.0.1-SNAPSHOT.war:/app/wego.war
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - wego-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  # MySQL Service
+  mysql:
+    image: mysql:8.0.13
+    container_name: wego-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=wego
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./wego.sql:/docker-entrypoint-initdb.d/wego.sql:ro
+    ports:
+      - "3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - wego-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Redis Service
+  redis:
+    image: redis:alpine
+    container_name: wego-redis
+    ports:
+      - "6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - wego-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  # Elasticsearch Service
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.6.2
+    container_name: wego-elasticsearch
+    environment:
+      - cluster.name=elasticsearch-cluster
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    ports:
+      - "9200"
+      - "9300"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - wego-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+networks:
+  wego-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  es-data:
