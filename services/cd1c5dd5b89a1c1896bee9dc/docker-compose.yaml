@@ -1,0 +1,36 @@
+services:
+  streamlit-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nba-prediction-app
+    ports:
+      - "40756:8501"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - HOOPSWORKS_API_KEY=${HOOPSWORKS_API_KEY:-}
+      - SCRAPINGANT_API_KEY=${SCRAPINGANT_API_KEY:-}
+      - GOOGLE_CREDENTIALS=${GOOGLE_CREDENTIALS:-}
+      - GOOGLE_SERVICE_ACCOUNT_KEY=${GOOGLE_SERVICE_ACCOUNT_KEY:-}
+      - GOOGLE_FOLDER_ID=${GOOGLE_FOLDER_ID:-}
+    volumes:
+      - ./data:/home/ubuntu/deploy-projects/cd1c5dd5b89a1c1896bee9dc/data
+      - ./models:/home/ubuntu/deploy-projects/cd1c5dd5b89a1c1896bee9dc/models
+      - ./configs:/home/ubuntu/deploy-projects/cd1c5dd5b89a1c1896bee9dc/configs
+      - ./src:/home/ubuntu/deploy-projects/cd1c5dd5b89a1c1896bee9dc/src
+      - ./images:/home/ubuntu/deploy-projects/cd1c5dd5b89a1c1896bee9dc/images
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
