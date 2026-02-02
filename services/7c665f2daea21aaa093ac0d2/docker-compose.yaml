@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: demo-mysql
+    environment:
+      MYSQL_ROOT_USER: root
+      MYSQL_ROOT_PASSWORD: lessroot
+      MYSQL_DATABASE: demo
+      MYSQL_USER: lessroot
+      MYSQL_PASSWORD: lessroot
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - demo-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-plessroot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  app:
+    build:
+      context: ./demo
+      dockerfile: Dockerfile
+    container_name: demo-app
+    ports:
+      - "41379:9090"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/demo?useSSL=false
+      - SPRING_DATASOURCE_USERNAME=lessroot
+      - SPRING_DATASOURCE_PASSWORD=lessroot
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.MySQLDialect
+      - SPRING_JPA_PROPERTIES_HIBERNATE_JDBC_BATCH_SIZE=500
+      - SPRING_JPA_SHOW_SQL=false
+      - SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL=false
+      - SERVER_PORT=9090
+      - SPRING_DS_CONTINUE_ON_ERROR=true
+      - SPRING_MAIN_BANNER_MODE=off
+      - SPRING_THYMELEAF_CACHE=false
+      - LDAP_ENABLED=true
+      - LDAP_URLS=ldap://ldap.forumsys.com:389/
+      - LDAP_BASE_DN=dc=example,dc=com
+      - LDAP_USERNAME=cn=read-only-admin,dc=example,dc=com
+      - LDAP_PASSWORD=password
+      - LDAP_USER_DN_PATTERN=uid={0}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - demo-network
+    volumes:
+      - ./demo/target/demo-0.0.1-SNAPSHOT.war:/app/target.jar
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  demo-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
