@@ -1,0 +1,13 @@
+{
+  "service_id": "d6dc5d64b8e5c57b32be5f9c",
+  "repo_name": "mixly/Mixly_Arduino",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "333.61MB",
+  "language": "nodejs",
+  "star": 294,
+  "repo_flag": "NODEJS",
+  "uploaded_at": "2026-02-02T02:31:37.394884"
+}
