@@ -1,0 +1,41 @@
+services:
+  web:
+    build: .
+    container_name: rlbot-web
+    ports:
+      - "0.0.0.0:40134:40134"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/home/ubuntu/deploy-projects/698f519baa11a18e36a84df3
+    command: ["python", "web_server.py"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:40134/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  rlbot:
+    build: .
+    container_name: rlbot-necto
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/home/ubuntu/deploy-projects/698f519baa11a18e36a84df3
+      - WANDB_KEY=${WANDB_KEY}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
