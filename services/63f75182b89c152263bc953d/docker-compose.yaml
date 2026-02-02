@@ -1,0 +1,43 @@
+services:
+  crnk-springboot-example:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: crnk-springboot-example
+    ports:
+      - "42044:8080"
+    environment:
+      - crnk.path-prefix=/api
+      - crnk.default-page-limit=10
+      - crnk.jpa.exposeAll=false
+      - crnk.security.enabled=false
+      - crnk.config.core.resource.domain=
+      - crnk.config.web.path.prefix=/api
+      - crnk.config.lookup.behavior.default=AUTOMATICALLY_ALWAYS
+      - crnk.config.include.behavior=BY_TYPE
+      - crnk.config.resource.immutableWrite=IGNORE
+      - crnk.config.null.data.response.enabled=false
+      - crnk.config.include.paging.enabled=false
+      - crnk.config.resource.response.return_404=false
+      - crnk.config.resource.request.allowUnknownAttributes=true
+      - crnk.config.resource.request.allowUnknownParameters=true
+      - crnk.config.serialize.object.links=false
+      - crnk.config.resource.request.rejectPlainJson=false
+      - crnk.config.serialize.relation.exceptionOnMissingRelatedResource=true
+    volumes:
+      - ./target.jar:/app/app.jar:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/api/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
