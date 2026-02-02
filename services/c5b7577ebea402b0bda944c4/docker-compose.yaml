@@ -1,0 +1,27 @@
+services:
+  minecraft-rl-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: minecraft-rl-service
+    ports:
+      - "42144:5000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
