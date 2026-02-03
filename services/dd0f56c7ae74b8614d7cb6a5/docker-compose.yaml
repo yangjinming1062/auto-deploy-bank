@@ -1,0 +1,24 @@
+services:
+  ceal-training:
+    build: .
+    container_name: ceal-ml-training
+    ports:
+      - "41384:8080"
+    volumes:
+      - ./logs:/home/ubuntu/deploy-projects/dd0f56c7ae74b8614d7cb6a5/logs
+      - ./models:/home/ubuntu/deploy-projects/dd0f56c7ae74b8614d7cb6a5/models
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: on-failure
