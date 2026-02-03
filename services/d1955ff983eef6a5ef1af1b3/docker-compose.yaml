@@ -1,0 +1,55 @@
+# Docker Compose for Python FaaS Service (Coze Loop)
+
+services:
+  # Python FaaS Service - Deno + Pyodide WebAssembly Python
+  python-faas:
+    container_name: "coze-loop-python-faas"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cozedev/coze-loop-python-faas:1.0.0
+    restart: always
+    ports:
+      - "40350:8000"
+    networks:
+      - coze-loop-network
+    environment:
+      # Deno configuration
+      DENO_DIR: /tmp/.deno
+      DENO_NO_UPDATE_CHECK: "1"
+      FAAS_WORKSPACE: /tmp/faas-workspace
+      FAAS_PORT: "8000"
+      FAAS_TIMEOUT: "30000"
+      FAAS_LANGUAGE: python
+      PYODIDE_VERSION: 0.26.2
+      # Pool configuration
+      FAAS_POOL_MIN_SIZE: "2"
+      FAAS_POOL_MAX_SIZE: "8"
+      FAAS_POOL_IDLE_TIMEOUT: "300000"
+      FAAS_MAX_EXECUTION_TIME: "30000"
+      FAAS_PRELOAD_TIMEOUT: "60000"
+    volumes:
+      - python_faas_workspace:/tmp/faas-workspace
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+networks:
+  coze-loop-network:
+    name: coze-loop-network
+    driver: bridge
+
+volumes:
+  python_faas_workspace:
+    name: coze-loop_python_faas_workspace
