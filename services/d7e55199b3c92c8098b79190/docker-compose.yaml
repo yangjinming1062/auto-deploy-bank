@@ -1,0 +1,31 @@
+services:
+  elasticsearch:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: elasticsearch-opennlp
+    ports:
+      - "40338:9200"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_SETTING_INGEST_OPENNLP_MODEL_FILE_NAMES=en-ner-persons.bin
+      - ES_SETTING_INGEST_OPENNLP_MODEL_FILE_LOCATIONS=en-ner-locations.bin
+      - ES_SETTING_INGEST_OPENNLP_MODEL_FILE_DATES=en-ner-dates.bin
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    volumes:
+      - ./target.jar:/app/target.jar
+      - ./build/distribution/elasticsearch-ingest-opennlp.zip:/tmp/elasticsearch-ingest-opennlp.zip

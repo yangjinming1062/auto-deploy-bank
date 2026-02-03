@@ -1,0 +1,13 @@
+{
+  "service_id": "d7e55199b3c92c8098b79190",
+  "repo_name": "spinscale/elasticsearch-ingest-opennlp",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "88KB",
+  "language": "java",
+  "star": 275,
+  "repo_flag": "JAVA",
+  "uploaded_at": "2026-02-03T06:49:02.453228"
+}
