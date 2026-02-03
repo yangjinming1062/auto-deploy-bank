@@ -1,0 +1,147 @@
+services:
+  main:
+    build:
+      context: .
+      target: production
+    container_name: ai-practices-main
+    ports:
+      - "41019:8080"
+    volumes:
+      - ./data:/app/data:ro
+      - ./models:/app/models:ro
+      - ./logs:/app/logs
+    working_dir: /app
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - MASTER_ADDR=localhost
+      - MASTER_PORT=29500
+      - WORLD_SIZE=1
+      - RANK=0
+      - LOCAL_RANK=0
+      - CUDA_VISIBLE_DEVICES=0
+      - PYTHONHASHSEED=42
+      - TF_CPP_MIN_LOG_LEVEL=2
+      - TF_DETERMINISTIC_OPS=0
+      - AI_PRACTICES_ROOT=/home/ubuntu/deploy-projects/c562519e97177f54126d50d3
+      - AI_PRACTICES_DATA=/home/ubuntu/deploy-projects/c562519e97177f54126d50d3/data
+      - AI_PRACTICES_DEVICE=cuda
+      - AI_PRACTICES_MODELS=/home/ubuntu/deploy-projects/c562519e97177f54126d50d3/models
+      - AI_PRACTICES_LOGS=/home/ubuntu/deploy-projects/c562519e97177f54126d50d3/logs
+      - TOKENIZERS_PARALLELISM=true
+      - NCCL_DEBUG=Not set
+      - NUMEXPR_MAX_THREADS=32
+      - NUMEXPR_NUM_THREADS=16
+      - PORT=8080
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+
+  dev:
+    build:
+      context: .
+      target: development
+    container_name: ai-practices-dev
+    volumes:
+      - .:/app
+      - pip-cache:/root/.cache/pip
+    working_dir: /app
+    stdin_open: true
+    tty: true
+    environment:
+      - PYTHONPATH=/app
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+      - AI_PRACTICES_ROOT=/home/ubuntu/deploy-projects/c562519e97177f54126d50d3
+      - AI_PRACTICES_DATA=/home/ubuntu/deploy-projects/c562519e97177f54126d50d3/data
+      - AI_PRACTICES_DEVICE=cuda
+      - TOKENIZERS_PARALLELISM=true
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  jupyter:
+    build:
+      context: .
+      target: jupyter
+    container_name: ai-practices-jupyter
+    ports:
+      - "8888:8888"
+    volumes:
+      - .:/app
+      - jupyter-data:/root/.jupyter
+    working_dir: /app
+    environment:
+      - JUPYTER_ENABLE_LAB=yes
+      - PYTHONPATH=/app
+      - AI_PRACTICES_ROOT=/home/ubuntu/deploy-projects/c562519e97177f54126d50d3
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  test:
+    build:
+      context: .
+      target: test
+    container_name: ai-practices-test
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+    working_dir: /app
+    environment:
+      - PYTHONPATH=/app
+      - AI_PRACTICES_ROOT=/home/ubuntu/deploy-projects/c562519e97177f54126d50d3
+      - TOKENIZERS_PARALLELISM=false
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+volumes:
+  pip-cache:
+    driver: local
+  jupyter-data:
+    driver: local
+
+networks:
+  default:
+    name: ai-practices-network
