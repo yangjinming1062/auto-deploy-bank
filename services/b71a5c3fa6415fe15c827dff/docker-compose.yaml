@@ -1,0 +1,25 @@
+services:
+  bytex:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bytex-gradle-plugin
+    ports:
+      - "40500:40500"
+    volumes:
+      # Volume mount for security scanning - extracts JAR to host
+      - ./target.jar:/app/target.jar
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:40500/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
