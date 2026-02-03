@@ -1,0 +1,68 @@
+services:
+  listsync-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: listsync-api
+    ports:
+      - "41670:4222"
+    environment:
+      # Required Overseerr Configuration
+      - OVERSEERR_URL=${OVERSEERR_URL:-}
+      - OVERSEERR_API_KEY=${OVERSEERR_API_KEY:-}
+      - OVERSEERR_USER_ID=${OVERSEERR_USER_ID:-1}
+      - OVERSEERR_4K=${OVERSEERR_4K:-false}
+
+      # Required Trakt API Configuration
+      - TRAKT_CLIENT_ID=${TRAKT_CLIENT_ID:-}
+
+      # System Settings
+      - TZ=${TZ:-UTC}
+      - SYNC_INTERVAL=${SYNC_INTERVAL:-24}
+      - AUTOMATED_MODE=${AUTOMATED_MODE:-true}
+
+      # Optional Discord webhook
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL:-}
+
+      # Service Endpoints
+      - FRONTEND_DOMAIN=${FRONTEND_DOMAIN:-http://localhost:3222}
+      - BACKEND_DOMAIN=${BACKEND_DOMAIN:-http://localhost:4222}
+      - NUXT_PUBLIC_API_URL=${NUXT_PUBLIC_API_URL:-http://localhost:4222}
+
+      # Docker-specific settings
+      - RUNNING_IN_DOCKER=true
+      - PYTHONUNBUFFERED=1
+
+      # CORS Configuration (allow public IP access)
+      - CORS_ALLOWED_ORIGINS=http://34.127.19.15:41670,http://34.127.19.15:3222
+
+      # List Configuration (comma-separated)
+      - IMDB_LISTS=${IMDB_LISTS:-}
+      - TRAKT_LISTS=${TRAKT_LISTS:-}
+      - LETTERBOXD_LISTS=${LETTERBOXD_LISTS:-}
+      - ANILIST_LISTS=${ANILIST_LISTS:-}
+      - MDBLIST_LISTS=${MDBLIST_LISTS:-}
+      - STEVENLU_LISTS=${STEVENLU_LISTS:-}
+      - TRAKT_SPECIAL_LISTS=${TRAKT_SPECIAL_LISTS:-}
+      - TRAKT_SPECIAL_ITEMS_LIMIT=${TRAKT_SPECIAL_ITEMS_LIMIT:-20}
+      - TMDB_KEY=${TMDB_KEY:-}
+      - TMDB_LISTS=${TMDB_LISTS:-}
+      - TVDB_LISTS=${TVDB_LISTS:-}
+      - SIMKL_LISTS=${SIMKL_LISTS:-}
+    volumes:
+      - ./data:/usr/src/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4222/api/system/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
