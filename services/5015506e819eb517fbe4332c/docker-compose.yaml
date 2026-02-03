@@ -1,0 +1,22 @@
+services:
+  android-demo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: scenedemo-android
+    ports:
+      - "40291:8080"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "ls", "/app/target.jar"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
