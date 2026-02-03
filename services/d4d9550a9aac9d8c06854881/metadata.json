@@ -1,0 +1,13 @@
+{
+  "service_id": "d4d9550a9aac9d8c06854881",
+  "repo_name": "tugstugi/pytorch-saltnet",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "925KB",
+  "language": "python",
+  "star": 281,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-02-03T01:15:38.322184"
+}
