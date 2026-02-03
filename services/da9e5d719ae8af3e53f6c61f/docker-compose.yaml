@@ -1,0 +1,80 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: beidou-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: beidou
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - beidou-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  gms-server:
+    build:
+      context: .
+      dockerfile: gms-server/Dockerfile
+    container_name: beidou-gms-server
+    environment:
+      MYBATIS_FLEX_DATASOURCE_MYSQL_URL: jdbc:mysql://mysql:3306/beidou?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+      MYBATIS_FLEX_DATASOURCE_MYSQL_USERNAME: root
+      MYBATIS_FLEX_DATASOURCE_MYSQL_PASSWORD: root
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/beidou?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SERVER_PORT: "8686"
+      APP_VUE: http://localhost:8787
+      JWT_SECRET: 50da066e-6080-40f5-a173-86bd27d4f674
+      JWT_DURATION: "1800000"
+      GMS_SERVICE_LANGUAGE: zh-CN
+      GMS_SERVICE_WAN_HOST: 127.0.0.1
+      GMS_SERVICE_LAN_HOST: 127.0.0.1
+      GMS_SERVICE_LOCALHOST: 127.0.0.1
+      GMS_SERVICE_LOGIN_PORT: "8484"
+      GMS_SERVICE_RATE_LIMIT_ENABLED: "false"
+      GMS_SERVICE_RATE_LIMIT_LIMIT: "10"
+      GMS_SERVICE_RATE_LIMIT_DURATION: "1000"
+      GMS_SERVICE_RATE_LIMIT_AUTO_BAN: "false"
+      SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: 1MB
+      SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE: 10MB
+      SPRING_JACKSON_TIME_ZONE: Asia/Shanghai
+      SPRING_JACKSON_DATE_FORMAT: yyyy-MM-dd HH:mm:ss
+    ports:
+      - "40081:8686"
+      - "40638:8484"
+    volumes:
+      - ./target.jar:/app/target.jar
+    command: >
+      --mybatis-flex.datasource.mysql.url=jdbc:mysql://mysql:3306/beidou?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+      --mybatis-flex.datasource.mysql.username=root
+      --mybatis-flex.datasource.mysql.password=root
+    networks:
+      - beidou-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+
+networks:
+  beidou-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
