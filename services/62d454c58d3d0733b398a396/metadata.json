@@ -1,0 +1,13 @@
+{
+  "service_id": "62d454c58d3d0733b398a396",
+  "repo_name": "allenai/FineGrainedRLHF",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "13.59MB",
+  "language": "python",
+  "star": 281,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-02-03T06:10:32.272630"
+}
