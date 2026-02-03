@@ -1,0 +1,26 @@
+services:
+  slimfast:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: slimfast
+    ports:
+      - "40510:8080"
+    environment:
+      - SERVER_PORT=8080
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    volumes:
+      - ./target.jar:/app/target.jar
