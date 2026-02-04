@@ -1,0 +1,29 @@
+services:
+  zxingorg:
+    build: .
+    image: zxingorg:latest
+    container_name: zxingorg
+    ports:
+      - "40239:8080"
+    environment:
+      - translateAPI_KEY=${translateAPI_KEY:-}
+    volumes:
+      - zxingorg-scan:/scan
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+volumes:
+  zxingorg-scan:

@@ -1,13 +1,14 @@
 {
   "service_id": "d9fa52fc9e5b740efe39f750",
   "repo_name": "zxing/zxing",
-  "platform": "github",
+  "platform": null,
   "ref": null,
   "version": "",
   "status": "stopped",
   "package_size": "128.89MB",
   "language": "java",
-  "star": 33741,
-  "repo_flag": "JAVA-Guava",
-  "uploaded_at": "2026-01-02T15:11:20.108774"
+  "star": 33836,
+  "repo_flag": "JAVA",
+  "uploaded_at": "2026-02-04T19:53:48.445493",
+  "generated_files": []
 }
