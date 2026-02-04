@@ -1,0 +1,26 @@
+services:
+  dreamo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dreamo-app
+    ports:
+      - "40565:8080"
+    environment:
+      - HF_TOKEN=${HF_TOKEN:-}
+      - TORCH_CUDA_ARCH_LIST=${TORCH_CUDA_ARCH_LIST:-}
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
