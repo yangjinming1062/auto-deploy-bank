@@ -1,0 +1,13 @@
+{
+  "service_id": "e5c3599ba97d28c34f0a2250",
+  "repo_name": "web-infra-dev/midscene",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "82.24MB",
+  "language": "nodejs",
+  "star": 11482,
+  "repo_flag": "ByteDance-SRC-1",
+  "uploaded_at": "2026-02-04T04:21:26.335602"
+}

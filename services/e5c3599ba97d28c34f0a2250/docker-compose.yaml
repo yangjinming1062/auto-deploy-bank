@@ -1,0 +1,32 @@
+services:
+  midscene-playground:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: midscene-playground
+    ports:
+      - "40502:3000"
+    environment:
+      - NODE_ENV=production
+      - MIDSCENE_MODEL_API_KEY=${MIDSCENE_MODEL_API_KEY}
+      - MIDSCENE_MODEL_BASE_URL=${MIDSCENE_MODEL_BASE_URL:-https://api.openai.com/v1}
+      - MIDSCENE_MODEL_FAMILY=${MIDSCENE_MODEL_FAMILY:-qwen2.5-vl}
+      - MIDSCENE_MODEL_NAME=${MIDSCENE_MODEL_NAME}
+      - MIDSCENE_MODEL_TIMEOUT=${MIDSCENE_MODEL_TIMEOUT:-600000}
+      - MIDSCENE_CACHE=${MIDSCENE_CACHE:-false}
+      - MIDSCENE_DEBUG_MODE=${MIDSCENE_DEBUG_MODE:-false}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
