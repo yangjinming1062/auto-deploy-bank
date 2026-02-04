@@ -1,0 +1,14 @@
+{
+  "service_id": "f2645c0588e76af70c56d825",
+  "repo_name": "FoundationVision/GLEE",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "22.60MB",
+  "language": "python",
+  "star": 1169,
+  "repo_flag": "ByteDance-SRC-1",
+  "uploaded_at": "2026-02-04T11:36:38.684324",
+  "generated_files": []
+}

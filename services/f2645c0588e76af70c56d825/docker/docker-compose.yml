@@ -1,0 +1,28 @@
+services:
+  gradio-app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "47749:7860"
+    environment:
+      - CUDA_VISIBLE_DEVICES=
+      - TORCH_CUDA_ARCH_LIST=8.0;8.6;8.9;9.0
+      - FORCE_CUDA=0
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    shm_size: 2gb
+    restart: unless-stopped
