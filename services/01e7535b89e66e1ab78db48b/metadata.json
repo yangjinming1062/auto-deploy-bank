@@ -1,0 +1,14 @@
+{
+  "service_id": "01e7535b89e66e1ab78db48b",
+  "repo_name": "apache/opennlp",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "4.90MB",
+  "language": "java",
+  "star": 1578,
+  "repo_flag": "JAVA",
+  "uploaded_at": "2026-02-04T10:49:13.190041",
+  "generated_files": []
+}
