@@ -1,0 +1,172 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: deer-flow-backend
+    ports:
+      - "40246:8000"
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./conf.yaml:/app/conf.yaml:ro
+    restart: unless-stopped
+    networks:
+      - deer-flow-network
+    depends_on:
+      - postgresql
+      - mongodb
+      - milvus
+      - qdrant
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  frontend:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+    container_name: deer-flow-frontend
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - deer-flow-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  postgresql:
+    image: postgres:16-alpine
+    container_name: deer-flow-postgresql
+    environment:
+      - POSTGRES_DB=deerflow
+      - POSTGRES_USER=deerflow
+      - POSTGRES_PASSWORD=deerflow123
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data
+    networks:
+      - deer-flow-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U deerflow -d deerflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  mongodb:
+    image: mongo:7
+    container_name: deer-flow-mongodb
+    environment:
+      - MONGO_INITDB_DATABASE=deerflow
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - deer-flow-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  milvus:
+    image: milvusdb/milvus:v2.3.4
+    container_name: deer-flow-milvus
+    command: ["milvus", "run", "standalone"]
+    ports:
+      - "19530:19530"
+    volumes:
+      - milvus_data:/var/lib/milvus
+    networks:
+      - deer-flow-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9091/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+
+  qdrant:
+    image: qdrant/qdrant:v1.12.1
+    container_name: deer-flow-qdrant
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - deer-flow-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/cluster"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+volumes:
+  postgresql_data:
+  mongodb_data:
+  milvus_data:
+  qdrant_data:
+
+networks:
+  deer-flow-network:
+    driver: bridge

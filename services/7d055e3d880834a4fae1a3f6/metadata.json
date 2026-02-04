@@ -1,0 +1,14 @@
+{
+  "service_id": "7d055e3d880834a4fae1a3f6",
+  "repo_name": "bytedance/deer-flow",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "3.80MB",
+  "language": "python",
+  "star": 19509,
+  "repo_flag": "ByteDance-SRC-1",
+  "uploaded_at": "2026-02-04T16:52:00.887477",
+  "generated_files": []
+}
