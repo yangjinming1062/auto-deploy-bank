@@ -1,0 +1,26 @@
+services:
+  mybatis-plus-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "40370:8080"
+    environment:
+      - mpw_key=${mpw_key:-default_key_for_development}
+    volumes:
+      - ./target.jar:/home/ubuntu/deploy-projects/c636561dae9540674ea68ae2/app.jar:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
