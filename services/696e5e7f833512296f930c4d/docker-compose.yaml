@@ -1,0 +1,206 @@
+services:
+  cognita-db:
+    image: postgres:13
+    container_name: cognita-postgres
+    restart: unless-stopped
+    env_file:
+      - ./compose.env
+    volumes:
+      - ./volumes/pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: cognita-config
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "sh -c 'pg_isready -U ${POSTGRES_USER:-postgres} -d cognita-config'",
+        ]
+      interval: 30s
+      timeout: 60s
+      retries: 5
+      start_period: 15s
+    networks:
+      - cognita-docker
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  qdrant-server:
+    image: qdrant/qdrant:v1.8.4
+    pull_policy: if_not_present
+    restart: unless-stopped
+    container_name: qdrant
+    expose:
+      - 6333
+      - 6334
+    healthcheck:
+      test: ["CMD-SHELL", "/bin/bash -c ':> /dev/tcp/0.0.0.0/6333'"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - ./volumes/qdrant_storage:/qdrant/storage:z
+    networks:
+      - cognita-docker
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  unstructured-io-parsers:
+    image: downloads.unstructured.io/unstructured-io/unstructured-api:0.0.73
+    pull_policy: if_not_present
+    restart: unless-stopped
+    container_name: unstructured-api
+    expose:
+      - 9500
+    environment:
+      - PORT=9500
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "-O",
+          "/dev/null",
+          "-o",
+          "/dev/null",
+          "http://localhost:9500/healthcheck",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    networks:
+      - cognita-docker
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  faster-whisper:
+    image: fedirz/faster-whisper-server:latest-cpu
+    pull_policy: if_not_present
+    container_name: faster-whisper
+    restart: unless-stopped
+    env_file:
+      - ./compose.env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    environment:
+      - WHISPER__MODEL=${WHISPER_MODEL}
+      - WHISPER__INFERENCE_DEVICE=auto
+    volumes:
+      - ./volumes/hugging_face_cache:/root/.cache/huggingface
+    networks:
+      - cognita-docker
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+
+  cognita-backend:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    restart: unless-stopped
+    container_name: cognita-backend
+    env_file:
+      - ./compose.env
+    depends_on:
+      - cognita-db
+      - qdrant-server
+      - unstructured-io-parsers
+    volumes:
+      - ./volumes/user_data:/app/user_data
+    environment:
+      - DEBUG_MODE=true
+      - LOCAL=${LOCAL}
+      - PROCESS_POOL_WORKERS=${PROCESS_POOL_WORKERS}
+      - LOG_LEVEL=DEBUG
+      - ML_REPO_NAME=${ML_REPO_NAME}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@cognita-db:5432/cognita-config
+      - METADATA_STORE_CONFIG=${METADATA_STORE_CONFIG}
+      - VECTOR_DB_CONFIG=${VECTOR_DB_CONFIG}
+      - LOCAL_DATA_DIRECTORY=/app/user_data
+      - UNSTRUCTURED_IO_URL=${UNSTRUCTURED_IO_URL}
+      - UNSTRUCTURED_IO_API_KEY=${UNSTRUCTURED_IO_API_KEY}
+      - INFINITY_API_KEY=${INFINITY_API_KEY}
+      - MODELS_CONFIG_PATH=${MODELS_CONFIG_PATH}
+      - TFY_HOST=${TFY_HOST}
+      - TFY_API_KEY=${TFY_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - BRAVE_API_KEY=${BRAVE_API_KEY}
+    networks:
+      - cognita-docker
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+  cognita-frontend:
+    build:
+      context: ./frontend
+      dockerfile: ./Dockerfile.dev
+      args:
+        - VITE_QA_FOUNDRY_URL=${VITE_QA_FOUNDRY_URL}
+        - VITE_DOCS_QA_DELETE_COLLECTIONS=${VITE_DOCS_QA_DELETE_COLLECTIONS}
+        - VITE_DOCS_QA_STANDALONE_PATH=${VITE_DOCS_QA_STANDALONE_PATH}
+        - VITE_DOCS_QA_ENABLE_REDIRECT=${VITE_DOCS_QA_ENABLE_REDIRECT}
+        - VITE_DOCS_QA_MAX_UPLOAD_SIZE_MB=${VITE_DOCS_QA_MAX_UPLOAD_SIZE_MB}
+        - VITE_USE_LOCAL=${LOCAL}
+    restart: unless-stopped
+    container_name: cognita-frontend
+    env_file:
+      - ./compose.env
+    ports:
+      - "${COGNITA_FRONTEND_PORT}:5001"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - cognita-backend
+    entrypoint: /bin/bash
+    command: -c "set -e; yarn install --frozen-lockfile && yarn dev --host 0.0.0.0"
+    networks:
+      - cognita-docker
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+networks:
+  cognita-docker:
+    external: false
