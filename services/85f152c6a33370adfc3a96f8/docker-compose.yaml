@@ -1,0 +1,31 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: shadowhook-builder
+    environment:
+      - ANDROID_HOME=/opt/android-sdk
+      - ANDROID_SDK_ROOT=/opt/android-sdk
+      - JAVA_OPTS=-Xmx2048m
+      - GRADLE_OPTS=-Xmx2048m
+    volumes:
+      # Named volume for APK output
+      - apk-output:/home/ubuntu/deploy-projects/85f152c6a33370adfc3a96f8/output
+      # Bind mount for security scanning - mount host file to container path
+      - type: bind
+        source: ./target.jar
+        target: /home/ubuntu/deploy-projects/85f152c6a33370adfc3a96f8/target.jar
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    ports:
+      - "41810:41810"
+
+volumes:
+  apk-output:
