@@ -1,0 +1,14 @@
+{
+  "service_id": "370852819e590c73ba04448d",
+  "repo_name": "bytedance/appshark",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "291.96MB",
+  "language": "java",
+  "star": 1725,
+  "repo_flag": "ByteDance-SRC-1",
+  "uploaded_at": "2026-02-04T15:44:58.185664",
+  "generated_files": []
+}
