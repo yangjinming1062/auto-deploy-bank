@@ -1,0 +1,36 @@
+services:
+  elecv2p:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: elecv2p
+    restart: always
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    environment:
+      - NODE_ENV=production
+      - TZ=Asia/Shanghai
+    ports:
+      - "42863:80"
+    volumes:
+      - ./script/JSFile:/usr/local/app/script/JSFile
+      - ./script/Lists:/usr/local/app/script/Lists
+      - ./script/Store:/usr/local/app/script/Store
+      - ./script/Shell:/usr/local/app/script/Shell
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80/", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
