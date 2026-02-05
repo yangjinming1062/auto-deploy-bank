@@ -1,0 +1,20 @@
+services:
+  flet-app:
+    build: .
+    container_name: flet-app
+    ports:
+      - "50456:50166"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:50166"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
