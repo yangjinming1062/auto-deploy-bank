@@ -1,0 +1,42 @@
+services:
+  voice-assistant:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: voice-assistant
+    # This is a CLI voice assistant application
+    # Requires model files in ./models/ directory:
+    #   - yi-34b-chat.Q8_0.gguf (LLM model)
+    #   - Whisper model will be downloaded automatically
+    # Audio device access via --device /dev/snd when running with microphone
+    environment:
+      - LANG=${LANG:-EN}
+      - DEBUG=${DEBUG:-true}
+      - WHISP_PATH=${WHISP_PATH:-models/whisper-large-v3}
+      - MODEL_PATH=${MODEL_PATH:-models/yi-34b-chat.Q8_0.gguf}
+      - CHUNK=${CHUNK:-1024}
+      - CHANNELS=${CHANNELS:-1}
+      - RATE=${RATE:-44100}
+      - SILENCE_THRESHOLD=${SILENCE_THRESHOLD:-500}
+      - MIC_IDX=${MIC_IDX:-0}
+    ports:
+      - "42469:42469"
+    volumes:
+      - ./models:/home/ubuntu/deploy-projects/a90455a893f6ff4c56809a80/models
+      - ./recordings:/home/ubuntu/deploy-projects/a90455a893f6ff4c56809a80/recordings
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "ps aux | grep -v grep | grep main.py || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    stdin_open: true
+    tty: true
