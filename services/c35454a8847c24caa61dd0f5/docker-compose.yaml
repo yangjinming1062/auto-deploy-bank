@@ -3,26 +3,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: mujing:latest
-    container_name: mujing-app
-    # Desktop application - no traditional web ports needed
-    # This service runs with virtual display for GUI
+    container_name: mujing-compose-app
     ports:
-      - "40830:8080"  # Health check endpoint
-    environment:
-      - DISPLAY=:99
-      - XDG_RUNTIME_DIR=/tmp/runtime
-      - GITHUB_ACTIONS=false
+      - "40283:40440"
     volumes:
-      # Mount JAR file for security scanning
-      - ./target.jar:/target.jar
-      # Mount workspace for build artifacts and resources
-      - ./build:/app/build
-      - ./resources:/app/resources
-      - ./lib:/app/lib
-      - ./dict:/app/dict
-      # Temporary runtime directory
-      - /tmp:/tmp
+      - ./target.jar:/app/app.jar
     deploy:
       resources:
         limits:
@@ -31,16 +16,10 @@ services:
         reservations:
           cpus: '1.0'
           memory: 1G
-    restart: unless-stopped
+    working_dir: /app
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/ || exit 1"]
+      test: ["CMD", "curl", "-f", "http://localhost:40440/health"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 120s
-    networks:
-      - mujing-network
-
-networks:
-  mujing-network:
-    driver: bridge
+      retries: 5
+      start_period: 60s

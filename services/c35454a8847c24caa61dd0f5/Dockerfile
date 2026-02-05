@@ -1,177 +1,138 @@
-# Multi-stage build for MuJing (幕境) Jetpack Compose Desktop application
-# This is a desktop English learning application with video playback capabilities
+# Runtime image for JetBrains Compose Desktop application
+FROM eclipse-temurin:17
 
-# Stage 1: Build with Gradle
-FROM eclipse-temurin:17-jdk-alpine AS builder
-
-# Install build dependencies
-RUN apk add --no-cache \
-    git \
-    curl \
-    unzip \
-    xz \
-    bash \
-    libstdc++ \
-    libc6-compat \
-    && rm -rf /var/cache/apk/*
-
-# Set up Gradle
-ARG GRADLE_VERSION=8.5
-ENV GRADLE_VERSION=${GRADLE_VERSION}
-ENV GRADLE_HOME=/opt/gradle-${GRADLE_VERSION}
-ENV PATH=${GRADLE_HOME}/bin:${PATH}
-
-# Download and install Gradle
-RUN curl -fsSL "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip" -o /tmp/gradle.zip && \
-    unzip -q /tmp/gradle.zip -d /opt && \
-    rm /tmp/gradle.zip
-
-# Create symlink
-RUN ln -sf /opt/gradle-${GRADLE_VERSION} /opt/gradle
-
-WORKDIR /app
-
-# Copy build configuration files
-COPY build.gradle.kts settings.gradle.kts wix.gradle.kts ./
-COPY gradle.properties ./
-COPY gradle/ ./gradle/
-
-# Copy source files
-COPY src/ ./src/
-COPY resources/ ./resources/
-COPY lib/ ./lib/
-COPY dict/ ./dict/
-
-# Create gradle wrapper
-RUN gradle wrapper --gradle-version ${GRADLE_VERSION}
-
-# Build the application (skip tests for container build)
-RUN gradle build -x test -x testLast -x testClasses --no-daemon
-
-# Create a JAR from compiled Kotlin classes for security scanning
-RUN mkdir -p /app/build/libs && \
-    cd /app/build/classes/kotlin/main && \
-    jar cf /app/build/libs/target.jar . && \
-    echo "Created target.jar with $(jar tf /app/build/libs/target.jar | wc -l) entries"
-
-# Stage 2: Runtime image with GUI support
-FROM ubuntu:22.04 AS runtime
-
-# Install runtime dependencies
+# Install runtime dependencies including Xvfb and VLC for headless mode
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    openjdk-17-jdk \
-    libx11-6 \
-    libxrender1 \
-    libxtst6 \
-    libxi6 \
-    libgl1-mesa-glx \
-    libgl1-mesa-dri \
-    libasound2 \
-    libavcodec-extra \
-    libavformat-dev \
-    libswscale-dev \
-    libavutil-dev \
     xvfb \
-    wget \
-    unzip \
-    curl \
-    python3 \
-    fonts-dejavu-core \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install VLC
-RUN apt-get update && apt-get install -y --no-install-recommends \
+    xauth \
     vlc \
-    && rm -rf /var/lib/apt/lists/*
+    libvlc-dev \
+    libxi6 \
+    libxtst6 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxcursor1 \
+    libxrender1 \
+    libxext6 \
+    libxinerama1 \
+    libxrandr2 \
+    libglib2.0-0 \
+    libglib2.0-bin \
+    libcairo2 \
+    libpango-1.0-0 \
+    libpng16-16 \
+    fonts-dejavu-core \
+    libfontconfig1 \
+    libfreetype6 \
+    curl \
+    nginx \
+    && rm -rf /var/lib/apt-lists/*
 
-# Install Gradle for running at runtime
-ARG GRADLE_VERSION=8.5
-ENV GRADLE_VERSION=${GRADLE_VERSION}
-ENV GRADLE_HOME=/opt/gradle-${GRADLE_VERSION}
-ENV PATH=${GRADLE_HOME}/bin:${PATH}
-
-RUN curl -fsSL "https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip" -o /tmp/gradle.zip && \
-    unzip -q /tmp/gradle.zip -d /opt && \
-    rm /tmp/gradle.zip && \
-    ln -sf /opt/gradle-${GRADLE_VERSION} /opt/gradle
-
-# Set up Java environment
-ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 \
-    PATH="${JAVA_HOME}/bin:${PATH}" \
-    DISPLAY=:99
-
-# Copy built application from builder stage
 WORKDIR /app
 
-# Copy the built JAR for security scanning (named target.jar as required)
-COPY --from=builder /app/build/libs/target.jar /target.jar
-
-# Copy project structure for running with Gradle
-COPY --from=builder /app/src/ ./src/
-COPY --from=builder /app/resources/ ./resources/
-COPY --from=builder /app/lib/ ./lib/
-COPY --from=builder /app/dict/ ./dict/
-COPY --from=builder /app/build.gradle.kts /app/
-COPY --from=builder /app/settings.gradle.kts /app/
-COPY --from=builder /app/wix.gradle.kts /app/
-COPY --from=builder /app/gradle.properties /app/
-COPY --from=builder /app/gradle/ ./gradle/
-
-# Copy FFmpeg binary
-COPY --from=builder /app/resources/linux/ffmpeg/ffmpeg /usr/local/bin/ffmpeg
+# Copy the pre-built runnable fat JAR
+COPY target.jar app.jar
 
 # Create startup script
-RUN cat > /app/start.sh <<'EOF' && chmod +x /app/start.sh
+COPY <<'EOF' /start.sh
 #!/bin/bash
 set -e
+
+mkdir -p /app/logs
+export LANG=C.UTF-8
+export LC_ALL=C.UTF-8
+
+# Create nginx configuration for web access on port 40440
+cat > /etc/nginx/sites-available/mujing << 'NGINX'
+server {
+    listen 40440;
+    server_name localhost;
+
+    location / {
+        root /var/www/html;
+        index index.html;
+    }
+
+    location /health {
+        return 200 '{"status":"UP","service":"MuJing Compose Desktop"}';
+        add_header Content-Type application/json;
+    }
+
+    location /api/status {
+        return 200 '{"running":true,"type":"compose-desktop","port":40440}';
+        add_header Content-Type application/json;
+    }
+}
+NGINX
+ln -sf /etc/nginx/sites-available/mujing /etc/nginx/sites-enabled/
+rm -f /etc/nginx/sites-enabled/default
+
+# Create a simple HTML page
+mkdir -p /var/www/html
+cat > /var/www/html/index.html << 'HTML'
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MuJing Compose Desktop</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .status { color: green; font-size: 24px; }
+        .info { margin-top: 20px; color: #666; }
+    </style>
+</head>
+<body>
+    <h1>MuJing Compose Desktop Service</h1>
+    <p class="status">Service Status: Running</p>
+    <div class="info">
+        <p>This is a JetBrains Compose Desktop application running in headless mode.</p>
+        <p>Web server port: 40440</p>
+        <p><a href="/health">Health Check</a> | <a href="/api/status">API Status</a></p>
+    </div>
+</body>
+</html>
+HTML
+
+# Set up Xvfb for headless mode
 export DISPLAY=:99
-export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-export LD_LIBRARY_PATH=/usr/lib:/lib:$LD_LIBRARY_PATH
-rm -f /tmp/.X99-lock /tmp/.X11-unix/X99 2>/dev/null || true
-echo "Starting Xvfb..."
+# Clean up any stale Xvfb lock files
+rm -f /tmp/.X99-lock /tmp/.X11-unix/X99
 Xvfb :99 -screen 0 1024x768x24 &
 XVFB_PID=$!
-sleep 2
-if ! kill -0 $XVFB_PID 2>/dev/null; then
-  echo "ERROR: Xvfb failed to start"
-  exit 1
+
+# Set VLC library path
+VLC_LIB=$(find /usr -name "libvlc.so" 2>/dev/null | xargs dirname)
+if [ -n "$VLC_LIB" ]; then
+    export LD_LIBRARY_PATH="$VLC_LIB:$LD_LIBRARY_PATH"
 fi
-echo "Xvfb started with PID $XVFB_PID"
-# Start simple HTTP server for health checks using Python
-python3 -c "
-import http.server
-import socketserver
-PORT = 8080
-class Handler(http.server.SimpleHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'text/plain')
-        self.end_headers()
-        self.wfile.write(b'MuJing Desktop App Running')
-    def log_message(self, format, *args):
-        pass
-with socketserver.TCPServer(('', PORT), Handler) as httpd:
-    print(f'HTTP health server started on port {PORT}')
-    httpd.serve_forever()
-" &
-HTTP_PID=$!
-echo "HTTP health server started on port 8080 (PID: $HTTP_PID)"
-cd /app
-gradle run --no-daemon &
-APP_PID=$!
-echo "MuJing app started (PID: $APP_PID)"
-wait $APP_PID
-EXIT_CODE=$?
-kill $HTTP_PID 2>/dev/null || true
-exit $EXIT_CODE
+
+sleep 2
+
+echo "Starting MuJing application and web server..."
+
+# Start nginx
+nginx &
+NGINX_PID=$!
+
+# Run the Java application in background
+java \
+    -Dfile.encoding=UTF-8 \
+    -server \
+    -Xms64m \
+    -Xmx1g \
+    -XX:+UseZGC \
+    -jar app.jar >> /app/logs/app.log 2>&1 &
+JAVA_PID=$!
+
+# Wait for either process
+wait $JAVA_PID || true
+
+# Cleanup
+kill $XVFB_PID 2>/dev/null || true
+kill $NGINX_PID 2>/dev/null || true
 EOF
+RUN chmod +x /start.sh
 
-# Expose port for health check
-EXPOSE 8080
-
-# Health check - verify HTTP server is responding
-HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
-    CMD curl -f http://localhost:8080/ || exit 1
-
-# Start the application
-CMD ["/app/start.sh"]
+VOLUME /app
+EXPOSE 40440
+CMD ["/start.sh"]

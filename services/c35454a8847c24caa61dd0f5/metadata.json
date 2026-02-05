@@ -1,13 +1,18 @@
 {
   "service_id": "c35454a8847c24caa61dd0f5",
   "repo_name": "tangshimin/MuJing",
-  "platform": "github",
+  "platform": null,
   "ref": null,
   "version": "",
-  "status": "stopped",
+  "status": "deploying",
   "package_size": "184.60MB",
   "language": "java",
-  "star": 3036,
-  "repo_flag": "JAVA-OpenNLP",
-  "uploaded_at": "2026-01-12T12:21:06.386017"
+  "star": 3462,
+  "repo_flag": "JAVA",
+  "uploaded_at": "2026-02-05T09:02:23.386453",
+  "generated_files": [
+    "Dockerfile",
+    "docker-compose.yaml",
+    "/home/ubuntu/deploy-projects/c35454a8847c24caa61dd0f5/Dockerfile"
+  ]
 }
