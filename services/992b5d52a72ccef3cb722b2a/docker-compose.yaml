@@ -1,0 +1,120 @@
+services:
+  feast-feature-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: feast-feature-server
+    ports:
+      - "0.0.0.0:51396:6565"
+    environment:
+      - FEAST_USAGE=${FEAST_USAGE:-True}
+      - FEAST_FORCE_LOCAL_UI=${FEAST_FORCE_LOCAL_UI:-False}
+      - FEAST_S3_ENDPOINT_URL=${FEAST_S3_ENDPOINT_URL:-}
+      - INTRA_COMMUNICATION_BASE64=${INTRA_COMMUNICATION_BASE64:-}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS:-}
+      - FEAST_RAY_AUTH_TOKEN=${FEAST_RAY_AUTH_TOKEN:-}
+      - RAY_AUTH_TOKEN=${RAY_AUTH_TOKEN:-}
+      - FEAST_RAY_AUTH_SERVER=${FEAST_RAY_AUTH_SERVER:-}
+      - RAY_AUTH_SERVER=${RAY_AUTH_SERVER:-}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - POSTGRES_HOST=postgresql
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=feast
+      - POSTGRES_USER=feast
+      - POSTGRES_PASSWORD=feast
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_DB=feast
+      - MYSQL_USER=feast
+      - MYSQL_PASSWORD=feast
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgresql:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./feature_repo:/home/feast
+    networks:
+      - feast-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6565/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
+
+  redis:
+    image: redis:7-alpine
+    container_name: feast-redis
+    ports: []
+    volumes:
+      - redis-data:/data
+    networks:
+      - feast-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  postgresql:
+    image: postgres:15-alpine
+    container_name: feast-postgresql
+    ports: []
+    environment:
+      - POSTGRES_USER=feast
+      - POSTGRES_PASSWORD=feast
+      - POSTGRES_DB=feast
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - feast-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U feast -d feast"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  mysql:
+    image: mysql:8.0
+    container_name: feast-mysql
+    ports: []
+    environment:
+      - MYSQL_ROOT_PASSWORD=feast
+      - MYSQL_DATABASE=feast
+      - MYSQL_USER=feast
+      - MYSQL_PASSWORD=feast
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - feast-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pfeast"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+networks:
+  feast-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+  postgres-data:
+  mysql-data:
