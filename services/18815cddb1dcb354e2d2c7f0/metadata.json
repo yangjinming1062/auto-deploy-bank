@@ -1,0 +1,14 @@
+{
+  "service_id": "18815cddb1dcb354e2d2c7f0",
+  "repo_name": "bytedance/UNO",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "19.77MB",
+  "language": "python",
+  "star": 1348,
+  "repo_flag": "ByteDance-SRC-1",
+  "uploaded_at": "2026-02-05T04:29:50.387580",
+  "generated_files": []
+}

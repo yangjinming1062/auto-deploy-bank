@@ -1,0 +1,35 @@
+services:
+  uno:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "42329:7860"
+    environment:
+      - HF_TOKEN=${HF_TOKEN:-}
+      - FLUX_DEV=${FLUX_DEV:-}
+      - FLUX_DEV_FP8=${FLUX_DEV_FP8:-}
+      - FLUX_SCHNELL=${FLUX_SCHNELL:-}
+      - AE=${AE:-}
+      - LORA=${LORA:-}
+      - T5=${T5:-xlabs-ai/xflux_text_encoders}
+      - CLIP=${CLIP:-openai/clip-vit-large-patch14}
+      - HF_HOME=/home/ubuntu/deploy-projects/18815cddb1dcb354e2d2c7f0/.cache/huggingface
+      - HF_HUB_DOWNLOAD_EAGER=1
+    volumes:
+      - ./model_cache:/home/ubuntu/deploy-projects/18815cddb1dcb354e2d2c7f0/.cache/huggingface
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
+      interval: 30s
+      timeout: 60s
+      retries: 3
+      start_period: 180s
