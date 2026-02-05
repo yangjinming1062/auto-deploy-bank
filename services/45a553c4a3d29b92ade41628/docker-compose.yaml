@@ -1,0 +1,25 @@
+services:
+  skymagic:
+    build: .
+    ports:
+      - "43950:43950"
+    volumes:
+      - ./test_videos:/home/ubuntu/deploy-projects/45a553c4a3d29b92ade41628/test_videos
+      - ./config:/home/ubuntu/deploy-projects/45a553c4a3d29b92ade41628/config
+      - ./skybox:/home/ubuntu/deploy-projects/45a553c4a3d29b92ade41628/skybox
+      - ./checkpoints_G_coord_resnet50:/home/ubuntu/deploy-projects/45a553c4a3d29b92ade41628/checkpoints_G_coord_resnet50
+      - ./output:/home/ubuntu/deploy-projects/45a553c4a3d29b92ade41628/output
+    healthcheck:
+      test: ["CMD-SHELL", "exit 0"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G

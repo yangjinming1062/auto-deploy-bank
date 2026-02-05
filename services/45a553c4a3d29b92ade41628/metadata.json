@@ -1,0 +1,21 @@
+{
+  "service_id": "45a553c4a3d29b92ade41628",
+  "repo_name": "jiupinjia/SkyAR",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "70.09MB",
+  "language": "python",
+  "star": 2034,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-02-06T04:55:39.518422",
+  "generated_files": [
+    "Dockerfile",
+    "docker-compose.yaml",
+    "start.sh",
+    "/home/ubuntu/deploy-projects/45a553c4a3d29b92ade41628/webapp.py",
+    "/home/ubuntu/deploy-projects/45a553c4a3d29b92ade41628/Requirements.txt",
+    "/home/ubuntu/deploy-projects/45a553c4a3d29b92ade41628/start.sh"
+  ]
+}
