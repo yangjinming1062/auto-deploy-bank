@@ -1,0 +1,19 @@
+{
+  "service_id": "18c55c0a992a1a4ea12094ed",
+  "repo_name": "bytedance/Elkeid",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "42.30MB",
+  "language": "java",
+  "star": 2553,
+  "repo_flag": "ByteDance-SRC-1",
+  "uploaded_at": "2026-02-06T07:30:54.154300",
+  "generated_files": [
+    "server/agent_center/conf/svr.yml",
+    "server/manager/conf/svr.yml",
+    "create_test_users.sh",
+    "scripts/init-mongo.js"
+  ]
+}

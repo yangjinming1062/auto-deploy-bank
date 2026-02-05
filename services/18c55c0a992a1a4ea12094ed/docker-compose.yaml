@@ -1,0 +1,99 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: elkeid-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass r65154g72q7gqpr2tc
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - elkeid-network
+
+  mongo:
+    image: mongo:6
+    container_name: elkeid-mongo
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=elkeid
+      - MONGO_INITDB_ROOT_PASSWORD=c596988d134go1qran
+      - MONGO_INITDB_DATABASE=elkeid
+    volumes:
+      - mongo-data:/data/db
+      - ./scripts/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - elkeid-network
+
+  manager:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: elkeid-manager
+    ports:
+      - "40723:6701"
+    environment:
+      - MANAGER_URL=http://localhost:6701
+      - BUILD_VERSION=1.0.0
+    volumes:
+      - ./target.jar:/app/target.jar
+      - ./server/manager/log:/app/log
+      - ./server/web_console:/app/static/frontend:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:6701/", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - elkeid-network
+
+networks:
+  elkeid-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+  mongo-data:
