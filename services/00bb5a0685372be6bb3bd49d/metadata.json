@@ -1,0 +1,26 @@
+{
+  "service_id": "00bb5a0685372be6bb3bd49d",
+  "repo_name": "mahyarnajibi/SNIPER",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "485KB",
+  "language": "python",
+  "star": 2693,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-02-05T22:57:00.362852",
+  "generated_files": [
+    "configs/faster/default_configs.py",
+    "configs/faster/sniper_res101_e2e.yml",
+    "configs/faster/sniper_res50_e2e.yml",
+    "configs/faster/sniper_mobilenetv2_e2e.yml",
+    "configs/faster/sniper_res101_e2e_pascal_voc.yml",
+    "configs/faster/sniper_res101_e2e_mask.yml",
+    "configs/faster/sniper_res101_e2e_autofocus.yml",
+    "configs/faster/sniper_res101_e2e_mask_autofocus.yml",
+    "api.py",
+    "api.py",
+    "docker-compose.yaml"
+  ]
+}
