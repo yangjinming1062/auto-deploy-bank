@@ -1,0 +1,20 @@
+{
+  "service_id": "9b2d5569b1cbcb2b6070e21a",
+  "repo_name": "WillKoehrsen/feature-selector",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "2.61MB",
+  "language": "python",
+  "star": 2236,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-02-06T03:15:06.757399",
+  "generated_files": [
+    "scripts/entrypoint.sh",
+    "app.py",
+    "requirements.txt",
+    "scripts/entrypoint.sh",
+    "Dockerfile"
+  ]
+}
