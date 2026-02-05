@@ -1,0 +1,26 @@
+services:
+  caption:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: caption-app
+    ports:
+      - "40277:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "sh", "-c", "netstat -tln | grep -q ':3000'"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
