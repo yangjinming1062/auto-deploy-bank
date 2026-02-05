@@ -1,0 +1,37 @@
+services:
+  webthinker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: webthinker-demo
+    ports:
+      - "42488:8501"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - OMP_NUM_THREADS=1
+      - TOKENIZERS_PARALLELISM=false
+      # API keys (configure these via environment or .env file)
+      - ANTHROPIC_KEY=${ANTHROPIC_KEY:-}
+      - OPENAI_KEY=${OPENAI_KEY:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY:-}
+      - COHERE_API_KEY=${COHERE_API_KEY:-}
+      - DEEPSEEK_API=${DEEPSEEK_API:-}
+      - SERPER_API_KEY=${SERPER_API_KEY:-}
+      - BING_SEARCH_V7_SUBSCRIPTION_KEY=${BING_SEARCH_V7_SUBSCRIPTION_KEY:-}
+      - JINA_API_KEY=${JINA_API_KEY:-}
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
