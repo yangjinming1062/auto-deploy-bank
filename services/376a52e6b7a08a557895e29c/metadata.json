@@ -1,0 +1,16 @@
+{
+  "service_id": "376a52e6b7a08a557895e29c",
+  "repo_name": "OpenLineage/OpenLineage",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "48.50MB",
+  "language": "python",
+  "star": 2284,
+  "repo_flag": "JAVA",
+  "uploaded_at": "2026-02-06T03:07:22.660422",
+  "generated_files": [
+    "/home/ubuntu/deploy-projects/376a52e6b7a08a557895e29c/docker-compose.yaml"
+  ]
+}

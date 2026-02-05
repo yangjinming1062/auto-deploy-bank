@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  test-server:
+    build: ./test_server
+    ports:
+      - "40479:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 2s
+      timeout: 1s
+      retries: 5
+      start_period: 5s
+    environment:
+      - PYTHONUNBUFFERED=1
+    networks:
+      - test-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+networks:
+  test-network:
+    driver: bridge
