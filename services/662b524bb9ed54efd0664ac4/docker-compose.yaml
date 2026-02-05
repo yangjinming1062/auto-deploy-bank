@@ -1,0 +1,70 @@
+services:
+  roxy-wi:
+    build: .
+    container_name: roxy-wi
+    ports:
+      - "45168:8765"
+    environment:
+      - HTTP_HOST=${HTTP_HOST:-}
+      - MYSQL_HOST=mysql
+      - CREATE_TEST_ACCOUNTS=true
+    volumes:
+      - roxy-wi-logs:/var/log/roxy-wi
+      - roxy-wi-lib:/var/lib/roxy-wi
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8765/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+    networks:
+      - roxy-wi-network
+
+  mysql:
+    image: mysql:8.0
+    container_name: roxy-wi-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: roxywi
+      MYSQL_USER: roxy-wi
+      MYSQL_PASSWORD: roxy-wi
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    restart: unless-stopped
+    networks:
+      - roxy-wi-network
+
+volumes:
+  roxy-wi-logs:
+  roxy-wi-lib:
+  mysql-data:
+
+networks:
+  roxy-wi-network:
+    driver: bridge
