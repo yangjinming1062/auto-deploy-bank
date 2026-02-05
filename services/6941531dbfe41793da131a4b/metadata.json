@@ -1,0 +1,14 @@
+{
+  "service_id": "6941531dbfe41793da131a4b",
+  "repo_name": "dgtlmoon/changedetection.io",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "stopped",
+  "package_size": "4.58MB",
+  "language": "python",
+  "star": 30113,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-02-06T01:32:46.061752",
+  "generated_files": []
+}

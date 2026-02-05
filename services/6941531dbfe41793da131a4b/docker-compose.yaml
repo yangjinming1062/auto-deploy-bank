@@ -1,0 +1,45 @@
+services:
+  changedetection:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: changedetection
+    hostname: changedetection
+    volumes:
+      - changedetection-data:/datastore
+    environment:
+      PORT: 5000
+      LOGGER_LEVEL: INFO
+      WEBDRIVER_URL: http://browser-chrome:4444/wd/hub
+      FETCH_WORKERS: 10
+      MINIMUM_SECONDS_RECHECK_TIME: 3
+      DISABLE_VERSION_CHECK: true
+      TZ: UTC
+      LC_ALL: en_US.UTF-8
+      SCREENSHOT_QUALITY: 72
+      PLAYWRIGHT_BROWSER_TYPE: chromium
+      LISTEN_HOST: 0.0.0.0
+      DATASTORE_SCAN_DIRTY_SAVE_INTERVAL_SECONDS: 10
+      NOTIFICATION_WORKERS: 1
+      ENABLE_NO_PROXY_OPTION: true
+      SAFE_PROTOCOL_REGEX: "^(http|https|ftp):"
+    ports:
+      - "0.0.0.0:45203:5000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+volumes:
+  changedetection-data:
