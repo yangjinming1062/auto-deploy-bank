@@ -1,0 +1,20 @@
+services:
+  nvm-desktop:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nvm-desktop
+    ports:
+      - "40635:40635"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    environment:
+      - NODE_ENV=production
+      - DISPLAY=:99
+    restart: unless-stopped
