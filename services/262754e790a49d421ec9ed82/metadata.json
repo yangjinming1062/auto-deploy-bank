@@ -9,11 +9,6 @@
   "language": "python",
   "star": 1523,
   "repo_flag": "PYTHON",
-  "uploaded_at": "2026-02-06T14:03:46.361968",
-  "generated_files": [
-    "docker-compose.yaml",
-    "Dockerfile",
-    "EPO/LLaMA-Factory/pyproject.toml",
-    "/home/ubuntu/deploy-projects/262754e790a49d421ec9ed82/EPO/LLaMA-Factory/src/llamafactory/api/app.py"
-  ]
+  "uploaded_at": "2026-02-06T14:25:24.876660",
+  "generated_files": []
 }

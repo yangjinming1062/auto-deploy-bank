@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: llamafactory
     ports:
-      - "40215:8000"
+      - "40272:8000"
     environment:
       - API_HOST=0.0.0.0
       - API_PORT=8000
@@ -14,6 +14,10 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - DISABLE_VERSION_CHECK=1
       - PYTHONUNBUFFERED=1
+      - FASTAPI_ROOT_PATH=${FASTAPI_ROOT_PATH:-}
+      - HF_TOKEN=${HF_TOKEN:-}
+      - GRADIO_SHARE=${GRADIO_SHARE:-false}
+      - GRADIO_SERVER_NAME=${GRADIO_SERVER_NAME:-0.0.0.0}
     volumes:
       - ./hf_cache:/root/.cache/huggingface
       - ./EPO/LLaMA-Factory/data:/app/data
@@ -24,14 +28,14 @@ services:
       test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
       interval: 30s
       timeout: 10s
-      start_period: 10s
+      start_period: 60s
       retries: 3
     deploy:
       resources:
         limits:
           cpus: '2.0'
-          memory: 8G
+          memory: 4G
         reservations:
           cpus: '1.0'
-          memory: 2G
+          memory: 1G
     restart: unless-stopped
