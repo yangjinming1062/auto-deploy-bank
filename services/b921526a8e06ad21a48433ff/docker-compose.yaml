@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  snake:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: snake-training
+    restart: "no"
+
+    ports:
+      - "40374:8080"
+
+    environment:
+      - CUDA_HOME=/usr/local/cuda
+      - FORCE_CUDA=0
+      - CITYSCAPES_DATASET=${CITYSCAPES_DATASET:-}
+      - CITYSCAPES_RESULTS=${CITYSCAPES_RESULTS:-}
+      - CITYSCAPES_EXPORT_DIR=${CITYSCAPES_EXPORT_DIR:-}
+      - PYTHONUNBUFFERED=1
+      - PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+
+    volumes:
+      - ./data:/home/ubuntu/deploy-projects/b921526a8e06ad21a48433ff/data
+
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s

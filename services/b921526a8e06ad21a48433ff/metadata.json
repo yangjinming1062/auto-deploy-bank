@@ -1,0 +1,20 @@
+{
+  "service_id": "b921526a8e06ad21a48433ff",
+  "repo_name": "zju3dv/snake",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "7.31MB",
+  "language": "python",
+  "star": 1182,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-02-07T00:47:16.521790",
+  "generated_files": [
+    "configs/default.yaml",
+    "start.sh",
+    "web_server.py",
+    "start.sh",
+    "docker-compose.yaml"
+  ]
+}
