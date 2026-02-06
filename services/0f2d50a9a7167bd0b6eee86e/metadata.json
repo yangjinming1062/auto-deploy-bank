@@ -1,0 +1,21 @@
+{
+  "service_id": "0f2d50a9a7167bd0b6eee86e",
+  "repo_name": "lowcoder-org/lowcoder",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "128.47MB",
+  "language": "java",
+  "star": 1490,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-02-06T14:09:28.090849",
+  "generated_files": [
+    "create_test_accounts.sh",
+    "/home/ubuntu/deploy-projects/0f2d50a9a7167bd0b6eee86e/Dockerfile",
+    "/home/ubuntu/deploy-projects/0f2d50a9a7167bd0b6eee86e/deploy/docker/Dockerfile.api-service",
+    "/home/ubuntu/deploy-projects/0f2d50a9a7167bd0b6eee86e/docker-compose.yaml",
+    "/home/ubuntu/deploy-projects/0f2d50a9a7167bd0b6eee86e/start.sh",
+    "/home/ubuntu/deploy-projects/0f2d50a9a7167bd0b6eee86e/docker-compose.yaml"
+  ]
+}

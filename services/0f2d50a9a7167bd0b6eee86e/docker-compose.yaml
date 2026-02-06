@@ -1,0 +1,148 @@
+#####################################################################
+##                                                                 ##
+##  Lowcoder API Service compose file                              ##
+##                                                                 ##
+##  To run:                                                        ##
+##     docker compose up -d                                        ##
+##                                                                 ##
+#####################################################################
+
+services:
+
+  ##
+  ## MongoDB (internal service, not exposed to host)
+  ##
+  mongodb:
+    image: mongo:7.0
+    container_name: lowcoder-mongodb
+    environment:
+      MONGO_INITDB_DATABASE: lowcoder
+      MONGO_INITDB_USERNAME: lowcoder
+      MONGO_INITDB_PASSWORD: secret123
+    volumes:
+      - mongodb_data:/data/db
+    expose:
+      - "27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  ##
+  ## Redis (internal service, not exposed to host)
+  ##
+  redis:
+    image: redis:7-alpine
+    container_name: lowcoder-redis
+    volumes:
+      - redis_data:/data
+    expose:
+      - "6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  ##
+  ## Lowcoder API Service
+  ##
+  api-service:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: lowcoder-api-service
+    environment:
+      # Database configuration
+      LOWCODER_MONGODB_URL: mongodb://lowcoder:secret123@mongodb:27017/lowcoder?retryWrites=true&loadBalanced=false&connectTimeoutMS=10000&authSource=admin&authMechanism=SCRAM-SHA-256
+      LOWCODER_REDIS_URL: redis://redis:6379
+
+      # Encryption settings
+      LOWCODER_DB_ENCRYPTION_PASSWORD: lowcoder.org
+      LOWCODER_DB_ENCRYPTION_SALT: lowcoder.org
+
+      # Super admin configuration
+      LOWCODER_SUPERUSER_USERNAME: admin@localhost
+      LOWCODER_SUPERUSER_PASSWORD: ""
+
+      # Authentication settings
+      LOWCODER_EMAIL_AUTH_ENABLED: "true"
+      LOWCODER_EMAIL_SIGNUP_ENABLED: "true"
+      LOWCODER_CREATE_WORKSPACE_ON_SIGNUP: "true"
+
+      # Node service configuration (internal)
+      LOWCODER_NODE_SERVICE_URL: http://127.0.0.1:6060
+      LOWCODER_NODE_SERVICE_SECRET: ""
+      LOWCODER_NODE_SERVICE_SECRET_SALT: ""
+
+      # Workspace mode
+      LOWCODER_WORKSPACE_MODE: SAAS
+
+      # Public URL and cookies
+      LOWCODER_PUBLIC_URL: http://34.127.19.15:40241
+      LOWCODER_COOKIE_NAME: LOWCODER_CE_SELFHOST_TOKEN
+      LOWCODER_COOKIE_MAX_AGE: "24"
+
+      # CORS
+      LOWCODER_CORS_DOMAINS: "*"
+
+      # Rate limits and timeouts
+      LOWCODER_API_RATE_LIMIT: "50"
+      LOWCODER_DEFAULT_QUERY_TIMEOUT: "10"
+      LOWCODER_MAX_QUERY_TIMEOUT: "120"
+      LOWCODER_MAX_REQUEST_SIZE: "20m"
+
+      # Plugin directory
+      LOWCODER_PLUGINS_DIR: /lowcoder/api-service/plugins
+
+      # Marketplace
+      LOWCODER_MARKETPLACE_PRIVATE_MODE: "true"
+
+      # Email notifications
+      LOWCODER_EMAIL_NOTIFICATIONS_SENDER: info@localhost
+      LOWCODER_APP_SNAPSHOT_RETENTIONTIME: "30"
+
+      # API Key secret
+      LOWCODER_API_KEY_SECRET: 5a41b090758b39b226603177ef48d73ae9839dd458ccb7e66f7e7cc028d5a50b
+
+      # User/group configuration
+      LOWCODER_PUID: "9001"
+      LOWCODER_PGID: "9001"
+
+    ports:
+      - "40241:8080"
+    volumes:
+      - ./target.jar:/security-scan.jar:rw
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/api/status/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+volumes:
+  mongodb_data:
+  redis_data:
+
+networks:
+  default:
+    name: lowcoder-network

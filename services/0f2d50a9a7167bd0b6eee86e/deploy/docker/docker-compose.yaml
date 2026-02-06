@@ -1,0 +1,31 @@
+#####################################################################
+##                                                                 ##
+##  Lowcoder all-in-one compose file.                              ##
+##                                                                 ##
+##  To run:                                                        ##
+##     docker compose up -d                                        ##
+##                                                                 ##
+#####################################################################
+
+services:
+
+  ##
+  ## Start Lowcoder (all-in-one)
+  ##
+  lowcoder-all-in-one:
+    image: lowcoderorg/lowcoder-ce:latest
+    container_name: lowcoder
+    env_file:
+      - path: ./default.env
+        required: true
+      - path: ./override.env
+        required: false
+    ports:
+      - "3000:3000"
+      - "3443:3443"
+    #  - "27017:27017"
+    volumes:
+      - ./lowcoder-stacks:/lowcoder-stacks
+      - ./lowcoder-stacks/assets:/lowcoder/assets
+    restart: unless-stopped
+
