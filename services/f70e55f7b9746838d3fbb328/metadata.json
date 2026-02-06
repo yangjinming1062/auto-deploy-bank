@@ -1,0 +1,16 @@
+{
+  "service_id": "f70e55f7b9746838d3fbb328",
+  "repo_name": "ahmetaa/zemberek-nlp",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "27.56MB",
+  "language": "java",
+  "star": 1294,
+  "repo_flag": "JAVA",
+  "uploaded_at": "2026-02-06T21:20:25.351809",
+  "generated_files": [
+    "server/src/main/resources/application.yml"
+  ]
+}
