@@ -1,0 +1,31 @@
+services:
+  openliberty:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: openliberty-server
+    ports:
+      - "47383:9080"
+    volumes:
+      - ./target.jar:/tmp/target.jar
+    environment:
+      - WLP_ENVIRONMENT=standalone
+      - WLP_LOGGING_CONSOLE_FORMAT=JSON
+      - SERVER_USER=admin
+      - SERVER_PASSWORD=Admin@123
+      - KEYSTORE_PASSWORD=Liberty keystore password
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped

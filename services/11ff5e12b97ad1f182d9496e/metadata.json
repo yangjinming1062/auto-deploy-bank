@@ -1,0 +1,19 @@
+{
+  "service_id": "11ff5e12b97ad1f182d9496e",
+  "repo_name": "OpenLiberty/open-liberty",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "322.18MB",
+  "language": "java",
+  "star": 1236,
+  "repo_flag": "JAVA",
+  "uploaded_at": "2026-02-07T05:40:45.198885",
+  "generated_files": [
+    "server.xml",
+    "server.env",
+    "bootstrap.properties",
+    "create_user.sh"
+  ]
+}
