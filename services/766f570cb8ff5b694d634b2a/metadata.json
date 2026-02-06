@@ -1,0 +1,16 @@
+{
+  "service_id": "766f570cb8ff5b694d634b2a",
+  "repo_name": "DeepWisdom/AutoDL",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "3.87MB",
+  "language": "python",
+  "star": 1186,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-02-07T00:31:25.817607",
+  "generated_files": [
+    "docker-compose.yaml"
+  ]
+}
