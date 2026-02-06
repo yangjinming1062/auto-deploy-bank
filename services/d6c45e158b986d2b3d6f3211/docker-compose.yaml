@@ -1,0 +1,77 @@
+services:
+  genie-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: genie-app
+    ports:
+      - "41231:8080"
+      - "9090:9090"
+    environment:
+      # Database configuration (using H2 in-memory for demo)
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:genie;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;NON_KEYWORDS=value,limit;
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=none
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.H2Dialect
+
+      # Flyway migration
+      - SPRING_FLYWAY_ENABLED=true
+      - SPRING_FLYWAY_LOCATIONS=classpath:db/migration/{vendor}
+
+      # Genie configuration
+      - GENIE_REDIS_ENABLED=false
+      - GENIE_LEADER_ENABLED=false
+      - GENIE_HEALTH_MAXCPULOADPERCENT=80
+      - GENIE_JOBS_MEMORY_MAXSYSTEMMEMORY=30720
+      - GENIE_JOBS_MEMORY_DEFAULTJOBMEMORY=1024
+      - GENIE_JOBS_MEMORY_MAXJOBMEMORY=10240
+      - GENIE_JOBS_LOCATIONS_ARCHIVES=file:///tmp/genie/archives/
+      - GENIE_JOBS_LOCATIONS_JOBS=file:///tmp/genie/jobs/
+      - GENIE_JOBS_USERS_RUNASUSERENABLED=false
+      - GENIE_SECURITY_OAUTH2_ENABLED=false
+      - GENIE_SECURITY_SAML_ENABLED=false
+      - GENIE_SECURITY_X509_ENABLED=false
+      - GENIE_TASKS_DATABASE-CLEANUP_ENABLED=true
+      - GENIE_TASKS_DISK-CLEANUP_ENABLED=true
+
+      # gRPC server configuration
+      - GRPC_SERVER_PORT=9090
+      - GRPC_SERVER_ADDRESS=0.0.0.0
+
+      # Management/Actuator endpoints
+      - MANAGEMENT_ENDPOINTS_WEB_BASE-PATH=/admin
+
+      # Exclude Redis auto-configuration
+      - SPRING_AUTOCONFIGURE_EXCLUDE=org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+
+      # AWS configuration
+      - CLOUD_AWS_CREDENTIALS_USEDEFAULTAWSCREDENTIALSCHAIN=true
+      - CLOUD_AWS_REGION_STATIC=us-east-1
+
+      # Zookeeper disabled
+      - SPRING_CLOUD_ZOOKEEPER_ENABLED=false
+    volumes:
+      # Volume mount for security scanning - copy JAR to host
+      - ./target.jar:/app/target.jar:ro
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/admin/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    networks:
+      - genie-network
+
+networks:
+  genie-network:
+    driver: bridge

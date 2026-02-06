@@ -1,0 +1,20 @@
+{
+  "service_id": "d6c45e158b986d2b3d6f3211",
+  "repo_name": "Netflix/genie",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "3.09MB",
+  "language": "java",
+  "star": 1762,
+  "repo_flag": "JAVA",
+  "uploaded_at": "2026-02-06T10:40:20.176786",
+  "generated_files": [
+    "genie-web/src/main/resources/genie-web-defaults.yml",
+    "genie-web/src/main/resources/genie-web-prod-defaults.yml",
+    "genie-agent/src/main/resources/genie-agent-defaults.yml",
+    "Dockerfile",
+    "docker-compose.yaml"
+  ]
+}
