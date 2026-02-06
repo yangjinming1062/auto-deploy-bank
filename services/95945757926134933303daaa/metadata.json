@@ -1,0 +1,16 @@
+{
+  "service_id": "95945757926134933303daaa",
+  "repo_name": "strnad/CrewAI-Studio",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "1.12MB",
+  "language": "python",
+  "star": 1153,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-02-07T06:07:11.760689",
+  "generated_files": [
+    ".env"
+  ]
+}
