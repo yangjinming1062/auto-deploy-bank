@@ -1,0 +1,16 @@
+{
+  "service_id": "ac8658e486f32fe663e632c6",
+  "repo_name": "nlkitai/nlux",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "11.48MB",
+  "language": "nodejs",
+  "star": 1355,
+  "repo_flag": "NODEJS",
+  "uploaded_at": "2026-02-06T15:35:44.009546",
+  "generated_files": [
+    "/home/ubuntu/deploy-projects/ac8658e486f32fe663e632c6/Dockerfile"
+  ]
+}
