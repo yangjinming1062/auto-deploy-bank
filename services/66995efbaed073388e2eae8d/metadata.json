@@ -1,0 +1,18 @@
+{
+  "service_id": "66995efbaed073388e2eae8d",
+  "repo_name": "marsupialtail/quokka",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "3.87MB",
+  "language": "python",
+  "star": 1188,
+  "repo_flag": "SNYK-PYTHON",
+  "uploaded_at": "2026-02-07T00:01:14.959680",
+  "generated_files": [
+    "Dockerfile",
+    "docker-compose.yaml",
+    "docker/server_with_http.py"
+  ]
+}

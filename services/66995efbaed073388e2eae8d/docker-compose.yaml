@@ -1,0 +1,63 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: quokka-redis
+    command: redis-server --port 6800 --protected-mode no --requirepass ${REDIS_PASSWORD:-5241590000000000}
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6800", "-a", "${REDIS_PASSWORD:-5241590000000000}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    networks:
+      - quokka-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  quokka:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: quokka-server
+    ports:
+      - "40567:5005"
+      - "40568:5006"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - OMP_NUM_THREADS=8
+      - ARROW_DEFAULT_MEMORY_POOL=system
+      - REDIS_HOST=redis
+      - REDIS_PORT=6800
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-5241590000000000}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_REGION=${AWS_REGION:-us-west-2}
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; s = socket.socket(); s.connect(('localhost', 5006)); s.close()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - quokka-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+networks:
+  quokka-network:
+    driver: bridge
