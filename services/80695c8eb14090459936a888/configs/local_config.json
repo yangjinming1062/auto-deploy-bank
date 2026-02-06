@@ -1,0 +1,9 @@
+{
+    "OPENAI_API_KEY": "sk-your-api-key-here",
+    "API_BASE_URL": "https://api.openai.com/v1",
+    "model_engine": "openai",
+    "LLM_MODEL": "gpt-3.5-turbo",
+    "EMBEDDING_MODEL": "text2vec-base",
+    "EMBEDDING_ENGINE": "model",
+    "log_verbose": "2"
+}

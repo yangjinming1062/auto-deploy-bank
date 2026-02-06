@@ -1,0 +1,44 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: devopsgpt-app
+    ports:
+      - "40060:8501"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-sk-xx}
+      - API_BASE_URL=${API_BASE_URL:-https://api.openai.com/v1}
+      - LLM_MODEL=${LLM_MODEL:-gpt-3.5-turbo}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-text2vec-base}
+      - EMBEDDING_ENGINE=${EMBEDDING_ENGINE:-model}
+      - model_engine=${model_engine:-openai}
+      - DOCKER_SERVICE=false
+      - SANDBOX_DO_REMOTE=false
+      - SANDBOX_HOST=127.0.0.1
+      - DEFAULT_BIND_HOST=0.0.0.0
+      - log_verbose=${log_verbose:-2}
+      - FSCHAT_MODEL_WORKERS=${FSCHAT_MODEL_WORKERS:-{}}
+      - BING_SUBSCRIPTION_KEY=${BING_SUBSCRIPTION_KEY:-}
+      - embedding_model_dict=${embedding_model_dict:-{}}
+      - llm_model_dict=${llm_model_dict:-{}}
+      - ONLINE_LLM_MODEL=${ONLINE_LLM_MODEL:-{}}
+    volumes:
+      - ./jupyter_work:/home/user/jupyter_work
+      - ./logs:/home/user/logs
+      - ./data:/home/user/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
