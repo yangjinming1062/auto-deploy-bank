@@ -1,0 +1,19 @@
+{
+  "service_id": "526d589395785c4e1fd9cd47",
+  "repo_name": "tensorflow/model-analysis",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "4.47MB",
+  "language": "python",
+  "star": 1266,
+  "repo_flag": "NODEJS",
+  "uploaded_at": "2026-02-07T00:50:23.717745",
+  "generated_files": [
+    "app.py",
+    "requirements.txt",
+    "Dockerfile",
+    "docker-compose.yaml"
+  ]
+}
