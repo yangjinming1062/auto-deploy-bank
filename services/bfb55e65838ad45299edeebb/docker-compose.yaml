@@ -1,0 +1,24 @@
+services:
+  complex-yolo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: complex-yolo-training
+    ports:
+      - "40149:6006"
+    environment:
+      - WORLD_SIZE=1
+      - RANK=0
+      - CUDA_VISIBLE_DEVICES=
+    volumes:
+      - ./checkpoints:/home/ubuntu/deploy-projects/bfb55e65838ad45299edeebb/src/checkpoints
+      - ./logs:/home/ubuntu/deploy-projects/bfb55e65838ad45299edeebb/src/logs
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped

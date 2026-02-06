@@ -1,0 +1,18 @@
+{
+  "service_id": "bfb55e65838ad45299edeebb",
+  "repo_name": "maudzung/Complex-YOLOv4-Pytorch",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "6.54MB",
+  "language": "python",
+  "star": 1320,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-02-06T18:00:59.498253",
+  "generated_files": [
+    "docker-compose.yaml",
+    "src/config/train_config.py",
+    "src/config/kitti_config.py"
+  ]
+}
