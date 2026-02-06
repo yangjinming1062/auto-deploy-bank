@@ -1,0 +1,28 @@
+services:
+  sa2va-gradio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "40206:7860"
+    environment:
+      - TRANSFORMERS_OFFLINE=0
+      - TOKENIZERS_PARALLELISM=true
+      - PYTHONUNBUFFERED=1
+      - CUDA_VISIBLE_DEVICES=0
+      - TORCH_DTYPE=fp16
+      - DEFAULT_MODEL=ByteDance/Sa2VA-4B
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s

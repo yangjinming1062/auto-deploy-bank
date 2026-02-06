@@ -1,0 +1,14 @@
+{
+  "service_id": "2e26543f894acb5bbce1b66d",
+  "repo_name": "bytedance/Sa2VA",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "45.93MB",
+  "language": "python",
+  "star": 1521,
+  "repo_flag": "ByteDance-SRC-1",
+  "uploaded_at": "2026-02-06T13:27:04.264277",
+  "generated_files": []
+}
