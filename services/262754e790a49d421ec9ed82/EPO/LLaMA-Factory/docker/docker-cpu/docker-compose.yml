@@ -1,0 +1,38 @@
+services:
+  llamafactory:
+    build:
+      dockerfile: ./docker/docker-cpu/Dockerfile
+      context: ../..
+    container_name: llamafactory
+    ports:
+      - "40463:8000"
+    environment:
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - API_KEY=${API_KEY:-}
+      - API_MODEL_NAME=${API_MODEL_NAME:-gpt-3.5-turbo}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - DISABLE_VERSION_CHECK=1
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ../../hf_cache:/root/.cache/huggingface
+      - ../../data:/app/data
+      - ../../output:/app/output
+    tty: true
+    stdin_open: true
+    command: python src/api.py --model_name_or_path gpt2 --template default
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 8G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
+    restart: unless-stopped
