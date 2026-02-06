@@ -1,0 +1,19 @@
+{
+  "service_id": "58f557c888d72cfa8fa17ff6",
+  "repo_name": "coze-dev/coze-studio",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "32.70MB",
+  "language": "python",
+  "star": 19714,
+  "repo_flag": "ByteDance-SRC-1",
+  "uploaded_at": "2026-02-06T15:32:58.493557",
+  "generated_files": [
+    "docker/.env",
+    "backend/conf/model/model_meta.json",
+    "backend/conf/workflow/config.yaml",
+    "scripts/create_test_accounts.py"
+  ]
+}
