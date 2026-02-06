@@ -1,0 +1,17 @@
+{
+  "service_id": "53e458e887e4ff8c3f0a2b86",
+  "repo_name": "langgraph4j/langgraph4j",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "28.90MB",
+  "language": "java",
+  "star": 1308,
+  "repo_flag": "JAVA",
+  "uploaded_at": "2026-02-06T18:13:57.865867",
+  "generated_files": [
+    "studio/springboot/src/main/resources/application.yml",
+    "/home/ubuntu/deploy-projects/53e458e887e4ff8c3f0a2b86/Dockerfile"
+  ]
+}
