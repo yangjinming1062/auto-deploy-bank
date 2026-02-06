@@ -1,35 +1,17 @@
+version: '3.8'
+
 services:
-  dmd2-sdxl:
+  gradio-app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: dmd2-sdxl
+    container_name: dmd2-gradio-app
     ports:
-      - "40126:7860"
+      - "47583:7860"
     environment:
-      - PYTHONUNBUFFERED=1
-      - MASTER_ADDR=localhost
-      - MASTER_PORT=29500
-      - RANK=0
-      - LOCAL_RANK=0
-      - WORLD_SIZE=1
-      - DNNLIB_CACHE_DIR=/root/.cache/dnnlib/
       - CUDA_VISIBLE_DEVICES=0
+      - WANDB_API_KEY=${WANDB_API_KEY:-}
       - HF_TOKEN=${HF_TOKEN:-}
-      # Path to the model checkpoint - override this with your checkpoint file
-      - CHECKPOINT_PATH=/home/ubuntu/deploy-projects/49d1530eb8d7e7e63a129aaa/checkpoints/model.pt
-    volumes:
-      # Mount checkpoints directory
-      - ./checkpoints:/home/ubuntu/deploy-projects/49d1530eb8d7e7e63a129aaa/checkpoints
-      # Mount cache directories
-      - ~/.cache/huggingface:/root/.cache/huggingface
-      - ~/.cache/dnnlib:/root/.cache/dnnlib
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
-      interval: 30s
-      timeout: 120s
-      retries: 3
-      start_period: 300s
     deploy:
       resources:
         limits:
@@ -39,3 +21,9 @@ services:
           cpus: '1.0'
           memory: 1G
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
+      interval: 30s
+      timeout: 60s
+      retries: 3
+      start_period: 120s
