@@ -1,26 +1,24 @@
 services:
-  autoldl:
+  python-app:
     build: .
-    container_name: autoldl-service
     ports:
-      - "41491:8080"
+      - "41367:8080"
     environment:
       - TF_CPP_MIN_LOG_LEVEL=3
       - PYTHONHASHSEED=0
       - LOG_LEVEL=INFO
-      - CUDA_VISIBLE_DEVICES=
-      - CUDA_HOME=/usr/local/cuda
-    deploy:
-      resources:
-        limits:
-          cpus: '2.0'
-          memory: 4G
-        reservations:
-          cpus: '1.0'
-          memory: 1G
+      - PORT=8080
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
