@@ -1,0 +1,19 @@
+{
+  "service_id": "d9e85a5abdcf208853385ff0",
+  "repo_name": "KwaiKEG/KwaiAgents",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "7.81MB",
+  "language": "python",
+  "star": 1195,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-02-06T23:30:31.458878",
+  "generated_files": [
+    "server.py",
+    "Dockerfile",
+    "docker-compose.yaml",
+    "server.py"
+  ]
+}

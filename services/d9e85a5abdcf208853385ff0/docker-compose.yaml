@@ -1,0 +1,29 @@
+services:
+  kwaiagents:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "41382:41382"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - WEATHER_API_KEY=${WEATHER_API_KEY:-}
+      - http_proxy=${http_proxy:-}
+      - https_proxy=${https_proxy:-}
+      - OPENAI_API_TYPE=${OPENAI_API_TYPE:-open_ai}
+      - OPENAI_API_VERSION=${OPENAI_API_VERSION:-}
+      - OPENAI_API_BASE=${OPENAI_API_BASE:-}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:41382/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
