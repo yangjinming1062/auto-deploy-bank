@@ -1,0 +1,35 @@
+services:
+  uso-gradio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: uso-gradio-app
+    ports:
+      - "40691:7860"
+    environment:
+      # Required: Hugging Face token for downloading FLUX.1-dev (gated model)
+      - HF_TOKEN=${HF_TOKEN:-}
+      # Model weights paths (local paths or HF model IDs)
+      - FLUX_DEV=${FLUX_DEV:-./weights/FLUX.1-dev/flux1-dev.safetensors}
+      - FLUX_DEV_FP8=${FLUX_DEV_FP8:-./weights/FLUX.1-dev/flux1-dev.safetensors}
+      - AE=${AE:-./weights/FLUX.1-dev/ae.safetensors}
+      - T5=${T5:-./weights/t5-xxl}
+      - CLIP=${CLIP:-./weights/clip-vit-l14}
+      - LORA=${LORA:-./weights/USO/uso_flux_v1.0/dit_lora.safetensors}
+      - PROJECTION_MODEL=${PROJECTION_MODEL:-./weights/USO/uso_flux_v1.0/projector.safetensors}
+      - SIGLIP_PATH=${SIGLIP_PATH:-google/siglip-so400m-patch14-384}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped

@@ -1,0 +1,16 @@
+{
+  "service_id": "84f95c3d9fe46746e9a060f2",
+  "repo_name": "bytedance/USO",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "20.01MB",
+  "language": "python",
+  "star": 1198,
+  "repo_flag": "ByteDance-SRC-1",
+  "uploaded_at": "2026-02-07T05:38:51.366201",
+  "generated_files": [
+    ".env"
+  ]
+}
