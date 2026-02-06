@@ -1,0 +1,20 @@
+{
+  "service_id": "86255a138beb142ba959dcac",
+  "repo_name": "hyperledger/besu",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "21.66MB",
+  "language": "java",
+  "star": 1751,
+  "repo_flag": "JAVA",
+  "uploaded_at": "2026-02-06T13:44:15.616710",
+  "generated_files": [
+    "config/besu.toml",
+    "config/rpc-auth.toml",
+    "config/genesis.json",
+    "create_test_accounts.sh",
+    "docker-compose.yaml"
+  ]
+}

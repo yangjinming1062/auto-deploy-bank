@@ -1,0 +1,22 @@
+# Hyperledger Besu RPC Authentication Configuration
+# Contains test accounts for security testing
+
+[Users.admin]
+password = "$2a$10$l3GA7K8g6rJ/Yv.YFSygCuI9byngpEzxgWS9qEg5emYDZomQW7fGC"
+groups = ["admin"]
+permissions = ["eth:*", "net:*", "perm:*", "admin:*", "debug:*", "txpool:*"]
+roles = ["admin"]
+
+[Users.user]
+password = "$2a$10$l3GA7K8g6rJ/Yv.YFSygCuI9byngpEzxgWS9qEg5emYDZomQW7fGC"
+permissions = ["eth:*", "net:*", "web3:*"]
+roles = ["user"]
+
+[Groups.admins]
+roles = ["admin"]
+
+[Roles.admin]
+permissions = ["admin:*", "perm:*", "debug:*", "eth:*"]
+
+[Roles.user]
+permissions = ["eth:*", "net:*", "web3:*"]

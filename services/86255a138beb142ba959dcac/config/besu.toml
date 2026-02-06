@@ -1,0 +1,50 @@
+# Hyperledger Besu Configuration File
+# Network: Dev (Local Development Network)
+
+# Network Configuration
+network = "DEV"
+discovery-enabled = true
+sync-mode = "FAST"
+fast-sync-min-peers = 1
+
+# P2P Networking
+p2p-host = "0.0.0.0"
+p2p-port = 30303
+max-peers = 25
+
+# RPC HTTP API
+rpc-http-enabled = true
+rpc-http-host = "0.0.0.0"
+rpc-http-port = 8545
+rpc-http-api = ["ETH", "NET", "WEB3", "DEBUG", "ADMIN"]
+rpc-http-cors-origins = ["*"]
+
+# RPC Authentication (disabled for development)
+rpc-http-authentication-enabled = false
+# rpc-http-authentication-credentials-file = "config/rpc-auth.toml"
+
+# RPC WebSocket API
+rpc-ws-enabled = true
+rpc-ws-host = "0.0.0.0"
+rpc-ws-port = 8546
+rpc-ws-api = ["ETH", "NET", "WEB3"]
+
+# GraphQL API
+graphql-http-enabled = false
+graphql-http-host = "0.0.0.0"
+graphql-http-port = 8547
+
+# Metrics
+metrics-enabled = false
+metrics-host = "0.0.0.0"
+metrics-port = 9545
+
+# Mining
+miner-enabled = true
+miner-coinbase = "0x0000000000000000000000000000000000000000"
+
+# Data Storage
+data-path = "data"
+
+# Logging
+logging = "INFO"

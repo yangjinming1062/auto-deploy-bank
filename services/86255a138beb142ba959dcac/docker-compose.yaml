@@ -1,0 +1,17 @@
+services:
+  webapp:
+    build:
+      context: ./webapp
+      dockerfile: Dockerfile
+    image: webapp:latest
+    container_name: webapp
+    hostname: webapp
+    ports:
+      - "40118:3000"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+
+networks:
+  default:
+    name: besu-network
