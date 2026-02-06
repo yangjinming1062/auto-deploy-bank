@@ -1,0 +1,21 @@
+{
+  "service_id": "e748595c86c88a8dc9676aa4",
+  "repo_name": "banq/jdonframework",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "13.64MB",
+  "language": "java",
+  "star": 1172,
+  "repo_flag": "JAVA",
+  "uploaded_at": "2026-02-07T02:20:33.607373",
+  "generated_files": [
+    "example/jdonMVC+CQRS+ES/src/main/webapp/META-INF/context.xml",
+    "example/jdonMVC+CQRS+ES/src/main/webapp/WEB-INF/web.xml",
+    "example/jdonMVC+CQRS+ES/mysql-ds.xml",
+    "example/jdonMVC+CQRS+ES/create_accounts.sh",
+    "/home/ubuntu/deploy-projects/e748595c86c88a8dc9676aa4/example/jdonMVC+CQRS+ES/src/main/webapp/login.jsp",
+    "/home/ubuntu/deploy-projects/e748595c86c88a8dc9676aa4/Dockerfile"
+  ]
+}
