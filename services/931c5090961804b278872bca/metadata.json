@@ -1,0 +1,14 @@
+{
+  "service_id": "931c5090961804b278872bca",
+  "repo_name": "web-infra-dev/rsdoctor",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "1.54MB",
+  "language": "nodejs",
+  "star": 1126,
+  "repo_flag": "ByteDance-SRC-1",
+  "uploaded_at": "2026-02-07T17:24:04.455750",
+  "generated_files": []
+}

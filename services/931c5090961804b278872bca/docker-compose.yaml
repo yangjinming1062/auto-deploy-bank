@@ -1,0 +1,27 @@
+services:
+  rsdoctor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rsdoctor-server
+    ports:
+      - "41273:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - OPENAI_MODEL_NAME=gpt-4o-2024-08-06
+      - OPENAI_INIT_OPTIONS={}
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
