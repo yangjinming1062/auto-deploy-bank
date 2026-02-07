@@ -1,0 +1,73 @@
+services:
+  amoro-ams:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: amoro-ams
+    hostname: amoro-ams
+
+    ports:
+      - "40452:1630"
+
+    environment:
+      # Core environment variables
+      AMORO_HOME: /opt/amoro
+      AMORO_CONF_DIR: /opt/amoro/conf
+      AMORO_PLUGIN_DIR: /opt/amoro/plugin
+      JAVA_OPTS: "-Xms512m -Xmx2048m"
+
+      # AMS specific configuration
+      AMS_ADMIN_USERNAME: admin
+      AMS_ADMIN_PASSWORD: admin
+      AMS_SERVER_BIND_HOST: "0.0.0.0"
+      AMS_SERVER_BIND_PORT: "1630"
+
+      # Derby database configuration (embedded)
+      AMS_DATABASE_URL: "jdbc:derby:/tmp/amoro/derby;create=true"
+      AMS_DATABASE_DRIVER_CLASS_NAME: "org.apache.derby.jdbc.EmbeddedDriver"
+      AMS_DATABASE_CONNECTION_POOL_SIZE: "10"
+
+      # JVM options via environment (converted to system properties)
+      JVM_XMS_CONFIG: "512"
+      JVM_XMX_CONFIG: "2048"
+
+    volumes:
+      # Volume mount for security scanning (extracts JAR to host)
+      - ./target.jar:/app/target.jar
+
+      # Persist Derby database data
+      - amoro-data:/tmp/amoro
+
+      # Persist logs
+      - amoro-logs:/opt/amoro/logs
+
+    networks:
+      - amoro-network
+
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:1630/api/ams/v1/health/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+    restart: unless-stopped
+
+volumes:
+  amoro-data:
+    driver: local
+  amoro-logs:
+    driver: local
+
+networks:
+  amoro-network:
+    driver: bridge

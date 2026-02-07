@@ -1,0 +1,16 @@
+{
+  "service_id": "dd1359a4817eb7d663915138",
+  "repo_name": "apache/amoro",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "22.90MB",
+  "language": "java",
+  "star": 1107,
+  "repo_flag": "JAVA",
+  "uploaded_at": "2026-02-07T20:05:52.261151",
+  "generated_files": [
+    "/home/ubuntu/deploy-projects/dd1359a4817eb7d663915138/amoro/conf/config.yaml"
+  ]
+}
