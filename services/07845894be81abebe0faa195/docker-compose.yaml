@@ -1,0 +1,52 @@
+services:
+  datadreamer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: datadreamer
+    ports:
+      - "40301:8080"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGURU_LEVEL=TRACE
+      - TOKENIZERS_PARALLELISM=false
+      - TF_FORCE_GPU_ALLOW_GROWTH=true
+      # DataDreamer settings
+      - PROJECT_DATA=~/.datadreamer_dev/
+      - PROJECT_JOB_NAME=test
+      - PROJECT_DISABLE_TUNNEL=1
+      # Optional API keys (set in environment if needed)
+      - HUGGING_FACE_HUB_TOKEN=
+      - HUGGINGFACEHUB_API_TOKEN=
+      - OPENAI_API_KEY=
+      - ANTHROPIC_API_KEY=
+      - COHERE_API_KEY=
+      - AI21_API_KEY=
+      - GOOGLE_API_KEY=
+      - MISTRAL_API_KEY=
+      - NGROK_AUTHTOKEN=
+      - WANDB_API_KEY=
+      - WANDB_ENTITY=
+      - WANDB_MODE=online
+      - PROJECT_CLUSTER=
+      - PROJECT_ACCELERATOR_TYPE=
+      - PROJECT_VISIBLE_ACCELERATOR_DEVICES=
+      - PROJECT_ARGS_FILE=
+      - DATADREAMER_BACKGROUND_PROCESS=
+      - NLTK_DATA=
+      - HF_HOME=
+      - SENTENCE_TRANSFORMERS_HOME=
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
