@@ -9,11 +9,9 @@
   "language": "python",
   "star": 1195,
   "repo_flag": "PYTHON",
-  "uploaded_at": "2026-02-06T23:30:31.458878",
+  "uploaded_at": "2026-02-07T10:56:59.445908",
   "generated_files": [
-    "server.py",
-    "Dockerfile",
-    "docker-compose.yaml",
-    "server.py"
+    "app.py",
+    "/home/ubuntu/deploy-projects/d9e85a5abdcf208853385ff0/app.py"
   ]
 }

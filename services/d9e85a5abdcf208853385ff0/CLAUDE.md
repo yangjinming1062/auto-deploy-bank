@@ -4,27 +4,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-KwaiAgents is an AI Agent system from Kuaishou Technology (KuaikeG). It includes:
-- **KAgentSys-Lite**: A lite agent system with planning, reflection, tool-use, and concluding capabilities
-- **KAgentLMs**: Fine-tuned LLMs (Qwen, Baichuan2) with agent capabilities via meta-agent tuning
-- **KAgentInstruct**: 200k+ agent-related instruction fine-tuning data
-- **KAgentBench**: 3,000+ human-edited evaluation data for testing agent capabilities
+KwaiAgents is an AI agent system from Kuaishou Technology that includes:
+- **KAgentSys-Lite**: A lightweight agent framework for information-seeking tasks with tool-use capabilities
+- **KAgentLMs**: Fine-tuned LLMs with agent capabilities (Qwen-MAT, Baichuan2-MAT models)
+- **KAgentBench**: An evaluation benchmark for agent capabilities (planning, tool-use, reflection, concluding, profiling)
 
-## Build & Test Commands
+## Development Commands
 
 ```bash
-# Install dependencies
-conda create -n kagent python=3.10
-conda activate kagent
+# Install the package in development mode
 pip install -r requirements.txt
-
-# Install package in development mode
 python setup.py develop
 
-# Run agent with GPT models (requires OPENAI_API_KEY)
+# Run agent with GPT-3.5-turbo (requires OPENAI_API_KEY)
+export OPENAI_API_KEY=sk-xxxxx
+export WEATHER_API_KEY=xxxxx  # Optional, for weather tool
 kagentsys --query="Who is Andy Lau's wife?" --llm_name="gpt-3.5-turbo" --lang="en"
 
-# Run agent with local model (requires vLLM service running)
+# Run agent with local model (requires FastChat server)
 kagentsys --query="Who is Andy Lau's wife?" --llm_name="kagentlms_qwen_7b_mat" \
   --use_local_llm --local_llm_host="localhost" --local_llm_port=8888 --lang="en"
 
@@ -36,77 +33,73 @@ python benchmark_eval.py ./benchmark_eval.jsonl ./qwen_benchmark_res.jsonl
 
 ## Architecture
 
+### Main Entry Point
+- `kwaiagents/agent_start.py`: CLI entry point with `AgentService` class that handles configuration parsing and orchestrates the agent
+
+### Core Agent (`kwaiagents/agents/kagent.py`)
+- `KAgentSysLite`: Main agent class that implements the agent loop
+  - `task_plan()`: Generates new tasks using smart LLM based on goal and memory
+  - `tool_use()`: Executes tool calls and returns observations
+  - `conclusion()`: Synthesizes final response from tool results
+  - `chat()`: Main loop that iterates through planning → tool execution → conclusion
+
+### Configuration (`kwaiagents/config.py`)
+- `Config` class manages LLM settings, browser config, and chain logging
+- Global `CFG` instance for runtime configuration
+
+### Agent Profile (`kwaiagents/agents/agent_profile.py`)
+- `AgentProfile`: Configures agent identity (name, bio, instructions, tools, max iterations)
+
+### LLM Clients (`kwaiagents/llms/`)
+- `OpenAIClient`: Routes to OpenAI API or Azure OpenAI (via `OPENAI_API_TYPE` env var)
+- `FastChatClient`: Calls local vLLM/FastChat servers for local models
+- `create_chat_completion()`: Unified interface with retry logic
+
+### Tools (`kwaiagents/tools/`)
+- Base classes: `BaseTool`, `BaseResult`
+- Built-in tools: `SearchTool`, `BrowserTool`, `WeatherTool`, `CalendarTool`, `TimeDeltaTool`, `SolarTermsTool`
+- `ALL_TOOLS` and `ALL_NO_TOOLS` lists for tool registration
+- Custom tools must inherit `BaseTool` and return `BaseResult` subclasses
+
+### Prompt System (`kwaiagents/agents/prompts.py`)
+- `make_planning_prompt()`: Creates task planning prompts (Chinese/English)
+- `make_task_conclusion_prompt()`: Creates final response synthesis prompts
+- Prompt truncation handles token limits using `transformers` tokenizer
+
+### Utilities (`kwaiagents/utils/`)
+- `chain_logger.py`: Message logging for agent execution chains
+- `json_fix_general.py`: JSON parsing and correction utilities
+- `date_utils.py`: Date/time formatting utilities
+- `function_utils.py`: Tool-to-OpenAI-function format conversion
+
+## Key Configuration Options
+
+```python
+# Available llm_name values
+"gpt-3.5-turbo", "gpt-4", "kagentlms_qwen_7b_mat", "kagentlms_baichuan2_13b_mat"
+
+# Tool selection
+--tool_names '["auto", "search", "browser", "weather", "calendar", "timedelta", "solarterms", "notool"]'
 ```
-agent_start.py          # CLI entry point, parses arguments, runs AgentService
-agents/
-  ├── kagent.py         # KAgentSysLite - core agent loop (planning, tool use, conclusion)
-  ├── agent_profile.py  # AgentProfile - agent name, bio, instructions, tools config
-  └── prompts.py        # Prompt templates for planning and conclusion
-llms/
-  ├── clients.py        # OpenAIClient, FastChatClient for LLM API calls
-  └── __init__.py       # create_chat_completion() - unified LLM interface
-tools/
-  ├── base.py           # BaseTool, BaseResult abstract classes
-  ├── search.py         # WebSearch tool (DuckDuckGo)
-  ├── browser.py        # BrowserTool (Selenium/chromedriver)
-  ├── weather.py        # WeatherTool
-  ├── calendars.py      # CalendarTool
-  ├── timedelta.py      # TimeDeltaTool
-  ├── solarterms.py     # SolarTermsTool
-  └── commons.py        # NoTool, FinishTool (task signaling)
-utils/
-  ├── chain_logger.py   # ChainMessageLogger for logging agent thought chain
-  ├── json_fix_general.py  # JSON parsing utilities
-  └── ...               # Other utilities (date, HTML, NLP, Selenium)
+
+## Adding Custom Tools
+
+See `examples/custom_tool_example.py`:
+1. Define result class inheriting from `BaseResult`
+2. Define tool class inheriting from `BaseTool`
+3. Set `name`, `zh_name`, `description`, `tips` class attributes
+4. Implement `__call__()` method with tool logic
+5. Pass tool class to `KAgentSysLite` via `tools` parameter
+
+## Local Model Deployment
+
+```bash
+# Terminal 1: Start controller
+python -m fastchat.serve.controller
+
+# Terminal 2: Start vLLM worker (single GPU)
+python -m fastchat.serve.vllm_worker --model-path $MODEL_PATH --trust-remote-code
+
+# Terminal 3: Start REST API
+python -m fastchat.serve.openai_api_server --host localhost --port 8888
 ```
-
-### Agent Execution Flow (KAgentSysLite.chat)
-
-1. **Planning Phase**: Uses `smart_llm_model` to generate task plan from goal + memory + tools
-2. **Tool Use Phase**: Executes tasks using `fast_llm_model`, calls tools from `name2tools` dict
-3. **Conclusion Phase**: Synthesizes final response using `smart_llm_model`
-
-The loop iterates up to `max_iter_num` with a `SingleTaskListStorage` queue managing tasks.
-
-### LLM Clients
-
-- `OpenAIClient`: For GPT-3.5/GPT-4 via OpenAI API (uses `OPENAI_API_KEY` env var)
-- `FastChatClient`: For local models served via vLLM/FastChat (OpenAI-compatible API at `localhost:8888`)
-
-The client selects the appropriate prompt format based on model type (Qwen uses `<|im_start|>/<|im_end|>`, Baichuan uses `<reserved_106>/<reserved_107>`).
-
-### Tool Development
-
-Tools inherit from `BaseTool` and return `BaseResult`:
-- Define `name` and `zh_name` class attributes
-- Implement `__call__(self, **kwargs)` returning a `BaseResult`
-- Override `answer` and `answer_md` properties for text/markdown output
-
-See `examples/custom_tool_example.py` for a complete example (GithubTrendingTool).
-
-## Environment Variables
-
-| Variable | Required | Purpose |
-|----------|----------|---------|
-| `OPENAI_API_KEY` | For GPT models | OpenAI API authentication |
-| `WEATHER_API_KEY` | Optional | Weather tool (weatherapi.com) |
-| `http_proxy` / `https_proxy` | Optional | Network proxy for DuckDuckGo search |
-| `OPENAI_API_TYPE` | Optional | Set to "azure" for Azure OpenAI |
-| `OPENAI_API_VERSION` | Azure only | Azure API version |
-| `OPENAI_API_BASE` | Azure only | Azure endpoint URL |
-
-## Key Configuration (Config class)
-
-- `fast_llm_model`: Model for tool use (default: gpt-3.5-turbo)
-- `smart_llm_model`: Model for planning/conclusion (default: gpt-4)
-- `use_local_llm`: Whether to use FastChatClient instead of OpenAIClient
-- `local_llm_host`/`local_llm_port`: Local model server address
-- `max_tokens_num`: LLM context window limit
-- `llm_max_retries`: Retry attempts for LLM calls (default: 5)
-
-## Useful Links
-
-- Paper: http://arxiv.org/abs/2312.04889
-- Models: https://huggingface.co/collections/kwaikeg/kagentlms-6551e685b5ec9f9a077d42ef
-- Dataset: https://huggingface.co/datasets/kwaikeg/KAgentInstruct
-- Benchmark: https://huggingface.co/datasets/kwaikeg/KAgentBench
