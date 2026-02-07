@@ -9,10 +9,11 @@
   "language": "python",
   "star": 1188,
   "repo_flag": "SNYK-PYTHON",
-  "uploaded_at": "2026-02-07T00:01:14.959680",
+  "uploaded_at": "2026-02-07T08:14:31.261216",
   "generated_files": [
-    "Dockerfile",
+    "redis.conf",
     "docker-compose.yaml",
-    "docker/server_with_http.py"
+    "docker/quokka_deploy.yaml",
+    "/home/ubuntu/deploy-projects/66995efbaed073388e2eae8d/docker-compose.yaml"
   ]
 }

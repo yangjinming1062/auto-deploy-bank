@@ -4,118 +4,84 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-PyQuokka is a push-based distributed query engine with lineage-based fault tolerance, optimized for time series workloads. Built completely in Python using:
-- **Ray**: Task scheduling and distributed execution
-- **Redis**: Lineage tracking and coordination (requires Redis > 6.2)
-- **Polars/DuckDB**: Relational algebra kernels
-- **Apache Arrow**: I/O and data representation
-- **SQLGlot**: SQL parsing
+Quokka is a **push-based distributed query engine with lineage-based fault tolerance** for time series analytics. It's built on Python with DuckDB, Polars, Ray, Arrow, Redis, and SQLGlot.
 
-## Common Commands
+**Key difference from Spark**: DataStream partitions can be consumed immediately after produced, enabling pipelined shuffles and I/O for significant performance gains.
 
-### Installation
+## Development Commands
+
 ```bash
-pip3 install pyquokka
-```
+# Install in development mode
+pip install -e .
 
-### Local Development
-Requires Redis server running on port 6800:
-```bash
-redis-server --port 6800 --protected-mode no
-```
-
-### Running Examples
-```bash
-# TPC-H queries
-python3 apps/tpc-h/tpch.py
-
-# Time series backtesting
-python3 apps/rottnest/backtester.py
-
-# Other examples in apps/ directory
+# Requires Redis > 6.2 to be running
+redis-server -v  # verify version
 ```
 
 ## Architecture
 
-### Entry Point
-- **`pyquokka.df.QuokkaContext`**: Main user-facing API (similar to SparkContext). Create with `qc = QuokkaContext()` for local mode or pass a `Cluster` object for distributed execution.
+### Core Components
 
-### Core Data Types
-- **`DataStream`**: Lazy evaluation API for distributed data processing. Create via `qc.read_csv()`, `qc.read_parquet()`, or `qc.from_polars()`.
-- **`OrderedStream`**: For time series data with ordering requirements. Created via `qc.from_ordered_csv()` or `qc.from_ordered_parquet()`.
+- **QuokkaContext** (`pyquokka/df.py`): Main entry point, similar to SparkContext. Creates IO and compute nodes on Ray cluster.
+- **DataStream** (`pyquokka/datastream.py`): Lazy stream of Polars DataFrames. User-facing API for transformations.
+- **TaskGraph** (`pyquokka/quokka_runtime.py`): Builds and executes the task dependency DAG.
+- **TaskManager** (`pyquokka/core.py`): Executes tasks on each node. Handles input reading, execution, and output pushing.
 
-### Execution Layers (Top to Bottom)
+### Operator Implementations
 
-1. **API Layer** (`df.py`, `datastream.py`, `orderedstream.py`)
-   - `QuokkaContext`: Creates DataStreams from data sources
-   - `DataStream`: Lazy transformations (filter, select, join, groupby)
-   - `OrderedStream`: Time-series specific operations
+- **Executors** (`pyquokka/executors/`):
+  - `sql_executors.py`: Filter, select, join, aggregate operators using DuckDB
+  - `ts_executors.py`: Time series operators (windows, asof joins, stateful transforms)
+  - `cep_executors.py`: Complex event processing (pattern matching, transactions)
+  - `vector_executors.py`: Vector embedding operations
 
-2. **Logical Plan** (`logical.py`)
-   - `Node` base class for operators in the DAG
-   - Lowering transforms logical plans to runtime task graphs
+- **Input Readers** (`pyquokka/dataset/`):
+  - `ordered_readers.py`: Time-ordered readers (逐 timestamps, crypto, etc.)
+  - `unordered_readers.py`: Parquet, CSV, S3 readers
 
-3. **Runtime** (`quokka_runtime.py`, `core.py`)
-   - `TaskGraph`: Builds execution DAG from logical plan
-   - `TaskManager` / `ReplayTaskManager`: Executes tasks on each node
-   - Push-based execution model with stages and channels
+### Redis Tables (in `pyquokka/tables.py`)
 
-4. **Operators** (`executors/`)
-   - Base class: `Executor` with `execute()` and `done()` methods
-   - `ts_executors.py`: Time series operators (windows, asof joins)
-   - `sql_executors.py`: SQL operators (filter, project, join, aggregate)
-   - `cep_executors.py`: Complex event processing (pattern matching)
-   - `vector_executors.py`: Vector operations
+Quokka uses Redis for coordination and fault tolerance:
+- **FOT** (FunctionObjectTable): Stores operators
+- **NTT** (NodeTaskTable): Task queue per node
+- **LT** (LineageTable): Lineage of each object (for recovery)
+- **CT** (CemetaryTable): Tracks garbage collection eligibility
+- **PT** (PresentObjectTable): Object locations
+- **NOT** (NodeObjectTable): Objects per node
 
-5. **Data Sources** (`dataset/`)
-   - `BaseInputDataset`: Abstract base for data readers
-   - `UnorderedReaders`: CSV, Parquet, JSON readers
-   - `OrderedReaders`: Time-ordered data readers
+### Execution Flow
 
-6. **Coordination** (`coordinator.py`, `tables.py`, `task.py`)
-   - `Coordinator`: Ray actor managing global state via Redis
-   - Redis tables for lineage, object locations, task tracking
-   - Task types: `InputTask`, `ExecutorTask`, `ReplayTask`
+1. User creates QuokkaContext → spawns Ray actors (coordinator, catalog, task managers)
+2. User defines DataStream transformations (lazy)
+3. `compute()` or `collect()` triggers TaskGraph creation
+4. TaskGraph registers operators and partition functions in Redis
+5. Coordinator orchestrates execution across nodes
+6. TaskManagers pull tasks from NTT, execute, push outputs
 
-### Key Files
-- **`pyquokka/__init__.py`**: Package entry point
-- **`pyquokka/core.py`**: TaskManager and core execution logic
-- **`pyquokka/quokka_runtime.py`**: TaskGraph and execution orchestration
-- **`pyquokka/coordinator.py`**: Central coordinator actor
-- **`pyquokka/df.py`**: QuokkaContext and high-level API
-- **`pyquokka/utils.py`**: Cluster management (LocalCluster, EC2Cluster)
+### Fault Tolerance
 
-### Data Flow
-1. User creates `QuokkaContext` with optional `Cluster`
-2. Read data via `qc.read_csv()` / `qc.read_parquet()` returning `DataStream`
-3. Chain transformations (filter, join, etc.) - lazy, builds DAG
-4. Call `stream.collect()` or `stream.compute()` to execute
-5. Logical plan lowered to TaskGraph
-6. Coordinator distributes work to TaskManagers
-7. TaskManagers push data through channels via Arrow Flight
+Quokka uses **lineage-based recovery**:
+- All objects logged in LT (lineage → how to recreate)
+- On node failure: coordinator reads NTT for pending tasks, reconstructs from lineage
+- Objects buffered in HBQ (high-bandwidth queue) until confirmed consumed
+- See `fault-tolerance.md` for detailed protocol
 
-## Configuration
+## Key Files
 
-```python
-qc.set_config("fault_tolerance", True)  # Enable checkpoint-based recovery
-qc.set_config("blocking", False)         # Pipeline execution
-qc.set_config("checkpoint_interval", 30) # Seconds between checkpoints
-```
+| File | Purpose |
+|------|---------|
+| `pyquokka/core.py` | TaskManager implementation, main execution loop |
+| `pyquokka/quokka_runtime.py` | TaskGraph, coordinates execution |
+| `pyquokka/df.py` | QuokkaContext API |
+| `pyquokka/datastream.py` | DataStream API (filter, select, join, etc.) |
+| `pyquokka/executors/*.py` | Operator implementations |
+| `pyquokka/dataset/*.py` | Input readers |
+| `pyquokka/logical.py` | Logical plan nodes |
+| `pyquokka/utils.py` | Cluster management (EC2Cluster, LocalCluster) |
 
-## Example Usage Pattern
+## Adding New Operators
 
-```python
-from pyquokka import QuokkaContext
-import polars
-
-qc = QuokkaContext()  # Local cluster
-lineitem = qc.read_parquet("s3://bucket/lineitem.parquet/*")
-orders = qc.read_parquet("s3://bucket/orders.parquet/*")
-
-result = (lineitem
-    .filter(lineitem["l_commitdate"] < lineitem["l_receiptdate"])
-    .join(orders, left_on="l_orderkey", right_on="o_orderkey", how="semi")
-    .filter_sql("o_orderdate >= date '1993-07-01'")
-    .select(["o_orderkey", "o_custkey", "o_totalprice"])
-    .collect())
-```
+1. Create executor class in `pyquokka/executors/` inheriting from `Executor`
+2. Implement `execute(self, batches, stream_id, executor_id)` returning output batches
+3. Add DataStream method in `pyquokka/datastream.py` wrapping the operator
+4. Register in logical plan (`pyquokka/logical.py`) if needed
