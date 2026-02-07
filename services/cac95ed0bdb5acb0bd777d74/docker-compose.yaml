@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: koloboke-service
     ports:
-      - "40493:40493"
+      - "40519:40493"
     volumes:
       - ./target.jar:/app/target.jar
     deploy:
