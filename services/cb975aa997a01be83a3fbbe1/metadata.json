@@ -1,0 +1,14 @@
+{
+  "service_id": "cb975aa997a01be83a3fbbe1",
+  "repo_name": "bytedance/1d-tokenizer",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "29.26MB",
+  "language": "python",
+  "star": 1104,
+  "repo_flag": "ByteDance-SRC-1",
+  "uploaded_at": "2026-02-07T17:37:05.492378",
+  "generated_files": []
+}
