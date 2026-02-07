@@ -1,13 +1,22 @@
 {
   "service_id": "9e8c5d159fe460d2b0592105",
   "repo_name": "LockerProject/Locker",
-  "platform": "github",
+  "platform": null,
   "ref": null,
   "version": "",
-  "status": "stopped",
+  "status": "deploying",
   "package_size": "4.64MB",
   "language": "nodejs",
   "star": 1063,
-  "repo_flag": "NODEJS-SocketIO",
-  "uploaded_at": "2026-01-12T12:15:06.917995"
+  "repo_flag": "NODEJS",
+  "uploaded_at": "2026-02-07T22:20:44.788935",
+  "generated_files": [
+    "Config/config.json",
+    "Config/apikeys.json",
+    "Common/node/lconfig.js",
+    "Apps/dashboardv3/dashboard-client.js",
+    "Apps/dashboardv3/dashboard.js",
+    "Ops/webservice.js",
+    "node_modules/http-proxy"
+  ]
 }

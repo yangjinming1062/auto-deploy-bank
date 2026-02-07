@@ -4,93 +4,112 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Locker is an open-source personal data locker platform that collects, aggregates, and manages personal data from various online services. It features a modular architecture with Connectors, Collections, and Apps.
+Locker is a personal data platform that collects, unifies, and serves your personal data. It consists of three main component types:
+- **Connectors**: Services that sync data from external sources (Twitter, Facebook, Flickr, etc.) into the locker
+- **Collections**: Unified data schemas that normalize data from multiple connectors (Contacts, Links, Photos, Places, Search)
+- **Apps**: User-facing applications that use the unified data
 
-## Build & Test Commands
+**Status**: This project is unmaintained. See README.md for details.
+
+## Build Commands
 
 ```bash
-# Initial setup (installs submodules, npm packages, builds Common)
-make
-
-# Install system dependencies into ./deps/
-make deps
-
-# Run all tests (both legacy Vows and modern Mocha tests)
-make test
-
-# Run only legacy tests (Vows framework in tests/)
-make oldtest
-
-# Run only modern tests (Mocha framework in test/)
-make newtest
-
-# Create distribution tarball
-make bindist
-
-# Start the locker daemon
-./locker
+make              # Full build: initializes submodules, installs npm deps, builds common
+make test         # Run all tests (both vows and mocha)
+make newtest      # Run only mocha tests
+make oldtest      # Run only vows tests
+make clean        # Clean build artifacts
+./locker          # Start the locker server (requires API keys first)
+./locker --production  # Start in production mode with auto-restart
 ```
 
-## Code Architecture
+The build process requires MongoDB to be running (lockerd.js starts it automatically).
 
-Locker follows a service-oriented architecture with three main layers:
+**Note**: Before running `./locker`, you must copy `Config/apikeys.json.example` to `Config/apikeys.json` and add your API keys.
 
-### 1. Core Platform (`lockerd.js`)
-The main daemon that manages the platform lifecycle. It handles:
-- MongoDB process management
-- Service lifecycle (startup/shutdown)
-- Event emission and scheduling
-- Configuration loading from `Config/config.json`
+## Architecture
 
-### 2. Connectors (`Connectors/`)
-Modular components that sync data from external services (Twitter, Facebook, Flickr, etc.).
-- Each connector lives in its own directory (e.g., `Connectors/twitter/`)
-- Data sync is handled by **synclets**, defined in `synclets.json`
-- Synclet frequency is configured in seconds (e.g., `frequency: 120`)
-- Data is published with service types like `contact/twitter` or `timeline/twitter`
+### Core Startup Sequence (lockerd.js)
 
-### 3. Collections (`Collections/`)
-Normalize and aggregate data by type across multiple connectors.
-- 4 main collections: Contacts, Links, Photos, Places
-- Provide deduplicated, merged views of data
+The main daemon `lockerd.js` orchestrates startup in this order:
+1. Load configuration from `Config/config.json` via `lconfig`
+2. Spawn embedded MongoDB instance (data stored in `Me/mongodata`)
+3. Verify cryptographic keys exist (`lcrypto`)
+4. Run pre-service migrations
+5. Initialize sync manager (`lsyncmanager`) and service manager (`lservicemanager`)
+6. Initialize registry (`Ops/registry.js`) for service discovery
+7. Start web service (`Ops/webservice.js`) - HTTP API on `lconfig.lockerPort`
+8. Load scheduled tasks via `lscheduler`
 
-### 4. Apps (`Apps/`)
-User-facing applications that access locker data.
-- Run as separate services with their own ports
-- Access data via Collections or directly from Connectors
-- Main dashboard: `Apps/dashboardv3/`
+### Key Core Modules (Common/node/)
 
-### 5. Common Libraries (`Common/node/`)
-Shared modules used by all components:
-- `locker.js`: Client library for apps/connectors
-- `lmongoclient.js`: MongoDB connection management
-- `lsyncmanager.js`: Synclet scheduling
-- `lservicemanager.js`: Service discovery
-- `lconfig.js`: Configuration loading
-- `lutil.js`: Utility functions
+- **lconfig.js**: Configuration loader, sets up `exports.*` for lockerDir, mongo settings, apps, collections
+- **lservicemanager.js**: Manages installed services in `Me/` directory, tracks service map
+- **lsyncmanager.js**: Manages connector synclet scheduling and execution
+- **locker.js**: Client library for apps/connectors to communicate with locker core via HTTP
+- **lmongo.js**: MongoDB connection and collection helpers
+- **lcrypto.js**: Cryptographic key management (symmetric and asymmetric)
+- **levents.js**: Event system for data change notifications
+- **lpquery.js**: Query engine for searching unified data
 
-## Key Patterns
+### Connectors (Connectors/*/)
 
-### Service Types
-The platform uses a type system like MIME types: `{collection}/{connector}`
-- Examples: `contact/twitter`, `photo/flickr`, `place/foursquare`
-- Defined in `Connectors/{name}/synclets.json` under `provides`
+Connectors sync data from external services. Each connector has:
+- `synclets.json`: Defines provided data types, sync frequencies, and mongo ID mappings
+- `*.js` files: Each synclet exports a `sync(processInfo, cb)` function
+- `package.json`: Dependencies and metadata
 
-### Data Flow
-1. Synclets fetch data from external services
-2. Data stored in MongoDB collections named by service type
-3. Collections aggregate and normalize data
-4. Apps query Collections or MongoDB directly
-5. Events notify services of data changes
+Synclets receive `processInfo` with:
+- `auth`: OAuth credentials and profile
+- `workingDirectory`: Service's Me/ subdirectory
+- `absoluteSrcDir`: Connector source directory
 
-### Configuration
-- `Config/config.json`: Main platform configuration
-- `Config/apikeys.json`: Required API keys (not checked in, use `Config/apikeys.json.example`)
-- Uses `nconf` for hierarchical config (environment > file > defaults)
+Synclets return `{data: {...}, auth: {...}}` where data keys are the data types from synclets.json.
 
-## Testing Notes
+### Collections (Collections/*/)
 
-- **Modern tests**: Mocha with `--growl --timeout 500` in `test/`
-- **Legacy tests**: Vows framework in `tests/` with custom runner
-- Mock services for testing exist in `tests/Data.tests/node_modules/`
-- Tests require `NODE_PATH` to include `Common/node`
+Collections normalize data from multiple connectors into unified schemas:
+- `index.js`: Main collection logic, implements `exports.sync(processInfo, cb)`
+- Data stored in MongoDB with type classification for querying
+
+### Apps (Apps/*/)
+
+Apps run as separate Node processes, communicate via stdin/stdout JSON:
+1. Receive JSON startup info on stdin with `workingDirectory`, `lockerUrl`, `mongo` info
+2. Call `locker.initClient(instanceInfo)` to set up communication
+3. Start HTTP server on ephemeral port
+4. Write `{port: <port>}` to stdout to signal readiness
+5. Use `locker.map()`, `locker.listen()`, `locker.ievent()` to interact with locker
+
+Skeleton app template in `Apps/skeleton/`.
+
+### Service Communication
+
+Services communicate via:
+- **HTTP API**: Core endpoints at `/core/<serviceId>/*` for event listening, scheduling, diary
+- **Service Map**: `/map` returns all installed services and their capabilities
+- **Events**: Services post events with IDR format (e.g., `contact://twitter/#123`) via `locker.ievent()`
+
+## Testing
+
+### Mocha Tests (test/*.test.js)
+```bash
+cd test
+INTEGRAL_CONFIG=test/config.json ../node_modules/.bin/mocha --timeout 500
+```
+
+### Vows Tests (tests/*.js)
+```bash
+cd tests
+env NODE_PATH="$(pwd)/../Common/node" node runTests.js
+```
+
+Tests use test fixtures in `tests/Me/` and `tests/Config/` as test data.
+
+## Configuration
+
+- `Config/config.json`: Main configuration (ports, paths, registered apps/collections)
+- `Config/apikeys.json`: API credentials for connectors (not tracked in git)
+- `Me/`: Runtime data directory (created on first run), contains installed service state
+
+The locker runs by default on port 8042 with MongoDB on port 27018.
