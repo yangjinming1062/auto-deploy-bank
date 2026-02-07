@@ -1,45 +1,59 @@
-# Base stage
-FROM node:20-alpine AS base
+# Build stage
+FROM node:20-alpine AS builder
 
 # Install pnpm
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable && corepack prepare pnpm@10.17.1 --activate
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Build stage - builds all packages with full dependencies
-FROM base AS builder
-
+# Set working directory
 WORKDIR /app
 
-# Copy entire project for workspace resolution
+# Copy package files and source code first
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY pnpm-workspace.yaml ./
 COPY . .
 
-# Install dependencies (including devDependencies for build)
-RUN pnpm install --no-frozen-lockfile
+# Install dependencies
+RUN pnpm install --frozen-lockfile
 
-# Build all packages
+# Install peer dependencies needed for type checking
+RUN pnpm add -Dw webpack@5 memfs@4 @types/node@^22
+
+# Build the project
 RUN pnpm build
 
-# Production stage - minimal runtime environment
-FROM base AS production
+# Production stage
+FROM node:20-alpine
+
+# Install runtime dependencies
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
 WORKDIR /app
 
-# Copy everything from builder - includes built artifacts and node_modules
-COPY --from=builder /app /app
+# Copy node_modules from builder (includes all dependencies and workspace links)
+COPY --from=builder /app/node_modules ./node_modules
 
-# Create demo profile directory
-RUN mkdir -p /app/.rsdoctor
+# Copy built artifacts from builder
+COPY --from=builder /app/packages ./packages
 
-# Create a minimal demo manifest
-RUN echo '{"data":{"alerts":[],"chunks":[],"modules":[],"packages":[],"loaders":[],"plugins":[],"entries":[],"sources":[],"bundles":[]},"client":{"enableRoutes":["overview","bundles","modules","packages","loaders","plugins","entries","analysis","bundle-diff"]},"__LOCAL__SERVER__":true}' > /app/.rsdoctor/manifest.json
+# Copy e2e fixtures for sample data
+COPY --from=builder /app/e2e/fixtures/rsdoctor ./e2e/fixtures/rsdoctor
 
 # Set environment variables
 ENV NODE_ENV=production
-ENV PORT=3000
+ENV PORT=2024
+ENV LOCAL_CLI_PORT=2024
+ENV ENABLE_CLIENT_SERVER=false
+ENV DEBUG=false
+ENV NO_COLOR=true
 
-# Expose the port
-EXPOSE 3000
+# Create volume mount point for data
+VOLUME /data
 
-# Run the rsdoctor analyze command with demo profile
-CMD ["node", "packages/cli/bin/rsdoctor", "analyze", "--profile", "/app/.rsdoctor/manifest.json", "--port", "3000", "--no-open"]
+# Expose the server port
+EXPOSE 2024
+
+# Set working directory to CLI
+WORKDIR /app/packages/cli
+
+# Run the CLI with sample manifest (use absolute path)
+CMD ["node", "bin/rsdoctor", "analyze", "--profile", "/app/e2e/fixtures/rsdoctor/manifest.json", "--port", "2024", "--no-open"]

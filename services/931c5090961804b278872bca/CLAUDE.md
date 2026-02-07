@@ -4,120 +4,92 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Rsdoctor is a build analyzer for the Rspack ecosystem with full webpack compatibility. It visualizes compilation behavior, identifies build bottlenecks, and provides build-time analysis for loaders, plugins, and resolvers. Part of the [Rstack](https://rstack.rs/) toolchain.
+Rsdoctor is a build analyzer for the Rspack and Webpack ecosystems. It's a TypeScript monorepo using pnpm workspaces and nx for task management. The project visualizes build processes to help identify bottlenecks and optimization opportunities.
 
-## Commands
+## Development Commands
 
-### Development Setup
 ```bash
-# Install dependencies (uses pnpm workspaces)
+# Install dependencies (requires pnpm 10.17.1+)
 pnpm install
 
 # Build all packages
-pnpm run build
+pnpm build
 
-# Build a specific package using nx
+# Build a single package
 npx nx build @rsdoctor/core
 
-# Start dev server for a package (watch mode)
-npx nx start @rsdoctor/core
-
 # Run unit tests
-pnpm run test
+pnpm test        # or pnpm ut
+pnpm ut:watch    # watch mode
 
-# Run unit tests with watch mode
-pnpm run ut:watch
+# Run tests for a single package
+pnpm run --filter @rsdoctor/core test
 
-# Run unit tests for a single package
-npx nx test @rsdoctor/core
+# Lint code
+pnpm lint        # uses Biome
+pnpm format      # uses Prettier
 
-# Run E2E tests (playwright-based)
-pnpm run e2e
+# Run E2E tests
+pnpm e2e
 
-# Run E2E tests with native Rspack
-pnpm run e2e:native
-
-# Run all tests
-pnpm run test:all
-
-# Lint with Biome
-pnpm run lint
-
-# Format code
-pnpm run format
-```
-
-### Local Development
-```bash
-# Start the client UI dev server
-cd packages/client && pnpm run dev
-
-# Run build analysis on examples
-cd examples/rspack-minimal && pnpm run build:analysis
+# Check spelling
+pnpm check-spell
 ```
 
 ## Architecture
 
-### Monorepo Structure
+### Package Structure
 
-```
-packages/
-├── ai/              @rsdoctor/mcp-server - MCP server for AI integration
-├── cli/             @rsdoctor/cli - CLI tool
-├── client/          @rsdoctor/client - React UI for analysis report (Rsbuild)
-├── components/      @rsdoctor/components - Shared UI components
-├── core/            @rsdoctor/core - Core analysis engine (Rslib)
-├── graph/           @rsdoctor/graph - Module/package graph utilities
-├── rspack-plugin/   @rsdoctor/rspack-plugin - Rspack plugin
-├── sdk/             @rsdoctor/sdk - Server/client SDK with socket.io
-├── types/           @rsdoctor/types - Shared TypeScript types
-├── utils/           @rsdoctor/utils - Utility functions
-└── webpack-plugin/  @rsdoctor/webpack-plugin - Webpack plugin
-
-examples/            Demo projects (rspack-minimal, webpack-minimal, rsbuild-minimal, etc.)
-e2e/                 End-to-end tests using Playwright
-```
-
-### Package Dependencies
-
-```
-client (React UI with Rsbuild)
-    └── components, types
-
-core (Analysis engine)
-    ├── graph, sdk, types, utils
-    └── inner-plugins/, rules/, build-utils/
-
-rspack-plugin
-    └── core, graph, sdk, types, utils
-
-webpack-plugin
-    └── core, graph, sdk, types, utils
-
-sdk
-    ├── client, graph, types, utils
-    └── socket.io server for client communication
-
-cli
-    ├── core, sdk, types, utils, graph
-    └── client (peerDependency)
-```
+- **@rsdoctor/core** - Core analysis engine with inner plugins that hook into bundlers (Webpack/Rspack)
+- **@rsdoctor/sdk** - SDK for data collection and report generation
+- **@rsdoctor/client** - React-based visualization dashboard for reports
+- **@rsdoctor/components** - Shared React UI components
+- **@rsdoctor/webpack-plugin** - Webpack integration plugin
+- **@rsdoctor/rspack-plugin** - Rspack integration plugin
+- **@rsdoctor/cli** - Command-line interface
+- **@rsdoctor/types** - Shared TypeScript type definitions
+- **@rsdoctor/utils** - Common utility functions
+- **@rsdoctor/ai** - MCP server and AI-related features
+- **@rsdoctor/graph** - Graph utilities for module/package graphs
 
 ### Build System
 
-- **Rslib** is used for building TypeScript packages (core, graph, sdk, utils, plugins, cli, ai)
-- **Rsbuild** is used for the client React UI package
-- **Prebundle** is used to bundle external dependencies into compiled/ directories
-- **nx** manages task scheduling and caching across the monorepo
+- **rslib** - Builds library packages with dual ESM/CJS output
+- **rsbuild** - Builds the client React application
+- **prebundle** - Pre-bundles certain dependencies (configured in `prebundle.config.mjs`)
 
-### Core Concepts
+### Data Flow
 
-- **Plugins**: The `inner-plugins/` directory in core contains Rsdoctor's internal loaders and plugins that intercept webpack/rspack compilation
-- **Rules**: Built-in analysis rules for detecting issues like duplicate packages, ES version problems
-- **Build Utils**: Utilities for parsing bundles, analyzing loaders, and processing sourcemaps
-- **SDK Server**: Runs a socket.io server during builds to stream data to the client UI
+1. Plugins (webpack/rspack) hook into bundlers to collect build data
+2. SDK collects data into a standard manifest format
+3. React client consumes the manifest for visualization
 
-### Test Framework
+## Testing
 
-- **Unit tests**: Use `@rstest/core` (Rust-inspired testing framework) in each package's `tests/` directory
-- **E2E tests**: Use Playwright in `e2e/cases/`, configured to run against both webpack and rspack
+Tests use **rstest** framework (similar to Rust's rstest). Unit tests live in `packages/*/tests/` directories. E2E tests are in the `e2e/` directory using Playwright.
+
+Tests use snapshot serialization configured in `scripts/rstest.setup.ts` for consistent path handling.
+
+## Code Style
+
+- **Biome** for linting (configured in `biome.json`)
+- **Prettier** for formatting
+- Strict rules enabled: `useExportType: error`, `noNonNullAssertion: off`
+- Non-null assertions (`!`) are allowed ( Biome's `noNonNullAssertion` is off)
+
+## Key Configuration Files
+
+- `package.json` - Scripts and pnpm workspace configuration
+- `nx.json` - Nx task distribution and caching
+- `biome.json` - Linting rules
+- `rstest.config.ts` - Test configuration
+- `packages/*/rslib.config.ts` - Per-package build configuration
+
+## Viewing Changes
+
+To view analysis reports after making changes, run in example projects:
+
+```bash
+pnpm run build:analysis
+# Available in: modern-minimal, webpack-minimal, rspack-minimal, rsbuild-minimal
+```
