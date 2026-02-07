@@ -1,0 +1,17 @@
+{
+  "service_id": "64eb585b8e61b134c4d5d5be",
+  "repo_name": "BabitMF/bmf",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "31.65MB",
+  "language": "python",
+  "star": 1003,
+  "repo_flag": "ByteDance-SRC-1",
+  "uploaded_at": "2026-02-08T04:11:54.676816",
+  "generated_files": [
+    "/home/ubuntu/deploy-projects/64eb585b8e61b134c4d5d5be/docker-compose.yaml",
+    "/home/ubuntu/deploy-projects/64eb585b8e61b134c4d5d5be/Dockerfile"
+  ]
+}

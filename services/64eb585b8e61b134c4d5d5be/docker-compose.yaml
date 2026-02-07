@@ -1,0 +1,29 @@
+services:
+  bmf:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bmf-service
+    ports:
+      - "0.0.0.0:40639:8080"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app/output
+      - LD_LIBRARY_PATH=/app/output/bmf/lib:/app/output/bmf/lib64
+      - BMF_VERSION_OVERRIDE=0.2.0
+      - GIT_SHA=unknown
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
