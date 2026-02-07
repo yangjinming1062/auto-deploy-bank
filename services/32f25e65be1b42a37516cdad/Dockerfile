@@ -1,15 +1,18 @@
 # Use specific version with SHA256 for reproducibility and security
 FROM python:3.12-slim@sha256:d86b4c74b936c438cd4cc3a9f7256b9a7c27ad68c7caf8c205e18d9845af0164
 
+# Install curl for healthcheck
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
+# Set Python environment
+ENV PYTHONUNBUFFERED=1
+
 # Create non-root user for security
 RUN groupadd -r attackgen && \
     useradd -r -g attackgen -u 1000 -m -d /home/attackgen attackgen
 
 # Set working directory
 WORKDIR /app
-
-# Set Python to output logs immediately
-ENV PYTHONUNBUFFERED=1
 
 # Copy and install dependencies as root (better layer caching)
 COPY requirements.txt .

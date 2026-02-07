@@ -2,7 +2,7 @@ services:
   attackgen:
     build: .
     ports:
-      - "40980:8501"
+      - "42013:8501"
     
     # Security settings
     security_opt:
@@ -27,10 +27,10 @@ services:
       resources:
         limits:
           cpus: '2.0'
-          memory: 4G
+          memory: 2G
         reservations:
-          cpus: '1.0'
-          memory: 1G
+          cpus: '0.5'
+          memory: 512M
     
     # Environment variables (override with .env file)
     environment:

@@ -9,10 +9,9 @@
   "language": "python",
   "star": 1207,
   "repo_flag": "PYTHON",
-  "uploaded_at": "2026-02-06T22:25:26.421286",
+  "uploaded_at": "2026-02-07T13:02:34.866132",
   "generated_files": [
     ".streamlit/config.toml",
-    ".streamlit/secrets.toml-example",
-    ".env.example"
+    "/home/ubuntu/deploy-projects/32f25e65be1b42a37516cdad/docker-compose.yaml"
   ]
 }
