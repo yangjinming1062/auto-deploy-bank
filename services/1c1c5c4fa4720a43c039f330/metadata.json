@@ -1,0 +1,27 @@
+{
+  "service_id": "1c1c5c4fa4720a43c039f330",
+  "repo_name": "Zephery/newblog",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "4.79MB",
+  "language": "java",
+  "star": 1105,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-02-07T20:57:32.566721",
+  "generated_files": [
+    "src/main/resources/application-common.yml",
+    "src/main/resources/application-dev.yml",
+    "src/main/resources/load.properties",
+    "create_admin_account.sh",
+    "Dockerfile",
+    "docker-compose.yaml",
+    "src/main/webapp/common/common.jsp",
+    "src/main/webapp/common/head.jsp",
+    "src/main/webapp/common/head_user.jsp",
+    "src/main/java/com/myblog/controller/LoginServlet.java",
+    "src/main/java/com/myblog/controller/LoginSupportServlet.java",
+    "src/main/java/com/myblog/controller/LogoutServlet.java"
+  ]
+}
