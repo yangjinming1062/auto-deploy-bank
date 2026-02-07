@@ -9,8 +9,10 @@
   "language": "python",
   "star": 1266,
   "repo_flag": "NODEJS",
-  "uploaded_at": "2026-02-07T10:51:27.278479",
+  "uploaded_at": "2026-02-07T10:53:11.833289",
   "generated_files": [
+    "Dockerfile",
+    "docker-compose.yaml",
     "/home/ubuntu/deploy-projects/526d589395785c4e1fd9cd47/docker-compose.yaml"
   ]
 }

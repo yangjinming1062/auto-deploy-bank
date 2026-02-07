@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: tfma-service
     ports:
-      - "48866:48821"
+      - "48821:48821"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:48821/health"]
       interval: 30s
