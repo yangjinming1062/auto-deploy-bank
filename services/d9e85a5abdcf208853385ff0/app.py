@@ -54,6 +54,19 @@ def chat_get():
     }
 
 
+@app.get("/")
+def root():
+    return {
+        "service": "kwaiagents",
+        "version": "1.0.0",
+        "endpoints": {
+            "/health": "Health check",
+            "/chat": "Chat API (POST)",
+            "/docs": "Swagger API Documentation"
+        }
+    }
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
