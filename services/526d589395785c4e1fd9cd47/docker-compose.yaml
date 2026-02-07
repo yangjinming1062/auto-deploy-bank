@@ -1,21 +1,17 @@
-version: '3.8'
-
 services:
-  tfma-service:
+  tensorflow-model-analysis:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: tfma-service
     ports:
-      - "41591:8080"
-    environment:
-      - PORT=8080
+      - "48866:48821"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:48821/health"]
       interval: 30s
       timeout: 10s
-      start_period: 10s
       retries: 3
+      start_period: 120s
     deploy:
       resources:
         limits:

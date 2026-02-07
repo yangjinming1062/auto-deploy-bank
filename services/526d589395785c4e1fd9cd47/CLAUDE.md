@@ -2,109 +2,116 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
-
-TensorFlow Model Analysis (TFMA) is a library for evaluating TensorFlow models. It computes metrics over different slices of data and supports distributed computation via Apache Beam.
-
-## Development Commands
+## Build Commands
 
 ```bash
-# Install package in development mode (requires protoc)
-pip install -e .
+# Install in development mode
+pip install .
 
-# Run all unit tests
+# Build wheel from source
+python setup.py bdist_wheel
+
+# Build with Jupyter widget JS (requires nodejs/npm)
+BUILD_JS=1 pip install -e .
+
+# Install protobuf compiler (required for building protos)
+apt install protobuf-compiler
+```
+
+## Test Commands
+
+```bash
+# Run all tests
 python -m unittest discover -p "*_test.py"
 
-# Run a single test file
-python -m unittest tensorflow_model_analysis.api.model_eval_lib_test
+# Run a specific test file
+python -m unittest tensorflow_model_analysis.evaluators.evaluator_test
 
 # Run a specific test class
-python -m unittest tensorflow_model_analysis.api.model_eval_lib_test.EvalResultTests
+python -m unittest tensorflow_model_analysis.evaluators.evaluator_test.EvaluatorTest
 
-# Run pre-commit hooks
+# Run a specific test method
+python -m unittest tensorflow_model_analysis.evaluators.evaluator_test.EvaluatorTest.test_evaluator
+```
+
+## Linting
+
+```bash
+# Install pre-commit hooks
+pre-commit install --install-hooks
+
+# Run pre-commit on all files
 pre-commit run --all-files
 
-# Build wheel distribution
-python setup.py bdist_wheel
+# Run ruff linting directly
+ruff check .
+ruff format .
 ```
 
-**Note**: Requires `protoc` (Protocol Buffer compiler) to generate `_pb2.py` files from `.proto` files during build.
+## Architecture Overview
 
-## Code Architecture
+TensorFlow Model Analysis (TFMA) is a library for evaluating TensorFlow models using Apache Beam pipelines for distributed computation.
 
-### Pipeline Design Pattern
+### Pipeline Flow
+The evaluation pipeline consists of four main stages:
 
-TFMA uses an **Extractors → Evaluators → Writers** pipeline architecture:
+1. **Read Inputs**: Converts raw inputs (tf.train.Example, CSV, JSON) into extracts
+2. **Extraction**: Runs a series of `Extractor` transforms that add data to extracts
+3. **Evaluation**: Runs `Evaluator` transforms that produce evaluation outputs
+4. **Write Results**: Writes evaluation results to disk using `Writer` transforms
 
-1. **Extractors** (`extractors/`): Transform raw input data into `Extracts` containing features, predictions, labels, and other artifacts
-2. **Evaluators** (`evaluators/`): Compute metrics, plots, and validations from extracts
-3. **Writers** (`writers/`): Write evaluation results to outputs (files, BigQuery, etc.)
+### Core Data Types
 
-### Key Modules
+**Extracts** (`Dict[Text, Any]`): Data extracted during pipeline processing, stored in a `PCollection`. Standard keys defined in `constants.py`:
+- `INPUT_KEY` ("input"): Raw input bytes
+- `FEATURES_KEY` ("features"): Raw features
+- `LABELS_KEY` ("labels"): Labels
+- `PREDICTIONS_KEY` ("predictions"): Model predictions
+- `EXAMPLE_WEIGHTS_KEY` ("example_weights"): Example weights
+- `SLICE_KEYS_KEY` ("slice_keys"): Slice key assignments
 
-| Module | Purpose |
-|--------|---------|
-| `api/model_eval_lib.py` | Main public API (`run_model_analysis`, `analyze_raw_data`, etc.) |
-| `api/types.py` | Core data types (`EvalSharedModel`, `Extracts`, `FeaturesPredictionsLabels`) |
-| `metrics/` | Metric implementations (confusion matrices, calibration, BLEU, etc.) |
-| `slicer/` | Slice specification and extraction for sub-population analysis |
-| `view/` | Visualization utilities and result types (`EvalResult`) |
-| `proto/` | Protocol Buffer definitions for config and results |
+**Evaluation** (`Dict[Text, PCollection]`): Output from evaluators. Standard keys:
+- `METRICS_KEY` ("metrics"): Computed metrics
+- `PLOTS_KEY` ("plots"): Plot data
+- `ANALYSIS_KEY` ("analysis"): Full extracts for analysis
+- `VALIDATIONS_KEY` ("validations"): Validation results
 
-### Data Flow
+### Key Components
 
-```
-Input Data → Extractors → Extracts → Evaluators → Metrics/Plots → Writers → Output
-                                    ↓
-                              Validations
-```
+- **Extractors** (`tensorflow_model_analysis/extractors/`): Transform extracts (e.g., `InputExtractor`, `PredictExtractor`, `SliceKeyExtractor`)
+- **Evaluators** (`tensorflow_model_analysis/evaluators/`): Produce evaluations from extracts (e.g., `MetricsAndPlotsEvaluator`, `AnalysisTableEvaluator`)
+- **Writers** (`tensorflow_model_analysis/writers/`): Serialize and write evaluation output (e.g., `MetricsAndPlotsWriter`)
+- **Metrics** (`tensorflow_model_analysis/metrics/`): Post-export metrics computations
+- **Slicer** (`tensorflow_model_analysis/slicer/`): Slice key generation and handling
+- **View** (`tensorflow_model_analysis/view/`): Visualization and result rendering
 
-### Evaluator Types
+### Main Entry Points
 
-- **MetricsPlotsAndValidationsEvaluator**: Main evaluator computing metrics, plots, and model validations
-- **KerasEvaluator**: Handles Keras/TensorFlow 2.x models
-- **LegacyEvaluator**: Support for TF 1.x estimators
+- `run_model_analysis()` in `api/model_eval_lib.py`: Primary high-level API for running evaluations
+- `default_extractors`, `default_evaluators`, `default_writers`: Default configurations
+- Configuration via `EvalConfig` with `SlicingSpec`, `MetricsSpec`, `ModelSpec`
 
-### Configuration
+### Important Files
 
-Configuration is defined in Protocol Buffers (`config.proto`, `metrics_for_slice.proto`, `validation_result.proto`). Use `EvalConfig` to specify:
-- Model specifications (`ModelSpec`)
-- Metrics specifications (`MetricsSpec`)
-- Slicing specifications (`SlicingSpec`)
+- `tensorflow_model_analysis/__init__.py`: Public API exports
+- `tensorflow_model_analysis/constants.py`: Extract/Evaluation keys and constants
+- `docs/architecture.md`: Detailed architecture documentation
+- `setup.py`: Build configuration, proto generation
+- `tensorflow_model_analysis/proto/`: Protocol buffer definitions
 
-## Linting & Style
+### Dependencies
 
-Uses `ruff` for linting (configured in `pyproject.toml`) and `pre-commit` hooks. Key rules:
-- Line length: 88 characters (ruff-format)
-- Type annotations: Required for public functions (many ignored in practice)
-- Docstrings: pydocstyle (D rules)
+- TensorFlow (required)
+- Apache Beam for distributed pipeline execution (local mode by default, supports Dataflow)
+- Apache Arrow for internal data representation
+- Jupyter widgets for notebook visualization
+- Protobuf for serialization
 
-## Testing Patterns
+### Proto Compilation
 
-- Tests follow `*_test.py` naming convention
-- Use `unittest` framework (not pytest)
-- Test utilities in `tensorflow_model_analysis/utils/test_util.py`
-- Integration tests use Apache Beam pipelines
+Protos are auto-generated during build via `setup.py`. Proto files are in `tensorflow_model_analysis/proto/`:
+- `config.proto`: Evaluation configuration
+- `metrics_for_slice.proto`: Metrics serialization
+- `validation_result.proto`: Validation results
 
-## Key Dependencies
-
-- **TensorFlow**: Model loading and inference
-- **Apache Beam**: Distributed computation (local mode by default, supports Dataflow)
-- **Apache Arrow**: Internal data representation
-- **pandas/numpy**: Data manipulation
-- **tfx-bsl**: TFX BSL integration
-
-## Common Tasks
-
-### Adding a New Metric
-
-1. Create metric class in `metrics/`
-2. Inherit from appropriate base class in `metric_types.py`
-3. Add to `metric_specs.py` to enable via config
-4. Add tests for the metric
-
-### Adding a New Extractor
-
-1. Create extractor class inheriting from `extractor.Extractor`
-2. Implement `extract` method returning `Extracts`
-3. Add to `default_extractors()` in `model_eval_lib.py`
+To regenerate: Run `python setup.py build_py` or `pip install .`

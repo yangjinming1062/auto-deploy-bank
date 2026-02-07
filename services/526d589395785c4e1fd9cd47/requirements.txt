@@ -1,6 +1,0 @@
-# Flask for web service
-flask>=2.3.0
-gunicorn>=21.0.0
-
-# TensorFlow Model Analysis (optional - for ML operations)
-# tensorflow-model-analysis>=1.0.0
