@@ -9,11 +9,10 @@
   "language": "python",
   "star": 1272,
   "repo_flag": "PYTHON",
-  "uploaded_at": "2026-02-06T22:38:53.015286",
+  "uploaded_at": "2026-02-07T12:39:33.430620",
   "generated_files": [
-    "configs/model_config.py",
-    "configs/server_config.py",
     "configs/local_config.json",
-    "/home/ubuntu/deploy-projects/80695c8eb14090459936a888/docker-compose.yaml"
+    "examples/api.py",
+    "examples/api.py"
   ]
 }
