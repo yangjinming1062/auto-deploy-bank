@@ -4,86 +4,117 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Minima is an on-premises RAG (Retrieval-Augmented Generation) system that allows querying local documents using various AI integrations (ChatGPT, Anthropic Claude, or fully local LLMs).
+Minima is an on-premises RAG (Retrieval-Augmented Generation) system for local document search and AI chat. It supports multiple deployment modes:
+- **Fully Local (Ollama)**: All models run on-premises via Ollama containers
+- **Custom LLM**: OpenAI-compatible API endpoints (vLLM, TGI, Ollama server, etc.)
+- **ChatGPT Integration**: Custom GPT integration for document search
+- **Anthropic Claude**: MCP integration for Claude Desktop app
 
-The project is structured as a set of microservices orchestrated via Docker Compose, with Python backends (FastAPI) and Node.js frontends.
+Supported document types: PDF, XLS, DOCX, TXT, MD, CSV.
 
-## Architecture
+## Development Commands
 
-The system consists of several independent services that communicate via HTTP/WebSocket:
-
-1.  **Indexer** (`indexer/`): Scans `LOCAL_FILES_PATH` for documents (PDF, DOCX, etc.), chunks them, and stores embeddings in Qdrant.
-2.  **LLM** (`llm/`): Handles RAG queries. It retrieves relevant chunks from Qdrant via the Indexer, reranks them, and generates answers using an LLM (Ollama).
-3.  **Linker** (`linker/`): Bridges external AI providers (ChatGPT Custom GPTs) with the internal Minima services. It polls Firestore for requests and submits results.
-4.  **MCP Server** (`mcp-server/`): A Python MCP server allowing AI assistants (like Claude Desktop) to query the local Minima instance.
-5.  **Chat UI** (`chat/`): A React application for local chat interactions.
-6.  **Electron App** (`electron/`): A desktop wrapper for the Chat UI.
-
-### Data Flow
-
-- **Local Mode**: Electron/Chat UI -> `llm` (WebSocket) -> `indexer` (HTTP).
-- **ChatGPT Mode**: ChatGPT Custom GPT -> Firestore -> `linker` -> `indexer`/`llm` -> Firestore.
-- **MCP Mode**: Claude Desktop -> `mcp-server` -> `indexer` (HTTP).
-
-## Commands
-
-### Running the System
-
-The primary way to run the system is using Docker Compose. A helper script `run.sh` is provided for interactive selection.
+### Backend Services (Docker)
 
 ```bash
-# Select deployment mode
+# Interactive menu with all options
 ./run.sh
+
+# Manual Docker Compose commands
+docker compose -f docker-compose-[mode].yml --env-file .env up --build
 ```
 
-Or run directly with docker compose:
+Docker compose modes: `ollama`, `custom-llm`, `chatgpt`, `mcp`
 
-```bash
-# Fully local (Ollama + Qdrant + Indexer + LLM + Chat UI)
-docker compose -f docker-compose-ollama.yml --env-file .env up --build
-
-# ChatGPT Integration (Linker + Indexer + LLM)
-docker compose -f docker-compose-chatgpt.yml --env-file .env up --build
-
-# MCP Integration (MCP Server + Indexer)
-docker compose -f docker-compose-mcp.yml --env-file .env up --build
-```
-
-### Frontend Development
-
-**Chat UI (React):**
-
+### Frontend (React Web App)
 ```bash
 cd chat
 npm install
-npm start
+npm start       # Development server at http://localhost:3000
+npm test        # Run tests
+npm run build   # Production build
 ```
 
-**Electron App:**
-
+### Desktop App (Electron)
 ```bash
 cd electron
 npm install
 npm start
 ```
 
-### MCP Server (Python)
-
-Requires Python >= 3.10 and `uv`.
-
+### MCP Server (Standalone)
+Requires Python >= 3.10 and `uv` installed.
 ```bash
-cd mcp-server
-uv run minima
-```
-Or use the helper script for Copilot integration:
-```bash
-./run_in_copilot.sh <path_to_project>
+uv --directory mcp-server run minima
 ```
 
-## Configuration
+## Architecture
 
-- Root `.env` file is required for container deployments (see `.env.sample`).
-- **Critical Variables**:
-  - `LOCAL_FILES_PATH`: The directory to index.
-  - `OLLAMA_MODEL`: The LLM to use (for local mode).
-  - `EMBEDDING_MODEL_ID` / `EMBEDDING_SIZE`: For vectorization.
+### Services
+
+| Service | Path | Port | Purpose |
+|---------|------|------|---------|
+| indexer | `/indexer` | 8001 | Document ingestion, embedding storage (Qdrant) |
+| llm | `/llm` | 8002 | LLM interactions, streaming responses via WebSocket |
+| linker | `/linker` | - | Service discovery and routing coordination |
+
+### Technology Stack
+
+- **Backend**: Python (FastAPI, LangChain, Qdrant, Unstructured)
+- **Frontend**: React (TypeScript, Create React App), Material UI
+- **Desktop**: Electron
+- **Vector Database**: Qdrant
+- **Protocol**: MCP (Model Context Protocol) for AI assistant integration
+
+### Key Source Files
+
+- `indexer/app.py` - FastAPI entry point, handles `/query` and `/files/add` endpoints
+- `llm/ollama_chain.py`, `llm/openai_chain.py` - LLM chain implementations
+- `mcp-server/minima/` - MCP server implementation for Claude Desktop integration
+
+### Service Communication
+
+- Indexer ↔ LLM: REST APIs
+- LLM ↔ Frontend: WebSocket for streaming responses
+- Linker: Coordinates inter-service discovery
+
+## Environment Variables
+
+Required variables (copy from `.env.sample`):
+- `LOCAL_FILES_PATH` - Root folder for document indexing
+- `EMBEDDING_MODEL_ID` - Sentence Transformer model (e.g., `sentence-transformers/all-mpnet-base-v2`)
+- `EMBEDDING_SIZE` - Embedding dimension (768 for mpnet-base-v2)
+
+Mode-specific variables:
+- **Ollama**: `OLLAMA_MODEL`, `RERANKER_MODEL`
+- **Custom LLM**: `LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY`
+- **ChatGPT**: `USER_ID`, `PASSWORD`
+
+## MCP Integration
+
+### Claude Desktop
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+```json
+{
+  "mcpServers": {
+    "minima": {
+      "command": "uv",
+      "args": ["--directory", "/path/to/minima/mcp-server", "run", "minima"]
+    }
+  }
+}
+```
+
+### GitHub Copilot
+Configure `.vscode/mcp.json`:
+```json
+{
+  "servers": {
+    "minima": {
+      "type": "stdio",
+      "command": "run_in_copilot.sh",
+      "args": ["/path/to/minima"]
+    }
+  }
+}
+```

@@ -1,14 +1,19 @@
-FROM python:3.11-slim
+FROM python:3.11-slim-buster
 
 WORKDIR /usr/src/app
 
 ARG RERANKER_MODEL
 
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 RUN pip install --upgrade pip
 COPY requirements.txt .
-RUN pip install "huggingface_hub>=0.20.0"
-RUN python -c "from huggingface_hub import HfApi; HfApi().snapshot_download(repo_id='$RERANKER_MODEL', repo_type='model')"
+# Install latest huggingface-hub with CLI support
+RUN pip install --upgrade "huggingface_hub[cli]"
+# Only download reranker if RERANKER_MODEL is set (for Ollama mode)
+RUN if [ -n "$RERANKER_MODEL" ]; then \
+        hf download $RERANKER_MODEL; \
+    else \
+        echo "Skipping reranker download (not needed for custom LLM mode)"; \
+    fi
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 

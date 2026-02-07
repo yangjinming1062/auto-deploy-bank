@@ -1,13 +1,17 @@
 {
   "service_id": "a3985d90a9ce6f3e29d01ca8",
   "repo_name": "dmayboroda/minima",
-  "platform": "github",
+  "platform": null,
   "ref": null,
   "version": "",
-  "status": "stopped",
-  "package_size": "448KB",
+  "status": "deploying",
+  "package_size": "466KB",
   "language": "python",
-  "star": 1021,
-  "repo_flag": "PYTHON-langfuse",
-  "uploaded_at": "2026-01-12T12:12:39.472489"
+  "star": 1031,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-02-08T03:08:43.016217",
+  "generated_files": [
+    "/home/ubuntu/deploy-projects/a3985d90a9ce6f3e29d01ca8/Dockerfile",
+    "/home/ubuntu/deploy-projects/a3985d90a9ce6f3e29d01ca8/docker-compose.yaml"
+  ]
 }
