@@ -1,0 +1,19 @@
+services:
+  pyret:
+    build: .
+    ports:
+      - "40126:40126"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "40126"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s

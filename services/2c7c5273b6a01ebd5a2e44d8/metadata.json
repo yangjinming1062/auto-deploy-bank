@@ -1,0 +1,18 @@
+{
+  "service_id": "2c7c5273b6a01ebd5a2e44d8",
+  "repo_name": "brownplt/pyret-lang",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "9.01MB",
+  "language": "nodejs",
+  "star": 1119,
+  "repo_flag": "NODEJS",
+  "uploaded_at": "2026-02-07T16:07:53.815705",
+  "generated_files": [
+    "Dockerfile",
+    "docker-compose.yaml",
+    "Dockerfile"
+  ]
+}
