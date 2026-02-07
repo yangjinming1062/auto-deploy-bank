@@ -4,10 +4,19 @@
   "platform": "github",
   "ref": null,
   "version": "",
-  "status": "stopped",
-  "package_size": "17.25MB",
+  "status": "deploying",
+  "package_size": "17.41MB",
   "language": "java",
-  "star": 79336,
-  "repo_flag": "JAVA-Logback",
-  "uploaded_at": "2026-01-02T15:07:31.985270"
+  "star": 79788,
+  "repo_flag": "JAVA",
+  "uploaded_at": "2026-02-07T19:50:11.948174",
+  "generated_files": [
+    "config/application.yml",
+    "docker-compose.yaml",
+    "create_test_users.sql",
+    "create_test_users.sql",
+    "/home/ubuntu/deploy-projects/872d5afc90caa1006525b171/target.jar",
+    "/home/ubuntu/deploy-projects/872d5afc90caa1006525b171/login_test.js",
+    "/home/ubuntu/deploy-projects/872d5afc90caa1006525b171/config/application.yml"
+  ]
 }

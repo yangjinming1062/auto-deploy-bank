@@ -2,195 +2,97 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Build System
-
-This project uses Gradle 9.2.1 with the Gradle wrapper. All commands should use `./gradlew` from the project root.
-
-### JDK Requirements
-
-- **main branch**: JDK 25 (use Bellsoft Liberica, HotSpot JVM)
-- **3.* branches**: JDK 17
-- **Earlier branches**: JDK 1.8
-
-SDKMAN! is configured (`.sdkmanrc`) to provision the recommended JDK. Use `sdk env install` to set up your environment.
-
-### Common Build Commands
+## Build Commands
 
 ```bash
-# Build everything
+# Build all modules without running tests
+./gradlew publishToMavenLocal
+
+# Full build with all tests
 ./gradlew build
 
-# Run tests only (unit, integration, smoke, and system tests)
-./gradlew test
-
-# Run only unit tests
-./gradlew :core:spring-boot:test
-
-# Run a specific test class
-./gradlew :core:spring-boot:test --tests "*ApplicationTests"
-
-# Run integration tests
-./gradlew :integration-test:spring-boot-integration-tests:integrationTest
-
-# Run smoke tests
-./gradlew :smoke-test:spring-boot-smoke-test-simple:bootTest
-
-# Format code (Spring JavaFormat)
-./gradlew format
-
-# Run checkstyle
-./gradlew checkstyleMain checkstyleTest
-
-# Run all verification (tests + checkstyle)
+# Run verification (tests + checkstyle)
 ./gradlew check
 
-# Build documentation
-./gradlew :core:spring-boot-docs:asciidoc
+# Format code using Spring JavaFormat
+./gradlew format
 
-# Publish to local Maven cache
-./gradlew publishToMavenLocal
+# Check code format violations
+./gradlew checkstyleMain checkstyleTest
+
+# Run tests for a specific project
+./gradlew :core:spring-boot:test
+
+# Run a single test class
+./gradlew :core:spring-boot:test --tests "org.springframework.boot.env.EnvironmentPostProcessorTests"
+
+# Run Docker integration tests (requires Docker)
+./gradlew :spring-boot-gradle-plugin:dockerTest
 ```
 
-## Project Architecture
+**Requirements:** JDK 17 minimum, JDK 25.0.2+ recommended. Uses Gradle wrapper. The build uses STABLE_CONFIGURATION_CACHE.
 
-### Module Structure
+## Project Structure
 
-The project is organized into several key areas:
+This is a multi-module Gradle build for Spring Boot. The project is organized into several major categories:
 
-1. **platform/** - Dependency management
-   - `spring-boot-dependencies` - Bill of Materials (BOM) defining all dependency versions
-   - `spring-boot-internal-dependencies` - Internal dependency constraints
+| Directory | Purpose |
+|-----------|---------|
+| `platform/` | BOM (Bill of Materials) dependency management - source of truth for versions |
+| `core/` | Core framework: spring-boot, spring-boot-autoconfigure, test infrastructure |
+| `module/` | Feature modules with auto-configuration AND library dependencies (e.g., spring-boot-data-jpa) |
+| `starter/` | Dependency-less starters that aggregate modules (e.g., spring-boot-starter-web) |
+| `loader/` | Custom class loaders and JAR tools including the jarmode-tools |
+| `build-plugin/` | Gradle and Maven plugins for building Spring Boot applications |
+| `cli/` | Spring Boot CLI command-line tool |
+| `integration-test/` | Large-scale integration tests |
+| `smoke-test/` | End-to-end application smoke tests |
+| `system-test/` | Deployment and container image system tests |
+| `configuration-metadata/` | Configuration processor and metadata generation |
+| `documentation/` | Reference documentation and actuator docs |
+| `buildpack/` | Cloud Native Buildpack support |
+| `buildSrc/` | Build conventions and custom Gradle plugins |
 
-2. **core/** - Core Spring Boot modules
-   - `spring-boot` - Main framework
-   - `spring-boot-autoconfigure` - Auto-configuration engine
-   - `spring-boot-autoconfigure-processor` - Annotation processor for auto-configuration metadata
-   - `spring-boot-test` - Testing support
-   - `spring-boot-test-autoconfigure` - Testing auto-configuration
-   - `spring-boot-testcontainers` - Testcontainers integration
-   - `spring-boot-docker-compose` - Docker Compose support
-   - `spring-boot-properties-migrator` - Configuration properties migration tool
+**Version management:** All dependency versions are defined in `gradle.properties` and consumed via `platform/spring-boot-dependencies`.
 
-3. **module/** - Feature modules (100+ modules)
-   - Integration modules for data, web, security, cloud, messaging, etc.
-   - Each feature typically has its own module with `-autoconfigure` companion
-   - Examples: `spring-boot-actuator`, `spring-boot-data-jpa`, `spring-boot-webflux`
+**Gradle project naming:** Projects use the pattern `group:artifact` (e.g., `:module:spring-boot-web`, `:starter:spring-boot-starter`). Use `./gradlew projects` to list all available projects.
 
-4. **build-plugin/** - Build plugins
-   - `spring-boot-gradle-plugin` - Official Gradle plugin
-   - `spring-boot-maven-plugin` - Official Maven plugin
-   - `spring-boot-antlib` - Ant tasks
+## Architecture Patterns
 
-5. **test-support/** - Test utilities
-   - Shared test support classes and fixtures
+### Auto-Configuration
+Auto-configuration classes are in `core/spring-boot-autoconfigure/src/main/java/org/springframework/boot/autoconfigure/` organized by feature (e.g., `jdbc/`, `web/`, `data/`). Each auto-configuration:
+- Uses `@AutoConfiguration` annotation (Spring Boot 3.x pattern)
+- Declares `@AutoConfigureBefore`/`@AutoConfigureAfter` for ordering
+- References `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` for auto-discovery (not spring.factories in new code)
 
-6. **integration-test/** - Integration tests
-   - Full integration tests that require Docker (Testcontainers)
+### Module vs Starter Pattern
+**`module/`** projects contain both the actual library integration AND auto-configuration. Example: `module:spring-boot-data-jpa` includes Hibernate integration and JPA auto-configuration.
 
-7. **smoke-test/** - Smoke tests
-   - End-to-end tests for specific features using real Spring Boot applications
+**`starter/`** projects are dependency-less aggregators that depend only on modules. Example: `starter:spring-boot-starter-web` depends on `module:spring-boot-web`, `module:spring-boot-autoconfigure-classic`, etc.
 
-8. **system-test/** - System tests
-   - Highest-level tests for deployment and image building
+### Configuration Properties
+Configuration properties classes use `@ConfigurationProperties` and are validated. Metadata is auto-generated in `spring-configuration-metadata.json` for IDE support.
 
-9. **cli/** - Spring Boot CLI tool
+## Code Conventions
 
-10. **buildSrc/** - Custom Gradle plugins and build logic
-    - Defines conventions applied to all subprojects
-    - Custom plugins for auto-configuration, testing, documentation, etc.
+- **Sign-offs**: All commits require a Signed-off-by trailer (DCO). Use `git commit -s` or add manually.
+- **License headers**: Required on all source files (Apache 2.0)
+- **Formatting**: Spring JavaFormat is enforced via `./gradlew format`
+- **Assertions**: Use AssertJ (`assertThat*` methods), not JUnit assertions
+- **Mocking**: Use BDDMockito (`given()` instead of `when()`)
+- **Imports**: See `config/checkstyle/checkstyle.xml` and `config/checkstyle/import-control.xml` for restrictions
+- **Javadoc**: Required on public classes with `@author` tag
 
-### Key Build Concepts
+## Testing
 
-- **Conventions Plugin** (`buildSrc/src/main/java/org/springframework/boot/build/ConventionsPlugin.java`):
-  Applies Java, Maven publishing, Kotlin, Eclipse, and other conventions to all projects.
+Tests follow conventions based on module type:
+- **Test slices**: Use `@SpringBootTest` with sliced context via `@AutoConfigure*` annotations
+- **Test support**: Projects in `test-support/` provide shared testing infrastructure
+- **Docker tests**: Use Testcontainers via `spring-boot-docker-test-support`
 
-- **Architecture Plugin**: Enforces architectural constraints (prevents circular dependencies, ensures proper layering)
+## Key Dependencies
 
-- **Auto-Configuration Plugin**: Processes `@ConfigurationProperties` and generates metadata
-
-- **Test Plugins**: Different test types (unit, integration, smoke, system) each have their own Gradle plugin
-
-## Development Workflow
-
-### Code Style and Quality
-
-- Code formatting: Spring JavaFormat plugin (applied automatically via conventions)
-- Checkstyle: Configured via `buildSrc`, run with `./gradlew checkstyleMain checkstyleTest`
-- Architecture checks: Automatically enforced by the ArchitecturePlugin
-- All new Java files must include ASF license header
-- All new Java files should have Javadoc with `@author` tag
-
-### Working with Auto-Configuration
-
-Auto-configuration classes are processed at build time:
-- Location: `core/spring-boot-autoconfigure/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`
-- Metadata generation: `@ConfigurationProperties` classes generate metadata in `spring-boot-autoconfigure-processor`
-- Do not manually edit the `AutoConfiguration.imports` file - it's auto-generated
-
-### Testing
-
-This project has multiple test layers:
-
-1. **Unit tests** - Standard JUnit tests in each module
-2. **Integration tests** (`integration-test/`) - Require Docker, test full functionality
-3. **Smoke tests** (`smoke-test/`) - Test complete applications end-to-end
-4. **System tests** (`system-test/`) - Test deployment and packaging
-
-Tests using Docker/Testcontainers will be automatically skipped if Docker is not available. If running Docker tests, ensure at least 20GB disk space is available.
-
-### Running Specific Test Types
-
-```bash
-# Run all tests in a specific module
-./gradlew :module:spring-boot-actuator:test
-
-# Run smoke tests for a specific feature
-./gradlew :smoke-test:spring-boot-smoke-test-actuator:bootTest
-
-# Run integration tests with Docker
-./gradlew :integration-test:spring-boot-actuator-integration-tests:integrationTest
-
-# Run a specific test method
-./gradlew :core:spring-boot:test --tests "*.ApplicationTests.shouldLoadCustomBanner"
-```
-
-## IDE Setup
-
-### Eclipse
-
-Use the Eclipse Installer with the setup file in `/eclipse/spring-boot-project.setup`.
-
-Or manually:
-1. Install Buildship plugin
-2. Install Spring JavaFormat plugin
-3. Import as "Gradle → Existing Gradle Project"
-
-### IntelliJ IDEA
-
-1. Open the project by selecting the root `build.gradle` file
-2. Or use "Project from Version Control" with the GitHub URL
-3. The project includes `.idea/` directory with code style and copyright settings
-
-### Windows Git Configuration
-
-When cloning on Windows, set Git config to handle long paths:
-```bash
-git config --global core.longPaths true
-```
-
-## Contributing Guidelines
-
-- All commits must include a "Signed-off-by" trailer (Developer Certificate of Origin)
-- Follow commit message conventions: https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
-- Run `./gradlew check` before committing (runs tests + checkstyle)
-- If modifying buildSrc, fix format violations with `./gradlew -p buildSrc format`
-- Add yourself as `@author` in modified Java files
-- Unset `SPRING_PROFILES_ACTIVE` before running tests if set in environment
-
-## Important Files
-
-- `gradle.properties` - Version numbers and build configuration
-- `settings.gradle` - Included modules and plugin management
-- `buildSrc/` - Custom Gradle plugins and conventions
-- `CONTRIBUTING.adoc` - Detailed contribution guidelines
-- `.sdkmanrc` - SDKMAN! configuration for JDK versions
+Versions are managed centrally in `gradle.properties`:
+- Spring Framework: `${springFrameworkVersion}`
+- Jackson: `${jackson2Version}`
+- Kotlin: `${kotlinVersion}`
