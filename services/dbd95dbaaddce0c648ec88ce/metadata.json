@@ -1,0 +1,19 @@
+{
+  "service_id": "dbd95dbaaddce0c648ec88ce",
+  "repo_name": "Xwin-LM/Xwin-LM",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "12.87MB",
+  "language": "python",
+  "star": 1039,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-02-08T03:34:37.038037",
+  "generated_files": [
+    "web.py",
+    "Dockerfile",
+    "docker-compose.yaml",
+    "requirements.txt"
+  ]
+}
