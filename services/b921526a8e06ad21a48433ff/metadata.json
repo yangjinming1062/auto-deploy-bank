@@ -9,12 +9,14 @@
   "language": "python",
   "star": 1182,
   "repo_flag": "PYTHON",
-  "uploaded_at": "2026-02-07T00:47:16.521790",
+  "uploaded_at": "2026-02-07T13:26:53.970362",
   "generated_files": [
     "configs/default.yaml",
-    "start.sh",
-    "web_server.py",
-    "start.sh",
-    "docker-compose.yaml"
+    "configs/city_snake.yaml",
+    "configs/coco_snake.yaml",
+    "configs/kins_snake.yaml",
+    "configs/sbd_snake.yaml",
+    "configs/city_ct_rcnn.yaml",
+    "configs/city_rcnn_snake.yaml"
   ]
 }

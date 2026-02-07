@@ -1,37 +1,44 @@
-FROM python:3.7-slim
+FROM python:3.8-slim
 
-# Install curl for healthcheck, build-essential for pycocotools, and OpenCV dependencies
-RUN apt-get update && apt-get install -y curl build-essential libglib2.0-0 libgtk2.0-0 libnotify-dev libgstreamer1.0-0 libgstreamer-plugins-base1.0-0 && rm -rf /var/lib/apt/lists/*
+# Install curl and build essentials for compiling pycocotools
+# Also install OpenCV runtime dependencies
+RUN apt-get update && apt-get install -y curl gcc g++ build-essential libglib2.0-0 libsm6 libxext6 libxrender1 && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /home/ubuntu/deploy-projects/b921526a8e06ad21a48433ff
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
-ENV CUDA_HOME=/usr/local/cuda
-ENV FORCE_CUDA=0
-ENV PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
 
-# Set work directory
-WORKDIR /home/ubuntu/deploy-projects/b921526a8e06ad21a48433ff
+# Install PyTorch and dependencies (CPU version for building)
+# For GPU training, use: pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
+RUN pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 
-# Copy requirements first for better caching
+# Install Cython for pycocotools build
+RUN pip install Cython
+
+# Install compatible protobuf version for tensorboardX
+RUN pip install 'protobuf>=3.8.0,<3.20.0' termcolor
+
+# Copy and install Python dependencies
 COPY requirements.txt .
-
-# Install Python dependencies
-# Install PyTorch CPU version since FORCE_CUDA=0
-# Cython is required for pycocotools, install it first
-RUN pip install --no-cache-dir Cython && \
-    pip install --no-cache-dir torch torchvision torchaudio -f https://download.pytorch.org/whl/cpu/torch_stable.html && \
-    pip install --no-cache-dir -r requirements.txt && \
-    pip install --no-cache-dir pyyaml termcolor
+# Update to compatible versions for Python 3.8
+RUN sed -i 's/opencv-contrib-python==3.4.2.17/opencv-contrib-python==3.4.8.29/g' requirements.txt && \
+    sed -i 's/opencv-python==3.4.2.17/opencv-python==3.4.8.29/g' requirements.txt && \
+    sed -i 's/numpy==1.16.4/numpy>=1.16.0/g' requirements.txt && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .
 
-# Create necessary directories
-RUN mkdir -p data/model data/record data/result && chmod +x start.sh
+# Build CUDA extensions (requires GPU and CUDA toolkit)
+# Skip this step in CPU-only environment - for GPU training, uncomment and run with nvidia-docker:
+# RUN cd lib/csrc/dcn_v2 && python setup.py build_ext --inplace && \
+#     cd ../extreme_utils && python setup.py build_ext --inplace && \
+#     cd ../roi_align_layer && python setup.py build_ext --inplace
 
-# Healthcheck - verify the training process is running
-HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD pgrep -f "python.*train_net" > /dev/null || exit 1
+# Make healthcheck script executable
+RUN chmod +x /home/ubuntu/deploy-projects/b921526a8e06ad21a48433ff/healthcheck_server.py
 
-# Default command - run training (task is defined in config file)
-CMD ["./start.sh", "--cfg_file", "configs/city_snake.yaml"]
+# Default command - start healthcheck server (use: docker compose run deep-snake python train_net.py ... for training)
+CMD ["python", "healthcheck_server.py"]

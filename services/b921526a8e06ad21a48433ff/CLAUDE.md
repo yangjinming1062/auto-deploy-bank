@@ -4,22 +4,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Deep Snake is a real-time instance segmentation algorithm (CVPR 2020). The codebase uses a modular plugin architecture with factory functions to dynamically load task-specific components.
+DeepSnake is a real-time instance segmentation algorithm (CVPR 2020). The codebase uses a modular factory pattern with four main components:
+- **Dataset**: Provides data for training/testing (`lib/datasets/$dataset_id/$task.py`)
+- **Network**: Model architecture (`lib/networks/$task/`)
+- **Trainer**: Defines loss functions (`lib/train/trainers/$task.py`)
+- **Evaluator**: Defines evaluation metrics (`lib/evaluators/$dataset_id/$task.py`)
 
-## Commands
+## Build & Installation
 
-### Installation
 ```bash
 # Create conda environment
 conda create -n snake python=3.7
 conda activate snake
 
-# Install PyTorch and dependencies
+# Install PyTorch (must match system CUDA version, e.g., CUDA 9.0)
 pip install torch==1.1.0 -f https://download.pytorch.org/whl/cu90/stable
+
+# Install dependencies
+pip install Cython==0.28.2
 pip install -r requirements.txt
 
-# Install NVIDIA Apex
-cd external/apex && python setup.py install --cuda_ext --cpp_ext
+# Install NVIDIA apex
+git clone https://github.com/NVIDIA/apex.git
+cd apex
+git checkout 39e153a3159724432257a8fc118807b359f4d1c8
+python setup.py install --cuda_ext --cpp_ext
 
 # Compile CUDA extensions
 cd lib/csrc/dcn_v2 && python setup.py build_ext --inplace
@@ -27,82 +36,85 @@ cd ../extreme_utils && python setup.py build_ext --inplace
 cd ../roi_align_layer && python setup.py build_ext --inplace
 ```
 
+## Common Commands
+
 ### Training
 ```bash
-# Single task training
-python train_net.py --cfg_file configs/sbd_snake.yaml model sbd_snake
+# Train a model (replace config, model, task as needed)
+python train_net.py --cfg_file configs/city_rcnn_snake.yaml model long_rcnn task rcnn_snake det_model long_rcnn_det
 
-# Two-stage training (Cityscapes with R-CNN)
-python train_net.py --cfg_file configs/city_ct_rcnn.yaml model rcnn_det
-python train_net.py --cfg_file configs/city_rcnn_snake.yaml model rcnn_snake det_model rcnn_det
-
-# Key training parameters (override via command line):
-# train.lr, train.milestones, train.gamma, train.batch_size, train.epoch
+# Key training parameters: train.epoch, train.lr, train.batch_size, train.milestones, train.gamma
+python train_net.py --cfg_file configs/city_rcnn_snake.yaml train.epoch 140 eval_ep 5
 ```
 
-### Testing
+### Testing & Evaluation
 ```bash
-# Evaluate model
+# Evaluate using COCO evaluator
 python run.py --type evaluate --cfg_file configs/city_rcnn_snake.yaml
 
-# Speed test
-python run.py --type network --cfg_file configs/city_rcnn_snake.yaml
+# Evaluate using dataset-specific evaluator
+python run.py --type evaluate --cfg_file configs/city_rcnn_snake.yaml test.dataset CityscapesVal
 ```
 
-### Visualization & Demo
+### Visualization
 ```bash
 # Visualize on test set
 python run.py --type visualize --cfg_file configs/city_rcnn_snake.yaml test.dataset CityscapesTest ct_score 0.3
 
-# Demo on images
-python run.py --type demo --cfg_file configs/sbd_snake.yaml demo_path demo_images ct_score 0.3
+# Visualize on validation set
+python run.py --type visualize --cfg_file configs/city_rcnn_snake.yaml test.dataset CityscapesVal ct_score 0.3
 ```
 
-### Monitoring
+### Demo
 ```bash
-tensorboard --logdir data/record/rcnn_snake
+# Run demo on image folder
+python run.py --type demo --cfg_file configs/sbd_snake.yaml demo_path demo_images ct_score 0.3
+
+# Run demo on single image
+python run.py --type demo --cfg_file configs/sbd_snake.yaml demo_path demo_images/2009_000871.jpg ct_score 0.3
 ```
 
-## Architecture
-
-The project follows a task-based plugin pattern where components are dynamically loaded based on `cfg.task` and dataset configuration.
-
-### Core Directory Structure
-```
-lib/
-├── config/           # YACS configuration system (cfg.py, yacs.py)
-├── networks/         # Factory: make_network() loads from lib/networks/{task}/__init__.py
-├── datasets/         # Factory: make_data_loader() loads from lib/datasets/{data_source}/{task}.py
-├── evaluators/       # Factory: make_evaluator() loads from lib/evaluators/{data_source}/{task}.py
-├── train/            # Trainer, optimizer, scheduler, recorder
-│   └── trainers/     # Task-specific trainers in lib/train/trainers/{task}.py
-├── visualizers/      # Factory: make_visualizer() loads from lib/visualizers/{task}.py
-└── utils/            # Utility functions including snake-specific geometry utils
+### Performance Benchmarking
+```bash
+python run.py --type network --cfg_file configs/city_rcnn_snake.yaml
 ```
 
-### Key Factory Patterns
-- **Networks**: `lib.networks.{task}.get_network(cfg)` - returns `nn.Module`
-- **Datasets**: `lib.datasets.{data_source}.{task}.Dataset` - extends `torch.utils.data.Dataset`
-- **Evaluators**: `lib.evaluators.{data_source}.{task}.Evaluator` - implements `evaluate()` and `summarize()`
-- **Trainers**: `lib.train.trainers.{task}.Trainer` - implements `train()` and `val()`
-- **Visualizers**: `lib.visualizers.{task}.{task}.Visualizer` - implements `visualize()`
+### TensorBoard
+```bash
+tensorboard --logdir data/record/rcnn_snake  # for rcnn_snake task
+tensorboard --logdir data/record/snake       # for snake task
+```
 
-### Configuration System
-- YAML config files in `configs/` define model, task, network, datasets
-- `cfg.task` determines which plugin components are loaded
-- `cfg.test.dataset` determines evaluator via `DatasetCatalog.get()` → `data_source`
-- Override configs via CLI: `python train_net.py --cfg_file x.yaml train.lr 0.001`
+## Configuration Pattern
 
-### Adding New Components
-1. **New task variant**: Create `lib/networks/{task}/__init__.py` with `get_network()`
-2. **New dataset**: Register in `lib/datasets/dataset_catalog.py`, create `lib/datasets/{data_source}/{task}.py`
-3. **New evaluator**: Create `lib/evaluators/{data_source}/{task}.py` with `Evaluator` class
-4. **New trainer**: Create `lib/train/trainers/{task}.py` with `Trainer` class
+Configs are YAML files with the following key fields:
+- `model`: model name (determines save directory)
+- `network`: backbone architecture (e.g., `rcnn_34`, `dla_34`)
+- `task`: algorithm type (e.g., `rcnn_snake`, `snake`)
+- `train.dataset`: training set name (registered in `lib/datasets/dataset_catalog.py`)
+- `test.dataset`: validation/test set name
+- `heads`: output heads for the network
 
-### CUDA Extensions
-Located in `lib/csrc/`: `dcn_v2`, `extreme_utils`, `roi_align_layer` - must be compiled before running.
+## Adding New Components
 
-### Data Paths
-- Models: `data/model/{task}/{model_name}/`
-- Records: `data/record/{task}/{model_name}/`
-- Results: `data/result/{task}/{model_name}/`
+1. **Dataset**: Create `lib/datasets/$dataset_id/$task.py` with a `Dataset` class, register in `lib/datasets/dataset_catalog.py`
+
+2. **Network**: Create `lib/networks/$task/__init__.py` with `get_network(cfg)` function
+
+3. **Trainer**: Create `lib/train/trainers/$task.py` with `train()` and `val()` methods
+
+4. **Evaluator**: Create `lib/evaluators/$dataset_id/$task.py` with an `Evaluator` class
+
+5. **Visualizer** (optional): Create `lib/visualizers/$task.py`
+
+## Directory Structure
+
+- `configs/`: Configuration YAML files for different datasets
+- `lib/csrc/`: CUDA extensions (dcn_v2, extreme_utils, roi_align_layer)
+- `lib/datasets/`: Dataset implementations by data source (coco, cityscapes, kins, sbd, voc)
+- `lib/networks/`: Network architectures by task (snake, rcnn_snake, ct_rcnn)
+- `lib/train/`: Training utilities (trainers, optimizer, scheduler, recorder)
+- `lib/evaluators/`: Evaluators by dataset
+- `lib/visualizers/`: Visualization utilities
+- `lib/utils/snake/`: Snake-specific utilities (config, poly utilities, evaluation)
+- `data/`: Data storage (models, records, results - create symlinks to datasets here)
