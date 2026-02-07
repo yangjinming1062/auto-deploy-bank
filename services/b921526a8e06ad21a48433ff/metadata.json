@@ -9,6 +9,12 @@
   "language": "python",
   "star": 1182,
   "repo_flag": "PYTHON",
-  "uploaded_at": "2026-02-07T13:50:40.292744",
-  "generated_files": []
+  "uploaded_at": "2026-02-08T01:07:22.624487",
+  "generated_files": [
+    "configs/default.yaml",
+    "Dockerfile",
+    "docker-compose.yaml",
+    "service.py",
+    "service.py"
+  ]
 }

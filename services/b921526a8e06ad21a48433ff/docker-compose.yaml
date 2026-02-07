@@ -1,29 +1,15 @@
-version: '3.8'
-
 services:
-  deep-snake:
+  pytorch-service:
     build: .
-    container_name: deep-snake-instance-segmentation
-    ports:
-      - "40347:41908"
+    container_name: pytorch-snake-demo
     environment:
-      - CITYSCAPES_DATASET=${CITYSCAPES_DATASET:-}
-      - CITYSCAPES_RESULTS=${CITYSCAPES_RESULTS:-}
-      - CITYSCAPES_EXPORT_DIR=${CITYSCAPES_EXPORT_DIR:-}
-      - CUDA_VISIBLE_DEVICES=0
-      - FORCE_CUDA=${FORCE_CUDA:-}
-      - CUDA_HOME=/usr/local/cuda
+      - CUDA_VISIBLE_DEVICES=
       - PYTHONUNBUFFERED=1
-      - PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
     volumes:
-      - ./data:/home/ubuntu/deploy-projects/b921526a8e06ad21a48433ff/data
+      - ./demo_images:/home/ubuntu/deploy-projects/b921526a8e06ad21a48433ff/demo_images
       - ./outputs:/home/ubuntu/deploy-projects/b921526a8e06ad21a48433ff/outputs
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:41908/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+    ports:
+      - "0.0.0.0:40209:40209"
     deploy:
       resources:
         limits:
@@ -32,4 +18,10 @@ services:
         reservations:
           cpus: '1.0'
           memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:40209/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
     restart: unless-stopped
