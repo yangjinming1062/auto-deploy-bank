@@ -5,7 +5,7 @@ services:
     build: .
     container_name: deep-snake-instance-segmentation
     ports:
-      - "42038:41908"
+      - "40347:41908"
     environment:
       - CITYSCAPES_DATASET=${CITYSCAPES_DATASET:-}
       - CITYSCAPES_RESULTS=${CITYSCAPES_RESULTS:-}

@@ -9,14 +9,6 @@
   "language": "python",
   "star": 1182,
   "repo_flag": "PYTHON",
-  "uploaded_at": "2026-02-07T13:26:53.970362",
-  "generated_files": [
-    "configs/default.yaml",
-    "configs/city_snake.yaml",
-    "configs/coco_snake.yaml",
-    "configs/kins_snake.yaml",
-    "configs/sbd_snake.yaml",
-    "configs/city_ct_rcnn.yaml",
-    "configs/city_rcnn_snake.yaml"
-  ]
+  "uploaded_at": "2026-02-07T13:50:40.292744",
+  "generated_files": []
 }
