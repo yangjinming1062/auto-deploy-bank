@@ -1,0 +1,17 @@
+{
+  "service_id": "b95c5457b10f2b34bc566b66",
+  "repo_name": "richardwilly98/elasticsearch-river-mongodb",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "361KB",
+  "language": "java",
+  "star": 1122,
+  "repo_flag": "JAVA",
+  "uploaded_at": "2026-02-07T16:00:53.430010",
+  "generated_files": [
+    "src/main/resources/es-plugin.properties",
+    "entrypoint.sh"
+  ]
+}
