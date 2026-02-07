@@ -1,0 +1,18 @@
+{
+  "service_id": "6d515aa18620039d9e77b3fa",
+  "repo_name": "erelsgl/limdu",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "202KB",
+  "language": "nodejs",
+  "star": 1053,
+  "repo_flag": "NODEJS",
+  "uploaded_at": "2026-02-08T02:42:39.985928",
+  "generated_files": [
+    "server.js",
+    "Dockerfile",
+    "docker-compose.yaml"
+  ]
+}
