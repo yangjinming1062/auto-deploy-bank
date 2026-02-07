@@ -2,176 +2,121 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Overview
+## Repository Overview
 
-This is the **DAMO-ConvAI** repository from Alibaba Research - a monorepo containing multiple independent research projects focused on conversational AI, NLP, and machine learning. Each top-level directory represents a separate research project with its own README, dependencies, and training/inference scripts.
+This is the **DAMO-ConvAI** research repository from Alibaba Group, containing ~45 independent research projects focused on Large Language Models (LLMs). Each subdirectory is a self-contained research project with its own README, dependencies, and setup instructions.
+
+### Main Research Themes
+
+- **LLM Training & Alignment**: EPO, SDPO, IOPO (reinforcement learning, preference optimization)
+- **Mathematical Reasoning**: MaskedThought (MFT - Masked Thought Fine-Tuning)
+- **Multi-Modal Models**: MMEvol, PaCE, OmniCharacter, OpenOmni
+- **Dialogue Systems**: Sotopia, API-Bank, dial2vec, dialogue-cse
+- **Text-to-SQL Parsing**: Proton, Graphix, s2sql, bird, r2sql, sunsql
+- **Long-Context Understanding**: Loong, space-1/2/3
+- **Agent Planning**: FlowBench, spectra, deep-thinking
+- **Self-Evolution of LLMs**: Awesome-Self-Evolution-of-LLM (survey paper collection)
 
 ## Common Commands
 
-### Setup
+### Environment Setup
+
 ```bash
-# For projects with requirements.txt (most projects)
-cd <project-directory>
+# Create conda environment (most projects use python 3.7-3.10)
+conda create -n <env_name> python=3.10
+conda activate <env_name>
+
+# Install dependencies
 pip install -r requirements.txt
 
-# For Poetry-based projects (Sotopia, graphix/picard)
-cd <project-directory>
-poetry install
-poetry install -E examples  # with optional dependencies
-
-# For LLaMA-Factory based projects (EPO, SDPO)
-cd <project>/LLaMA-Factory && pip install -e .
-
-# For Makefile-based projects (Graphix)
-cd graphix && make pull-train-image  # Uses Docker
+# For editable installs (common pattern)
+pip install -e .
 ```
 
-### Training (project-specific)
+### Model Training (LLaMA-Factory based projects)
+
+Projects using LLaMA-Factory (EPO, SDPO, IOPO):
 ```bash
-# SPACE1.0 style (uses run.py with argparse)
-python run.py --do_train=true --model=UnifiedTransformer --data_name=multiwoz ...
+# Training
+llamafactory-cli train examples/train_full/<config>.yaml
 
-# BIRD fine-tuning style (uses shell scripts)
-sh ./finetuning/run/run_bird_large.sh
-
-# LLaMA-Factory style (EPO, SDPO)
-llamafactory-cli train examples/train_epo/llama3_sotopia_pi_rl.yaml
+# Inference
+llamafactory-cli api examples/inference/<config>.yaml
 ```
 
-### Inference/Evaluation
+### Evaluation
+
+Many projects use OpenAI API for evaluation:
 ```bash
-# SPACE1.0 style
-python run.py --do_infer=true ...
+# Set API key in config files (typically in config/models/*.yaml or utils/keys.json)
+export OPENAI_API_KEY="your-key"
 
-# BIRD evaluation
-sh ./llm/run/run_evaluation.sh
-
-# Sotopia benchmark evaluation (EPO, SDPO)
-sotopia benchmark --models <MODEL_NAME> --partner-model <PARTNER> --evaluator-model gpt-4o --task all
+# Run evaluation scripts (project-specific)
+python eval_model.py
+python run.sh
 ```
 
-### Data Preprocessing
+### Redis Setup (required for Sotopia-based projects)
+
+Several dialogue projects require Redis:
 ```bash
-# SPACE1.0 preprocessing
-sh scripts/pre_train/preprocess.sh
-
-# Project-specific scripts typically in scripts/ directory
+# Install Redis
+sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2.23_amd64.deb
+./redis-stack-server-7.2.0-v10/bin/redis-stack-server --daemonize yes
 ```
 
-### Testing
-```bash
-# Poetry projects (Sotopia)
-poetry run pytest
+## Key Dependencies
 
-# Project-specific evaluation scripts
-sh ./llm/run/run_evaluation.sh
-```
+- **LLaMA-Factory**: Model training framework used by multiple projects
+- **vLLM**: High-throughput inference (used for evaluation)
+- **Redis/Redis Stack**: Memory backend for dialogue systems
+- **PyTorch**: Deep learning framework
+- **Transformers**: Hugging Face model library
+- **OpenAI API**: Used for evaluation and some data generation
 
-## Architecture
+## Project-Specific Notes
 
-### Project Structure Patterns
+### EPO (Explicit Policy Optimization)
+- Contains `LLaMA-Factory`, `Sotopia` (benchmark), and `Alfshop` (WebShop/ALFWorld)
+- Training data available at HuggingFace: `Tongyi-ConvAI/EPO-RL-data`
+- Primary command: `llamafactory-cli train examples/train_epo/llama3_sotopia_pi_rl.yaml`
 
-**requirements.txt projects** (most common):
-```
-<project>/
-├── README.md           # Project documentation
-├── requirements.txt    # Python dependencies
-├── run.py             # Main entry point for training/inference
-├── scripts/           # Shell scripts for specific tasks
-│   ├── <task>/train.sh
-│   └── <task>/infer.sh
-├── galaxy/ or src/    # Core implementation
-│   ├── args.py        # Argument parsing
-│   ├── data/          # Dataset handling
-│   ├── models/        # Model definitions
-│   ├── trainers/      # Training logic
-│   └── utils/         # Utility functions
-├── data/              # Dataset files (not in git)
-└── model/             # Model checkpoints (not in git)
-```
+### MMEvol (Multi-Modal Evolution)
+- Requires extensive dataset preparation (see README for data structure)
+- Uses VLMEvalKit for evaluation
+- Training scripts in `scripts/v1_6/train/`
 
-**Poetry projects** (Sotopia, graphix/picard):
-```
-<project>/
-├── pyproject.toml     # Poetry configuration with extras
-├── poetry.lock        # Locked dependencies
-├── tests/             # Test files (pytest)
-├── <project>/         # Source code package
-└── scripts/           # Utility scripts
-```
+### Graphix (Text-to-SQL)
+- Requires dependency parsing packages (Supar)
+- Uses Docker for environment setup (recommended)
+- Data preprocessing: `make pre_process`
 
-### Common Dependencies
-- **PyTorch**: Core ML framework (versions vary by project, typically 1.8+)
-- **transformers**: Hugging Face model library (v3.x or v4.x)
-- **numpy/scipy**: Numerical computing
-- **nltk**: Natural language toolkit
-- **spaCy**: Tokenization (some older projects)
-- **scikit-learn**: Machine learning utilities
+### Loong (Long-Context Benchmark)
+- Evaluation via `src/run.sh`
+- Requires vLLM server for open-source models
+- Data downloaded from: `http://alibaba-research.oss-cn-beijing.aliyuncs.com/loong/doc.zip`
 
-### Training Patterns
-1. **Argument-based config**: Most projects use argparse with configuration files
-2. **GPU configuration**: `CUDA_VISIBLE_DEVICES` or `--gpu` flag
-3. **Checkpointing**: Models saved in `outputs/` or `save_dir/`
-4. **Distributed training**: Some support multi-GPU via DataParallel
+### API-Bank (Tool-Augmented LLMs)
+- Contains 73 API tools and 314 annotated dialogues
+- Demo: `python demo.py`
+- Evaluation: `python evaluator.py`
 
-## Key Projects
+## Code Style
 
-| Project | Focus Area | Main Framework |
-|---------|------------|----------------|
-| SPACE1.0/2.0/3.0 | Task-oriented dialog | Custom GALAXY framework |
-| BIRD-SQL | Text-to-SQL | T5 fine-tuning, OpenAI ICL |
-| S²SQL / R²SQL | Text-to-SQL | Sequence-to-sequence |
-| Graphix | Text-to-SQL | T5 with graph-aware layers, Docker |
-| PROTON | Text-to-SQL parsing | Graph neural networks |
-| Sotopia | Social simulation | Multi-agent dialogue, Poetry |
-| EPO | Strategic reasoning in LLMs | LLaMA-Factory, RL |
-| SDPO | Segment-level preference optimization | LLaMA-Factory, DPO |
-| IOPO | Offline-to-online RL | LLaMA-Factory |
-| MMEvol | Multimodal LLMs with Evol-Instruct | LLaVA-based |
-| OmniCharacter | Character-based dialogue | LLM agents |
-| OpenOmni | Open-domain omnimodal conversation | Multimodal LLMs |
-| Loong | Long context language models | Extended context LLMs |
-| metaretriever | Information retrieval | Dense retrieval |
+- Python-based research code
+- Configuration typically in YAML files or Python dictionaries
+- Model checkpoints stored in `checkpoints/` or project-specific directories
+- Dataset files typically in JSON/JSONL format
 
-## Working with Specific Projects
+## Data Locations
 
-### For SPACE-style projects (galaxy/ module)
-- Entry point: `run.py`
-- Datasets: MultiWOZ, CamRest, In-Car Assistant
-- Models: UnifiedTransformer with DA classification head
-- Requires SpaCy: `python -m spacy download en_core_web_sm`
+- **HuggingFace datasets**: `Tongyi-ConvAI/` organization (training data for multiple projects)
+- **Model checkpoints**: Various, check project READMEs
+- **Benchmark data**: Often requires separate download (Google Drive, project pages)
 
-### For BIRD
-- Two modes: Fine-tuning (T5) and In-Context Learning (GPT)
-- Evaluation requires: Execution accuracy (EX) and Valid Efficiency Score (VES)
-- Database files in `./data/dev_databases/`
+## Notes
 
-### For LLaMA-Factory based projects (EPO, SDPO)
-- Training: `llamafactory-cli train <config.yaml>`
-- Inference: `bash inference.sh` with vLLM
-- Requires: Redis for some data pipeline operations
-
-### For Sotopia (Poetry-based)
-- Install: `poetry install && poetry install -E examples`
-- Run tests: `poetry run pytest`
-- CLI: `sotopia benchmark --models <MODEL> --task all`
-
-### For Graphix (Docker-based)
-- Uses Docker for environment isolation
-- Preprocess: `make pre_process`
-- Train: `make train`
-- Evaluate: `make eval`
-- Image: `eyuansu62/graphix-text-to-sql:v2`
-
-## Environment Setup Notes
-
-1. **Python version**: Projects vary (3.7+ to 3.10+)
-2. **CUDA versions**: Projects may require specific PyTorch CUDA versions
-3. **External data**: Most require downloading data/models from Google Drive, HuggingFace, or provided links
-4. **External APIs**: Some evaluation scripts require OpenAI API keys
-
-## Repository Root
-
-- MIT License
-- Each project has its own license notation (check individual READMEs)
-- Papers accepted at major venues: NeurIPS, ACL, EMNLP, SIGIR, AAAI, KDD
+- Each subdirectory is largely independent - check the specific project's README for accurate instructions
+- Many projects depend on external API keys (OpenAI, etc.)
+- GPU requirements vary by project (A100s commonly used for training)
+- Some projects use deprecated Python versions (3.7) - check requirements

@@ -11,6 +11,10 @@ WORKDIR /app
 ENV PYTHONUNBUFFERED=1
 ENV MAX_JOBS=4
 ENV DISABLE_VERSION_CHECK=1
+ENV API_HOST=0.0.0.0
+ENV API_PORT=8000
+ENV GRADIO_SERVER_NAME=0.0.0.0
+ENV GRADIO_SHARE=False
 
 # Copy requirements first for better caching
 COPY requirements.txt /app/
@@ -26,11 +30,10 @@ COPY . /app/
 RUN pip install -e ".[metrics]"
 
 # Expose port 8000 for the API service
-ENV API_PORT=8000
 EXPOSE 8000
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
     CMD curl -f http://localhost:8000/docs || exit 1
 
 # Run the API server

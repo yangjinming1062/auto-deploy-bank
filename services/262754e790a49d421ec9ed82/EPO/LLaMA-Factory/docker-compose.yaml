@@ -1,8 +1,10 @@
+version: "3.8"
+
 services:
   llamafactory-api:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: docker/docker-cpu/Dockerfile
     container_name: llamafactory-api
     ports:
       - "40150:8000"
