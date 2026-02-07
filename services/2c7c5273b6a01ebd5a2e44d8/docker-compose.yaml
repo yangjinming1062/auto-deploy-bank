@@ -2,7 +2,7 @@ services:
   pyret:
     build: .
     ports:
-      - "40126:40126"
+      - "40024:40126"
     deploy:
       resources:
         limits:
@@ -13,6 +13,7 @@ services:
           memory: 1G
     healthcheck:
       test: ["CMD", "nc", "-z", "localhost", "40126"]
+      # Internal port stays 40126, only host port changes
       interval: 10s
       timeout: 5s
       retries: 3

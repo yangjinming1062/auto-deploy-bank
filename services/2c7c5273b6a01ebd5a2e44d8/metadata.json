@@ -9,10 +9,13 @@
   "language": "nodejs",
   "star": 1119,
   "repo_flag": "NODEJS",
-  "uploaded_at": "2026-02-07T16:07:53.815705",
+  "uploaded_at": "2026-02-07T18:43:44.998277",
   "generated_files": [
-    "Dockerfile",
-    "docker-compose.yaml",
-    "Dockerfile"
+    "src/scripts/standalone-config.json",
+    "src/scripts/standalone-configA.json",
+    "src/scripts/standalone-configB.json",
+    "src/scripts/standalone-configC.json",
+    "src/scripts/node_modules-config.json",
+    "build/phaseA/config.json"
   ]
 }

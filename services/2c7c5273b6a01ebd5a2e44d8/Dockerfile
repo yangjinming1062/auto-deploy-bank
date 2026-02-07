@@ -8,11 +8,14 @@ RUN apk add --no-cache bash wget netcat-openbsd make g++ python3 pkgconf cairo-d
 # Copy package files for dependency caching
 COPY package*.json ./
 
-# Install dependencies (ignore canvas errors - optional for charting)
-RUN npm ci --only=production --ignore-scripts || npm install --ignore-scripts --no-optional || true
+# Install all dependencies (canvas is optional for charting, ignore build scripts)
+RUN npm ci --ignore-scripts 2>&1 || npm install --ignore-scripts 2>&1 || true
 
 # Copy source code
 COPY . .
+
+# Create build directories for phaseA
+RUN mkdir -p build/phaseA/js build/phaseA/compiled
 
 # Build the Pyret compiler (phaseA)
 RUN make phaseA
