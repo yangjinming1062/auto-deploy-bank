@@ -4,93 +4,99 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Pyret is a self-hosted programming language focused on education, functional programming, and integrated testing. The compiler is written in Pyret itself, targeting JavaScript as the runtime.
+Pyret is a self-hosted programming language with a compiler written in Pyret itself. The compiler is built using a multi-phase bootstrapping process. Most development work uses Phase A, while Phase B and C are used for verifying compiler correctness.
 
 ## Build Commands
 
 ```bash
-npm install                    # Install dependencies and build Phase A deps
-make                           # Build Phase A compiler (development snapshot)
-make phaseB                    # Build Phase B (fully-bootstrapped compiler)
-make phaseC                    # Build Phase C (for verification)
-make new-bootstrap             # Build phases B and C, verify they match, update Phase 0
-make test-all                  # Run full test suite (alias: npm test)
-make pyret-test                # Run Pyret language tests
-make pyret-io-test             # Run Node.js IO tests (Jest)
-make type-check-test           # Run type checking tests
-make parse-test                # Run parser tests
-make regression-test           # Run regression tests
-make clean                     # Clean build artifacts
-make test-clean                # Clean compiled test files
+npm install          # Install dependencies (runs make phaseA-deps)
+make                 # Build the Pyret compiler (Phase A)
+make test            # Run all tests (pyret-test, type-check-test, pyret-io-test)
+make test-all        # Alias for make test
+make parse-test      # Run parser tests only
+make phaseB          # Build Phase B compiler (fully bootstrapped)
+make phaseC          # Build Phase C compiler (verification phase)
+make new-bootstrap   # Build phaseB/phaseC, verify with diff, update phase0
+make clean           # Remove all build artifacts
+make test-clean      # Remove compiled test files
 ```
 
-## Running Pyret Programs
-
+To run a single test file:
 ```bash
-# Run with development compiler (Phase A)
-./src/scripts/phaseA <program.arr> [args...]
-
-# Compile to standalone and run separately
-node build/phaseA/pyret.jarr --build-runnable <program.arr> --outfile <output.jarr>
-node <output.jarr>
-
-# Run tests for a specific file (if it has check blocks)
-./src/scripts/phaseA <test-file.arr>
+./src/scripts/phaseA <path-to-pyret-program> [args...]
+# Or compile and run standalone:
+node build/phaseA/pyret.jarr --build-runnable <file.arr> --outfile <out.jarr>
+node <out.jarr>
 ```
 
 ## Architecture
 
 ### Multi-Phase Bootstrapping
 
-Pyret uses a 4-phase build system to handle self-hosting:
+Pyret uses four distinct phases for building:
 
-1. **Phase 0** (`build/phase0/`): Canonical compiled compiler (committed to git). Used as the starting point for all builds.
-2. **Phase A** (`build/phaseA/`): Built with Phase 0. Used for development and most testing.
-3. **Phase B** (`build/phaseB/`): Built with Phase A. Fully-bootstrapped compiler reflecting current source.
-4. **Phase C** (`build/phaseC/`): Built with Phase B. Must match Phase B to confirm bootstrapping is stable.
+- **Phase 0** (`build/phase0/pyret.jarr`): The committed standalone compiler blob. Updated rarely for major features.
+- **Phase A** (`build/phaseA/pyret.jarr`): Development snapshot built from Phase 0. Most development/testing uses this.
+- **Phase B** (`build/phaseB/pyret.jarr`): Fully bootstrapped compiler built from Phase A.
+- **Phase C** (`build/phaseC/pyret.jarr`): Second bootstrap from Phase B for verification. Phase B and C outputs must be identical.
 
-Run `diff build/phaseB/pyret.jarr build/phaseC/pyret.jarr` to verify the compiler has reached a fixed point before updating Phase 0.
+To verify compiler correctness before committing Phase 0 updates:
+```bash
+make phaseB phaseC
+diff build/phaseB/pyret.jarr build/phaseC/pyret.jarr  # Should be empty
+make new-bootstrap
+```
 
-### Compiler Passes
+### Source Directory Structure
 
-The compiler pipeline in `src/arr/compiler/compile-lib.arr` follows this sequence:
-1. **Parsing**: Surface parse to AST (`parse-pyret`)
-2. **Well-formedness checking** (`well-formed.arr`)
-3. **Check block desugaring** (`desugar-check.arr`)
-4. **Scope resolution** (`resolve-scope.arr`)
-5. **Name resolution** (`resolve-scope.arr`)
-6. **Desugaring** (`desugar.arr`)
-7. **Type checking** (`type-check.arr`) - optional via `--type-check` flag
-8. **Post-typecheck desugaring** (`desugar-post-tc.arr`)
-9. **ANF conversion** and **JS code generation** (`anf-loop-compiler.arr`)
+- `src/arr/compiler/`: The Pyret compiler (written in Pyret). Key files include:
+  - `pyret.arr`: Main compiler entry point
+  - `compile-lib.arr`, `compile-structs.arr`: Compiler core
+  - `desugar.arr`, `well-formed.arr`: Parsing/desugaring phases
+  - `type-check.arr`, `type-structs.arr`, `type-defaults.arr`: Type checker
+  - `resolve-scope.arr`: Scope resolution
+  - `anf.arr`, `anf-loop-compiler.arr`: ANF transformation
+  - `js-of-pyret.arr`, `js-ast.arr`: JavaScript code generation
 
-The `compile-module` function in `compile-lib.arr` is the core entry point.
+- `src/arr/trove/`: Built-in Pyret standard library modules
 
-### Key Source Directories
+- `src/js/base/`: JavaScript base utilities and parser grammar/tokenizer:
+  - `*-grammar.bnf`: Parser grammar files
+  - `*-tokenizer.js`: Tokenizer implementations
 
-- `src/arr/compiler/`: Self-hosted compiler written in Pyret (main files: `compile-lib.arr`, `pyret.arr`)
-- `src/arr/trove/`: Pyret standard library (built-in types and functions)
-- `src/js/base/`: Core runtime (`runtime.js`), tokenizer, grammar, parser components
-- `src/js/trove/`: Native JavaScript implementations of standard library modules
-- `lib/jglr/`: RNG LR parser generator (`rnglr.js`, `jglr.js`)
-- `tests/pyret/tests/`: Feature tests (`.arr` files with `check` blocks)
-- `tests/type-check/`: Type checker tests organized by expectation (`good/`, `bad/`, `should/`, `should-not/`)
-- `tests/pyret/regression/`: Regression tests
-- `tests/io-tests/`: Jest-based Node.js IO tests
+- `src/js/trove/`: Built-in JavaScript runtime functions
 
-### Build Outputs
+- `lib/jglr/`: JavaScript GLR parser framework
 
-- `*.jarr`: Bundled Pyret archive files (compiled Pyret + runtime, run with `node file.jarr`)
-- `build/phaseX/compiled/`: Intermediate compiled `.js` files for each phase
-- `tests/pyret/*.jarr`: Compiled test bundles
+- `tests/`: Test suites:
+  - `tests/pyret/`: Pyret language tests
+  - `tests/type-check/`: Type checker tests (good/, bad/, should/, should-not/)
+  - `tests/parse/`: Parser tests
+  - `tests/io-tests/`: I/O tests (Jest-based)
+  - `tests/jsnums-test/`: Number library tests
 
-### File Types
+### Compilation Pipeline
 
-- `.arr` - Pyret source files
-- `.jarr` - Bundled compiled output (executable with Node.js)
-- `.bnf` - Parser grammar definition files
+Pyret source (.arr) → Parsing → Desugaring → Type Checking → ANF → JavaScript Code Generation → JavaScript (.jarr)
 
-### Debugging Tips
+## Running Tests
 
-- Use `make show-comp` to build a debugging utility for viewing compilation phases
-- `./src/scripts/phaseA src/scripts/show-compilation.arr <file.arr>` - Show each compilation phase output
+The test suite runs in three parts:
+
+1. **Pyret tests** (`make pyret-test`): Runs `tests/pyret/main2.jarr`
+2. **Type check tests** (`make type-check-test`): Validates type checker with good/bad/should files
+3. **IO tests** (`make pyret-io-test`): Jest-based integration tests
+
+All three run with `make test` or `make test-all`.
+
+To test against Phase B or C instead of Phase A:
+```bash
+make test P=B    # Test with Phase B
+make test P=C    # Test with Phase C
+```
+
+## Key Configuration Files
+
+- `Makefile`: Build orchestration, test commands
+- `package.json`: Node dependencies and npm scripts
+- `src/scripts/standalone-config*.json`: Compiler configuration for each phase

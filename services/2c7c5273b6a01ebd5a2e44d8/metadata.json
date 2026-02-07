@@ -9,13 +9,8 @@
   "language": "nodejs",
   "star": 1119,
   "repo_flag": "NODEJS",
-  "uploaded_at": "2026-02-07T18:43:44.998277",
+  "uploaded_at": "2026-02-08T04:17:41.609236",
   "generated_files": [
-    "src/scripts/standalone-config.json",
-    "src/scripts/standalone-configA.json",
-    "src/scripts/standalone-configB.json",
-    "src/scripts/standalone-configC.json",
-    "src/scripts/node_modules-config.json",
-    "build/phaseA/config.json"
+    "/home/ubuntu/deploy-projects/2c7c5273b6a01ebd5a2e44d8/src/arr/compiler/server.js"
   ]
 }

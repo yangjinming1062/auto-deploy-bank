@@ -1,8 +1,15 @@
 services:
   pyret:
     build: .
+    container_name: pyret-lang
     ports:
-      - "40024:40126"
+      - "40811:8888"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf -o /dev/null -w '%{http_code}' http://localhost:8888/ | grep -q '404\\|200'"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     deploy:
       resources:
         limits:
@@ -11,10 +18,7 @@ services:
         reservations:
           cpus: '1.0'
           memory: 1G
-    healthcheck:
-      test: ["CMD", "nc", "-z", "localhost", "40126"]
-      # Internal port stays 40126, only host port changes
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
+    working_dir: /home/ubuntu/deploy-projects/2c7c5273b6a01ebd5a2e44d8
+    volumes:
+      - ./examples:/home/ubuntu/deploy-projects/2c7c5273b6a01ebd5a2e44d8/examples
+    command: ["node", "build/phaseA/pyret.jarr", "-serve", "--port", "8888"]
