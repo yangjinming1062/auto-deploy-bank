@@ -1,0 +1,21 @@
+{
+  "service_id": "a93556c2b37df50b72f4db50",
+  "repo_name": "castorini/anserini",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "10.76MB",
+  "language": "java",
+  "star": 1096,
+  "repo_flag": "JAVA",
+  "uploaded_at": "2026-02-08T01:23:20.054011",
+  "generated_files": [
+    "pom.xml",
+    "src/main/resources/log4j2.xml",
+    "src/main/resources/simplelogger.properties",
+    "Dockerfile",
+    "docker-compose.yaml",
+    "/home/ubuntu/deploy-projects/a93556c2b37df50b72f4db50/docker-compose.yaml"
+  ]
+}
