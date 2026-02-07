@@ -9,6 +9,11 @@
   "language": "python",
   "star": 1104,
   "repo_flag": "ByteDance-SRC-1",
-  "uploaded_at": "2026-02-07T17:37:05.492378",
-  "generated_files": []
+  "uploaded_at": "2026-02-08T01:01:45.864849",
+  "generated_files": [
+    "requirements.txt",
+    "service.py",
+    "Dockerfile",
+    "docker-compose.yaml"
+  ]
 }
