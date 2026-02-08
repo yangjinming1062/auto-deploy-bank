@@ -1,0 +1,19 @@
+{
+  "service_id": "c21e5e96935e019755907679",
+  "repo_name": "theopenconversationkit/tock",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "26.17MB",
+  "language": "java",
+  "star": 601,
+  "repo_flag": "JAVA",
+  "uploaded_at": "2026-02-09T07:14:53.780419",
+  "generated_files": [
+    "Dockerfile",
+    "docker-compose.yaml",
+    "nginx.conf",
+    "docker-compose.yaml"
+  ]
+}

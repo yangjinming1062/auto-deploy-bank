@@ -1,0 +1,71 @@
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: tock-mongodb
+    restart: unless-stopped
+    ports: []
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=tock
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - tock-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: tock-nginx
+    restart: unless-stopped
+    ports:
+      - "40403:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - bot-admin-server
+    networks:
+      - tock-network
+
+  bot-admin-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tock-bot-admin-server
+    restart: unless-stopped
+    # Expose only internally on port 8080, nginx handles external port 40403
+    ports: []
+    volumes:
+      - ./target.jar:/app/target.jar
+    environment:
+      - tock_mongo_url=mongodb://mongodb:27017/tock
+      - port=8080
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/health/liveness"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    networks:
+      - tock-network
+
+networks:
+  tock-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
