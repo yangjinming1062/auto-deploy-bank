@@ -4,10 +4,11 @@
   "platform": "github",
   "ref": null,
   "version": "",
-  "status": "stopped",
+  "status": "deploying",
   "package_size": "3.59MB",
   "language": "python",
-  "star": 613,
-  "repo_flag": "PYTHON-Matplotlib",
-  "uploaded_at": "2026-01-17T14:09:03.753401"
+  "star": 615,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-02-09T06:33:29.845019",
+  "generated_files": []
 }

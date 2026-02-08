@@ -1,40 +1,39 @@
 FROM python:3.10-slim
 
 ENV PYTHONUNBUFFERED=1
-ENV DEBIAN_FRONTEND=noninteractive
+ENV CUDA_VISIBLE_DEVICES=all
+ENV LOCAL_RANK=0
+ENV WORLD_SIZE=1
 
-# Install system dependencies
+# Install build dependencies and runtime libraries
 RUN apt-get update && apt-get install -y \
-    wget \
-    git \
     curl \
     build-essential \
+    cmake \
+    git \
+    libgl1 \
     libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
-    libgomp1 \
-    libglx-mesa0 \
-    mesa-utils \
     && rm -rf /var/lib/apt/lists/*
 
-# Upgrade pip and install base Python dependencies
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+WORKDIR /home/ubuntu/deploy-projects/61585d678a430d1165ea2cec
 
-# Set working directory
-WORKDIR /app
+# Install pytorch first with compatible numpy
+RUN pip install --no-cache-dir "torch==1.13.1" torchvision "numpy<2"
 
-# Copy requirements first for better layer caching
+# Install pytorch3d from source (to a permanent location)
+RUN git clone --depth 1 --branch v0.7.4 https://github.com/facebookresearch/pytorch3d.git /tmp/pytorch3d && \
+    cd /tmp/pytorch3d && \
+    pip install --no-cache-dir . && \
+    cd /home/ubuntu/deploy-projects/61585d678a430d1165ea2cec && rm -rf /tmp/pytorch3d
+
+# Copy requirements and install remaining dependencies
 COPY requirements.txt .
+RUN pip install --no-cache-dir "numpy<2" einops hydra-core omegaconf timm wandb plotly scipy opencv-python matplotlib black dash fvcore imageio imageio-ffmpeg iopath ipdb ipython isort jupyter jupyter-black jupyter-dash flask
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Install PyTorch3D from GitHub (no-build-isolation to use installed torch)
-RUN pip install --no-cache-dir --no-build-isolation git+https://github.com/facebookresearch/pytorch3d.git
-
-# Copy application code
+# Copy project files
 COPY . .
 
-# Default command (verify environment)
-CMD ["python", "-c", "import torch; import cv2; from accelerate import Accelerator; print('Environment OK')"]
+# Make start script executable
+RUN chmod +x start.sh
+
+CMD ["./start.sh"]

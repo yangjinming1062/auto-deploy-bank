@@ -1,34 +1,24 @@
 services:
-  raydiffusion:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: raydiffusion:latest
-    container_name: raydiffusion-container
-    environment:
-      - MODE=${MODE:-verify}
-      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0}
-      - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
-      - NVIDIA_DRIVER_CAPABILITIES=${NVIDIA_DRIVER_CAPABILITIES:-compute,utility}
-      - TRAINING_BATCH_SIZE=${TRAINING_BATCH_SIZE:-8}
-      - TRAINING_MAX_ITERATIONS=${TRAINING_MAX_ITERATIONS:-300000}
-      - REGRESSION=${REGRESSION:-False}
-      - DATASET_CATEGORY=${DATASET_CATEGORY:-all_train}
-      - WANDB_API_KEY=${WANDB_API_KEY:-}
-      - WANDB_MODE=${WANDB_MODE:-offline}
-      - CO3D_DATA_DIR=${CO3D_DATA_DIR:-../co3d_data}
-      - PYTHONUNBUFFERED=1
+  ray-diffusion:
+    build: .
+    container_name: ray-diffusion
+    ports:
+      - "42116:51870"
     volumes:
-      - ./:/app
-      - ./output:/app/output
-      - ./models:/app/models
-      - ./examples:/app/examples
+      - ./output:/home/ubuntu/deploy-projects/61585d678a430d1165ea2cec/output
+    environment:
+      - SERVICE_PORT=51870
+      - WANDB_API_KEY=${WANDB_API_KEY}
+      - PYTHONUNBUFFERED=1
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-all}
+      - LOCAL_RANK=${LOCAL_RANK:-0}
+      - WORLD_SIZE=${WORLD_SIZE:-1}
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import torch; import cv2; from accelerate import Accelerator\" || exit 1"]
-      interval: 120s
-      timeout: 60s
+      test: ["CMD-SHELL", "curl -f http://localhost:51870/health || exit 1"]
+      interval: 30s
+      timeout: 10s
       retries: 3
-      start_period: 180s
+      start_period: 10s
     deploy:
       resources:
         limits:
@@ -37,9 +27,3 @@ services:
         reservations:
           cpus: '1.0'
           memory: 1G
-    ports:
-      - "8080:8080"
-    command: ["sh", "-c", "python server.py"]
-    stdin_open: true
-    tty: true
-    network_mode: bridge
