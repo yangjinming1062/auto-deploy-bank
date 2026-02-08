@@ -1,4 +1,4 @@
-# Dockerfile for LLaMA-Factory API service
+# CPU-based Dockerfile for LLaMA-Factory API service
 FROM python:3.11-slim
 
 # Install curl for healthcheck
@@ -24,8 +24,7 @@ RUN pip config set global.index-url "https://pypi.org/simple" && \
     pip install --no-cache-dir -r requirements.txt
 
 # Copy application source
-COPY EPO/LLaMA-Factory/src /app/src
-COPY EPO/LLaMA-Factory/pyproject.toml /app/
+COPY EPO/LLaMA-Factory /app/
 
 # Install the LLaMA Factory package in editable mode with metrics extras
 RUN pip install -e ".[metrics]"
@@ -38,4 +37,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
     CMD curl -f http://localhost:8000/docs || exit 1
 
 # Run the API server
-CMD ["python", "src/api.py"]
+CMD ["python", "src/api.py", "--model_name_or_path", "gpt2", "--template", "default"]

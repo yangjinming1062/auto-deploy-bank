@@ -4,119 +4,116 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-This is the **DAMO-ConvAI** research repository from Alibaba Group, containing ~45 independent research projects focused on Large Language Models (LLMs). Each subdirectory is a self-contained research project with its own README, dependencies, and setup instructions.
+Multi-project research repository from Alibaba Research/DAMO-ConvAI containing ~30+ independent NLP/ML research projects focused on LLMs and conversational agents. Most projects are self-contained with independent dependencies.
 
-### Main Research Themes
+**Primary research areas:**
+- Strategic reasoning and RL for LLMs (EPO)
+- Tool-augmented LLMs (API-Bank)
+- Workflow-guided planning (FlowBench)
+- Multimodal LLMs and instruction tuning
+- Dialogue systems and conversation agents
 
-- **LLM Training & Alignment**: EPO, SDPO, IOPO (reinforcement learning, preference optimization)
-- **Mathematical Reasoning**: MaskedThought (MFT - Masked Thought Fine-Tuning)
-- **Multi-Modal Models**: MMEvol, PaCE, OmniCharacter, OpenOmni
-- **Dialogue Systems**: Sotopia, API-Bank, dial2vec, dialogue-cse
-- **Text-to-SQL Parsing**: Proton, Graphix, s2sql, bird, r2sql, sunsql
-- **Long-Context Understanding**: Loong, space-1/2/3
-- **Agent Planning**: FlowBench, spectra, deep-thinking
-- **Self-Evolution of LLMs**: Awesome-Self-Evolution-of-LLM (survey paper collection)
+## Main Project: EPO (Explicit Policy Optimization)
 
-## Common Commands
+The `EPO/` directory is the primary integrated project for strategic reasoning in LLMs via reinforcement learning. It contains:
 
-### Environment Setup
+- **LLaMA-Factory/**: Training and fine-tuning framework (based on hiyouga/LLaMA-Factory)
+- **Sotopia/**: Social intelligence simulation environment
+- **Alfshop/**: Combined environment for WebShop and ALFWorld tasks
 
+### EPO Setup
 ```bash
-# Create conda environment (most projects use python 3.7-3.10)
-conda create -n <env_name> python=3.10
-conda activate <env_name>
-
-# Install dependencies
-pip install -r requirements.txt
-
-# For editable installs (common pattern)
-pip install -e .
+conda create -n epo python=3.10
+conda activate epo
+cd EPO
+# Install LLaMA-Factory
+cd LLaMA-Factory && pip install -e .
+# Install Sotopia dependencies
+cd ../Sotopia && pip install -r requirements.txt && cd sotopia && pip install -e .
 ```
 
-### Model Training (LLaMA-Factory based projects)
-
-Projects using LLaMA-Factory (EPO, SDPO, IOPO):
+### EPO Training
 ```bash
-# Training
-llamafactory-cli train examples/train_full/<config>.yaml
+cd EPO/LLaMA-Factory
 
-# Inference
-llamafactory-cli api examples/inference/<config>.yaml
+# Train on SOTOPIA-PI
+llamafactory-cli train examples/train_epo/llama3_sotopia_pi_rl.yaml
+
+# Train on WebShop and ALFWorld
+llamafactory-cli train examples/train_epo/llama3_alfshop_rl.yaml
 ```
 
-### Evaluation
-
-Many projects use OpenAI API for evaluation:
+### EPO Evaluation
 ```bash
-# Set API key in config files (typically in config/models/*.yaml or utils/keys.json)
-export OPENAI_API_KEY="your-key"
+# SOTOPIA benchmark
+cd EPO/Sotopia
+sotopia benchmark --models <TEST_MODEL_NAME> --partner-model <PARTNER_MODEL> \
+  --evaluator-model gpt-4o --strategy-model <REASON_MODEL> \
+  --strategy-model-partner <REASON_MODEL> --batch-size <BATCH_SIZE> --task all
 
-# Run evaluation scripts (project-specific)
-python eval_model.py
-python run.sh
+# WebShop/ALFWorld evaluation
+cd EPO/Alfshop
+python -m fastchat.serve.controller
+python -m fastchat.serve.model_worker --model-path <YOUR_MODEL_PATH> --port 21002
+python -m eval_agent.main --thought_agent_config fastchat \
+  --thought_model_name <REASON_MODEL> --action_agent_config openai \
+  --action_model_name <ACTION_MODEL> --exp_config <TASK_NAME> --split test
 ```
 
-### Redis Setup (required for Sotopia-based projects)
+### EPO Data
+Download RL training data from HuggingFace: `Tongyi-ConvAI/EPO-RL-data`
 
-Several dialogue projects require Redis:
+## LLaMA-Factory Commands (used by EPO, SDPO)
+
+Located in `EPO/LLaMA-Factory/` and `SDPO/LLaMA-Factory/`
+
 ```bash
-# Install Redis
-sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2.23_amd64.deb
-./redis-stack-server-7.2.0-v10/bin/redis-stack-server --daemonize yes
+cd EPO/LLaMA-Factory
+
+# Linting and formatting (ruff)
+make quality          # Check code quality
+make style            # Auto-fix issues
+
+# Run tests
+pytest tests/
+
+# Model inference via API
+API_PORT=8000 llamafactory-cli api examples/inference/llama3_vllm.yaml
 ```
 
-## Key Dependencies
+**Code style**: 119 line length, 4-space indent, Ruff linter configured in `pyproject.toml`
 
-- **LLaMA-Factory**: Model training framework used by multiple projects
-- **vLLM**: High-throughput inference (used for evaluation)
-- **Redis/Redis Stack**: Memory backend for dialogue systems
-- **PyTorch**: Deep learning framework
-- **Transformers**: Hugging Face model library
-- **OpenAI API**: Used for evaluation and some data generation
+## Project Structure Pattern
 
-## Project-Specific Notes
+Most projects follow this structure:
+```
+<project_name>/
+├── README.md              # Setup and usage instructions
+├── requirements.txt       # Dependencies
+├── scripts/ or *.sh       # Training/evaluation scripts
+├── data/                  # (not included - download separately)
+└── pyproject.toml         # (some projects)
+```
 
-### EPO (Explicit Policy Optimization)
-- Contains `LLaMA-Factory`, `Sotopia` (benchmark), and `Alfshop` (WebShop/ALFWorld)
-- Training data available at HuggingFace: `Tongyi-ConvAI/EPO-RL-data`
-- Primary command: `llamafactory-cli train examples/train_epo/llama3_sotopia_pi_rl.yaml`
+## Common Dependencies
 
-### MMEvol (Multi-Modal Evolution)
-- Requires extensive dataset preparation (see README for data structure)
-- Uses VLMEvalKit for evaluation
-- Training scripts in `scripts/v1_6/train/`
+- `torch`, `transformers`, `tokenizers`, `sentencepiece`
+- `accelerate`, `peft`, `bitsandbytes` (efficient training)
+- `deepspeed` (distributed training)
+- `wandb` (logging)
+- `gradio` (demo interfaces)
 
-### Graphix (Text-to-SQL)
-- Requires dependency parsing packages (Supar)
-- Uses Docker for environment setup (recommended)
-- Data preprocessing: `make pre_process`
+## Key Individual Projects
 
-### Loong (Long-Context Benchmark)
-- Evaluation via `src/run.sh`
-- Requires vLLM server for open-source models
-- Data downloaded from: `http://alibaba-research.oss-cn-beijing.aliyuncs.com/loong/doc.zip`
+- **API-Bank** (`api-bank/`): Benchmark for tool-augmented LLMs with 73 APIs, 314 dialogues
+- **FlowBench** (`FlowBench/`): Workflow-guided planning benchmark (6 domains, 22 roles, 51 scenarios)
+- **MMLatentAction**: Multimodal conversational agents with latent action learning
+- **OmniCharacter**: Speech-language personality interaction for role-playing
+- **MMEvol**: Multimodal LLM evolution with Evol-Instruct
 
-### API-Bank (Tool-Augmented LLMs)
-- Contains 73 API tools and 314 annotated dialogues
-- Demo: `python demo.py`
-- Evaluation: `python evaluator.py`
+## Important Notes
 
-## Code Style
-
-- Python-based research code
-- Configuration typically in YAML files or Python dictionaries
-- Model checkpoints stored in `checkpoints/` or project-specific directories
-- Dataset files typically in JSON/JSONL format
-
-## Data Locations
-
-- **HuggingFace datasets**: `Tongyi-ConvAI/` organization (training data for multiple projects)
-- **Model checkpoints**: Various, check project READMEs
-- **Benchmark data**: Often requires separate download (Google Drive, project pages)
-
-## Notes
-
-- Each subdirectory is largely independent - check the specific project's README for accurate instructions
-- Many projects depend on external API keys (OpenAI, etc.)
-- GPU requirements vary by project (A100s commonly used for training)
-- Some projects use deprecated Python versions (3.7) - check requirements
+1. **Models and datasets not included**: Download from HuggingFace or links in project READMEs
+2. **GPU required**: Deep learning projects requiring CUDA/GPU access
+3. **Python 3.10**: Recommended version for most projects
+4. **Redis required**: For Sotopia environment (used in EPO)

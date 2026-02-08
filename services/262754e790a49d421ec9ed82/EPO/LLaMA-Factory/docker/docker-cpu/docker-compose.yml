@@ -5,7 +5,7 @@ services:
       context: ../..
     container_name: llamafactory
     ports:
-      - "40463:8000"
+      - "41396:8000"
     environment:
       - API_HOST=0.0.0.0
       - API_PORT=8000

@@ -1,37 +1,37 @@
 services:
-  llamafactory-api:
+  llamafactory:
     build:
+      dockerfile: ./Dockerfile
       context: .
-      dockerfile: Dockerfile
-    container_name: llamafactory-api
+    container_name: llamafactory
     ports:
-      - "40150:8000"
+      - "41396:8000"
     environment:
       - API_HOST=0.0.0.0
       - API_PORT=8000
       - API_KEY=${API_KEY:-}
-      - MODEL_NAME_OR_PATH=gpt2
-      - TEMPLATE=default
-      - API_MODEL_NAME=gpt-3.5-turbo
-      - FASTAPI_ROOT_PATH=
+      - API_MODEL_NAME=${API_MODEL_NAME:-gpt-3.5-turbo}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - DISABLE_VERSION_CHECK=1
-      - MAX_JOBS=4
-      - GRADIO_SERVER_NAME=0.0.0.0
-      - GRADIO_SHARE=False
-      - WANDB_DISABLED=${WANDB_DISABLED:-}
-      - WANDB_PROJECT=huggingface
-      - WANDB_API_KEY=${WANDB_API_KEY:-}
-    deploy:
-      resources:
-        limits:
-          cpus: "2.0"
-          memory: 4G
-        reservations:
-          cpus: "1.0"
-          memory: 1G
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./EPO/LLaMA-Factory/hf_cache:/root/.cache/huggingface
+      - ./EPO/LLaMA-Factory/data:/app/data
+      - ./EPO/LLaMA-Factory/output:/app/output
+    tty: true
+    stdin_open: true
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
       interval: 30s
       timeout: 10s
-      retries: 3
       start_period: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
