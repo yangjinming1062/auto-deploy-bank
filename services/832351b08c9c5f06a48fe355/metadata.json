@@ -1,0 +1,17 @@
+{
+  "service_id": "832351b08c9c5f06a48fe355",
+  "repo_name": "Azzedde/paper_to_podcast",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "17.58MB",
+  "language": "python",
+  "star": 604,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-02-09T05:10:49.015235",
+  "generated_files": [
+    ".env",
+    "main.py"
+  ]
+}

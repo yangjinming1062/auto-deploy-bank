@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  paper-to-podcast:
+    build: .
+    ports:
+      - "51895:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - ./uploads:/tmp/podcast_work
+      - ./outputs:/tmp/podcast_output
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
