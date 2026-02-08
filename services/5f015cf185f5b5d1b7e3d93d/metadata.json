@@ -1,0 +1,16 @@
+{
+  "service_id": "5f015cf185f5b5d1b7e3d93d",
+  "repo_name": "charliegerard/gaze-detection",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "4.75MB",
+  "language": "nodejs",
+  "star": 641,
+  "repo_flag": "NODEJS",
+  "uploaded_at": "2026-02-08T19:02:26.455219",
+  "generated_files": [
+    "Dockerfile"
+  ]
+}
