@@ -1,0 +1,23 @@
+services:
+  nlpia:
+    build: .
+    ports:
+      - "40132:5000"
+    environment:
+      - DEBUG=
+    volumes:
+      - ./secrets.cfg:/home/ubuntu/deploy-projects/17c85e969e78bbd137850133/secrets.cfg:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s

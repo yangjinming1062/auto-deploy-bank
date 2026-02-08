@@ -1,0 +1,20 @@
+{
+  "service_id": "17c85e969e78bbd137850133",
+  "repo_name": "totalgood/nlpia",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "31.56MB",
+  "language": "python",
+  "star": 635,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-02-08T19:18:11.553278",
+  "generated_files": [
+    "secrets.cfg",
+    "app.py",
+    "Dockerfile",
+    "docker-compose.yaml",
+    "requirements-web.txt"
+  ]
+}
