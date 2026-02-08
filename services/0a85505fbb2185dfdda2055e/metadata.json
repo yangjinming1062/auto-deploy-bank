@@ -1,0 +1,17 @@
+{
+  "service_id": "0a85505fbb2185dfdda2055e",
+  "repo_name": "LalanaChami/Pharmacy-Mangment-System",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "51.90MB",
+  "language": "nodejs",
+  "star": 617,
+  "repo_flag": "NODEJS",
+  "uploaded_at": "2026-02-09T00:50:11.281484",
+  "generated_files": [
+    ".env",
+    "create-test-accounts.js"
+  ]
+}
