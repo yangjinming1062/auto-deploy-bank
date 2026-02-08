@@ -1,0 +1,17 @@
+{
+  "service_id": "a3775d7893390516dec713c5",
+  "repo_name": "JThink/SkyEye",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "2.59MB",
+  "language": "java",
+  "star": 863,
+  "repo_flag": "JAVA",
+  "uploaded_at": "2026-02-08T16:25:48.036222",
+  "generated_files": [
+    "skyeye-web/src/main/resources/properties/web.properties",
+    "skyeye-alarm/src/main/resources/properties/alarm.properties"
+  ]
+}

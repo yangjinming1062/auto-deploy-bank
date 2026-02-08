@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: skyeye-mysql
+    restart: always
+    command: --default-authentication-plugin=mysql_native_password --ssl=OFF
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: monitor-center
+    ports:
+      - "33061:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - skyeye-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  skyeye-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: skyeye-web:latest
+    container_name: skyeye-web
+    restart: always
+    command: java -jar /app/target.jar
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "40126:8090"
+    environment:
+      - serverAddress=0.0.0.0
+      - serverPort=8090
+      - JAVA_OPTS=-Djdk.tls.disabledAlgorithms="" -Djavax.net.ssl.keyStore="" -Djavax.net.ssl.trustStore=""
+      - JAVA_TOOL_OPTIONS=--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED
+      - database.address=${DATABASE_ADDRESS:-mysql:3306}
+      - database.name=${DATABASE_NAME:-monitor-center}
+      - database.username=${DATABASE_USERNAME:-root}
+      - database.password=${DATABASE_PASSWORD:-root}
+      - database.params=${DATABASE_PARAMS:-useSSL=false&amp;allowPublicKeyRetrieval=true}
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/monitor-center?useSSL=false&amp;allowPublicKeyRetrieval=true&amp;characterEncoding=utf8
+      - es.sql.url=${ES_SQL_URL:-http://elasticsearch:9200/_sql?sql=}
+      - es.ips=${ES_IPS:-elasticsearch}
+      - es.cluster=${ES_CLUSTER:-mondeo}
+      - es.port=9200
+      - es.sql.sql=select * from app-log/log
+      - es.query.delay=10
+      - es.sql.index.event=event-log/log
+      - kafka.brokers=${KAFKA_BROkers:-kafka:9092}
+      - kafka.topic=app-log
+      - kafka.consume.group=es-indexer-consume-group
+      - kafka.poll.timeout=100
+      - rabbit.request.addresses=${RABBIT_REQUEST_ADDRESSES:-rabbitmq:5672}
+      - rabbit.request.username=${RABBIT_REQUEST_USERNAME:-jthink}
+      - rabbit.request.password=${RABBIT_REQUEST_PASSWORD:-jthink}
+      - rabbit.request.vhost=${RABBIT_REQUEST_VHOST:-/dev}
+      - hbase.quorum=${HBASE_QUORUM:-hbase}
+      - hbase.rootDir=${HBASE_ROOTDIR:-hdfs://hbase:8020/hbase}
+      - hbase.zookeeper.znode.parent=/hbase
+      - monitor.es.mail=${MONITOR_ES_MAIL:-leviqian@sina.com}
+      - monitor.es.interval=0 */1 * * * ?
+    volumes:
+      # Volume mount for security scanning - JAR file extracted to host
+      - ./target.jar:/app/target.jar:ro
+      # Application logs
+      - ./skyeye-web/logs:/home/deploy/logs
+      # Config file mount
+      - ./skyeye-web/src/main/resources/properties/web.properties:/opt/jthink/jthink-config/skyeye/web/web.properties
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8090/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 180s
+    networks:
+      - skyeye-network
+
+networks:
+  skyeye-network:
+    driver: bridge
+
+volumes:
+  mysql_data:

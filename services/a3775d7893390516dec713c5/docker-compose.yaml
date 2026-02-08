@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  skyeye-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: skyeye-web:latest
+    container_name: skyeye-web
+    restart: always
+    ports:
+      - "40126:8090"
+    environment:
+      - serverAddress=0.0.0.0
+      - serverPort=8090
+      - database.address=${DATABASE_ADDRESS:-mysql:3306}
+      - database.name=${DATABASE_NAME:-monitor-center}
+      - database.username=${DATABASE_USERNAME:-root}
+      - database.password=${DATABASE_PASSWORD:-root}
+      - es.sql.url=${ES_SQL_URL:-http://elasticsearch:9200/_sql?sql=}
+      - es.ips=${ES_IPS:-elasticsearch}
+      - es.cluster=${ES_CLUSTER:-mondeo}
+      - es.port=9200
+      - es.sql.sql=select * from app-log/log
+      - es.query.delay=10
+      - es.sql.index.event=event-log/log
+      - kafka.brokers=${KAFKA_BROkers:-kafka:9092}
+      - kafka.topic=app-log
+      - kafka.consume.group=es-indexer-consume-group
+      - kafka.poll.timeout=100
+      - rabbit.request.addresses=${RABBIT_REQUEST_ADDRESSES:-rabbitmq:5672}
+      - rabbit.request.username=${RABBIT_REQUEST_USERNAME:-jthink}
+      - rabbit.request.password=${RABBIT_REQUEST_PASSWORD:-jthink}
+      - rabbit.request.vhost=${RABBIT_REQUEST_VHOST:-/dev}
+      - hbase.quorum=${HBASE_QUORUM:-hbase}
+      - hbase.rootDir=${HBASE_ROOTDIR:-hdfs://hbase:8020/hbase}
+      - hbase.zookeeper.znode.parent=/hbase
+      - monitor.es.mail=${MONITOR_ES_MAIL:-leviqian@sina.com}
+      - monitor.es.interval=0 */1 * * * ?
+    volumes:
+      # Volume mount for security scanning - JAR file extracted to host
+      - ./target.jar:/app/target.jar:ro
+      # Application logs
+      - ./skyeye-web/logs:/home/deploy/logs
+      # Config file mount
+      - ./skyeye-web/src/main/resources/properties/web.properties:/opt/jthink/jthink-config/skyeye/web/web.properties
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8090/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - skyeye-network
+
+networks:
+  skyeye-network:
+    driver: bridge
