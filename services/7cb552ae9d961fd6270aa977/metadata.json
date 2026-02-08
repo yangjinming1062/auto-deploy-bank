@@ -1,0 +1,20 @@
+{
+  "service_id": "7cb552ae9d961fd6270aa977",
+  "repo_name": "zzzzzzzzyt/zeng-rpc-framework",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "3.99MB",
+  "language": "java",
+  "star": 608,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-02-09T01:19:11.399831",
+  "generated_files": [
+    "zyt-rpc-common/src/main/resources/db.properties",
+    "zyt-rpc-common/src/main/resources/spring-mybatis.xml",
+    "zyt-rpc-common/src/main/resources/log4j.properties",
+    "/home/ubuntu/deploy-projects/7cb552ae9d961fd6270aa977/docker-compose.yaml",
+    "/home/ubuntu/deploy-projects/7cb552ae9d961fd6270aa977/http_health.py"
+  ]
+}

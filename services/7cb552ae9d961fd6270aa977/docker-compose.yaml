@@ -1,0 +1,61 @@
+services:
+  rpc-provider:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: zyt-rpc-provider
+    ports:
+      - "46076:8080"
+    environment:
+      # Zookeeper configuration
+      - ZOOKEEPER_ADDRESS=zytCentros:2181
+      - ZOOKEEPER_SESSION_TIMEOUT=2000
+      # Nacos configuration
+      - NACOS_SERVER_ADDR=192.168.18.128:8848
+      - NACOS_NAMESPACE=public
+      # Database configuration
+      - JDBC_URL=jdbc:mysql://host.docker.internal:3306/zeng?serverTimezone=GMT%2B8
+      - JDBC_USERNAME=root
+      - JDBC_PASSWORD=root
+      - JDBC_DRIVER=com.mysql.cj.jdbc.Driver
+      # Application configuration
+      - HOST=0.0.0.0
+      - PORT=8080
+    volumes:
+      # Volume mount for security scanning - JAR will be copied to this path at runtime
+      - ./target.jar:/data/target.jar
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - rpc-network
+
+  http-health:
+    image: python:3.11-alpine
+    container_name: zyt-rpc-http-health
+    command: ["python3", "/http_health.py"]
+    ports:
+      - "46077:8081"
+    volumes:
+      - ./http_health.py:/http_health.py:ro
+    depends_on:
+      - rpc-provider
+    restart: unless-stopped
+    networks:
+      - rpc-network
+
+networks:
+  rpc-network:
+    driver: bridge
