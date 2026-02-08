@@ -2,99 +2,87 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
-
-AsyncHBase is an alternative, fully asynchronous, non-blocking, thread-safe Java HBase client library. Unlike the standard HBase client (HTable), only one instance of `HBaseClient` is needed per application/cluster regardless of the number of tables or threads.
-
 ## Build Commands
 
 ```bash
-# Build everything (jar + unit tests)
-make
-
-# Run unit tests
-make check
-
-# Run a specific test class
-make run CLASS=TestHBaseClient ARGS='testName'
-
-# Run integration tests (requires HBASE_HOME to point to HBase installation)
-HBASE_HOME=/path/to/hbase make integration ARGS='test f'
-
-# Speed up integration test reruns
-TEST_NO_TRUNCATE=1 HBASE_HOME=/path/to/hbase make integration
-
-# Generate Maven pom.xml
-make pom.xml
-
-# Build with Maven
-mvn install
-
-# Generate Javadoc
-make doc
-
-# Clean build artifacts
-make clean    # Basic cleanup
-make distclean # Full cleanup including jar and api docs
+make              # Build the project (requires javac and protoc v2.5.0)
+make check        # Run unit tests
+make run CLASS=TestScanner   # Run a single unit test
+make jar          # Build the JAR only
+make pom.xml      # Generate Maven pom.xml from template
+make doc          # Generate Javadoc in build/api
+make clean        # Clean build artifacts
+make distclean    # Remove all generated files including JAR and docs
 ```
 
-**Requirements:** GNU Make, Java 6+, protoc 2.5.0
+**Integration tests** (requires running HBase instance):
+```bash
+HBASE_HOME=/path/to/hbase make integration ARGS='test f'
+# Speed up subsequent runs: TEST_NO_TRUNCATE=1 HBASE_HOME=... make integration ARGS='test f'
+# Run single test: TEST_NAME=XXX HBASE_HOME=... make integration ARGS='test f'
+```
 
 ## Architecture
 
-### Core Components
+This is an asynchronous, non-blocking, thread-safe Java client for HBase.
 
-- **HBaseClient** (`src/HBaseClient.java`) - Main entry point; single instance per application manages all region connections, ZooKeeper coordination, and RPC routing
-- **RegionClient** (`src/RegionClient.java`) - Handles communication with a specific region server; manages connection pooling, RPC batching, and retry logic
-- **HBaseRpc** (`src/HBaseRpc.java`) - Abstract base for all RPC request types (GetRequest, PutRequest, DeleteRequest, etc.)
-- **Scanner** (`src/Scanner.java`) - Handles server-side scan operations with batch fetching
+**Main Entry Point**: `org.hbase.async.HBaseClient`
+- Instantiate once per cluster (unlike HTable which is table-per-instance)
+- Thread-safe, designed for multi-threaded applications
+- Uses `Deferred` pattern (returns `Deferred<T>` instead of blocking)
 
-### Exception Model
+**Key Components**:
+- `HBaseClient`: Main client class - handles cluster connection, region location caching, and RPC dispatch
+- `RegionClient`: Per-region RPC connection manager. Extends Netty's `ReplayingDecoder` for response decoding. Manages RPC IDs, serialization/deserialization, and in-flight RPC tracking
+- `Scanner`: Asynchronous table scanner with callback-based results
+- Request classes: `GetRequest`, `PutRequest`, `DeleteRequest`, `AtomicIncrementRequest`, etc.
+- Filter classes: `FamilyFilter`, `RowFilter`, `ColumnPrefixFilter`, etc. (implement `ScanFilter`)
+- `auth/`: Authentication providers (Kerberos via `KerberosClientAuthProvider`, simple auth)
+- `jsr166e/`: Backported concurrency utilities (`LongAdder`, `Striped64`)
 
-All exceptions extend `HBaseException` (a `RuntimeException`). No checked exceptions are used. Key exception categories:
-- **RecoverableException** - Retriable failures (region moved, NSRE)
-- **NonRecoverableException** - Permanent failures (no such family, table not found)
-- Region-specific exceptions (RegionOfflineException, RegionMovedException, etc.)
+**Asynchronous Flow**:
+1. Client creates request (e.g., `GetRequest`) and passes to `HBaseClient`
+2. `HBaseClient` locates region via region cache or ZK/metadata lookup
+3. Request routed to appropriate `RegionClient` for that region
+4. `RegionClient` serializes request to Protocol Buffers, sends via Netty
+5. Response decoded by `RegionClient` (state machine via `ReplayingDecoder`)
+6. Original `Deferred` resolved with result or exception via callback chain
 
-### RPC Request Flow
+**RPC Protocol**: Protobuf-based HBase RPC. Protocol buffer files in `protobuf/` generate Java classes in `build/src/org/hbase/async/generated/`.
 
-1. Client creates an `HBaseRpc` subclass (GetRequest, PutRequest, DeleteRequest, etc.)
-2. `HBaseClient` routes to appropriate `RegionClient` based on table/region location
-3. `RegionClient` serializes request via Protocol Buffers and sends over Netty
-4. Response decoded and returned via `Deferred` callback chain
+## Coding Conventions
 
-### Dependencies
+Follow existing code style when editing. Key conventions from `HACKING`:
 
-- **Netty** - Async network I/O and channel management
-- **ZooKeeper** - Region location discovery and cluster coordination
-- **Protocol Buffers** - RPC serialization (definitions in `protobuf/` directory)
-- **Guava** - Utilities and caching
-- **SLF4J + Logback** - Logging (configured via `logback.xml`)
+- **Local variables**: `snake_case` (e.g., `local_variable_name`)
+- **Fields/methods**: standard `camelCase`
+- **No checked exceptions**: All derive from `HBaseException` (RuntimeException)
+- **Lines**: Keep under 80 characters
+- **Javadoc**: Required for everything, including private members
+- **Thread safety**: Document synchronization requirements in Javadoc
+- **Performance**: Avoid object allocation in loops; reuse objects to minimize GC pressure
+- **Exceptions**: Fine-grained types with recovery data
 
-### Package Structure
+## Key Dependencies
+
+- **Netty 3.2.x**: Non-blocking network I/O, channel pipeline, timers
+- **stumbleupon-async**: `Deferred<T>` Promise type, `Callback<T,R>`, `DeferredGroupException`
+- **Protobuf 2.5.0**: RPC serialization (protoc v2.5.0 required)
+- **ZooKeeper**: Region location discovery via ZK quorum
+- **Guava**: Collections, caching (`LoadingCache`), utilities
+- **SLF4J + Logback**: Logging facade and implementation
+
+## Directory Structure
 
 ```
 src/
-├── org/hbase/async/           # Main package
-│   ├── HBaseClient.java       # Core client
-│   ├── RegionClient.java      # Region server connection
-│   ├── HBaseRpc.java          # RPC base + request types
-│   ├── Scanner.java           # Scan implementation
-│   ├── Bytes.java             # Byte utilities
-│   ├── auth/                  # Auth providers (Kerberos, Simple)
-│   ├── protobuf/              # Custom protobuf utilities
-│   └── jsr166e/               # Concurrent utilities
-protobuf/                       # .proto definitions for HBase RPC
-test/                           # Unit and integration tests
-third_party/                    # Dependency management (Make includes)
+  *.java                          # Core classes (HBaseClient, RegionClient, Scanner, etc.)
+  auth/                           # Kerberos/simple authentication providers
+  jsr166e/                        # Concurrent utilities (LongAdder, Striped64)
+  protobuf/ZeroCopyLiteralByteString.java  # Zero-copy protobuf optimization
+test/
+  BaseTest*.java                  # Test base classes (mock Netty, ZK, region handling)
+  Test*.java                      # Unit tests
+  TestIntegration.java            # Integration tests (real HBase required)
+  auth/                           # Auth provider tests
 ```
-
-## Code Conventions
-
-From HACKING guide:
-- Local variables use `snake_case` naming
-- No checked exceptions; all extend `HBaseException`
-- Document all exceptions in Javadoc
-- Document synchronization requirements for thread-safety
-- Lines should not exceed 80 characters
-- All code must be properly Javadoc'd including private members
