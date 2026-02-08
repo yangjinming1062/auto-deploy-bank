@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  seedvr2-3b:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: seedvr2-3b-inference
+    ports:
+      - "40377:40110"
+    environment:
+      - PORT=40110
+      - CUDA_VISIBLE_DEVICES=0
+    volumes:
+      - ./input:/app/input
+      - ./output:/app/output
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:40110/health"]
+      interval: 30s
+      timeout: 30s
+      start_period: 120s
+      retries: 3
+    restart: unless-stopped
