@@ -9,12 +9,11 @@
   "language": "java",
   "star": 610,
   "repo_flag": "JAVA",
-  "uploaded_at": "2026-02-08T23:08:58.057653",
+  "uploaded_at": "2026-02-08T23:09:03.138461",
   "generated_files": [
     "asynchbase.conf",
-    "Dockerfile",
-    "docker-compose.yaml",
-    "/home/ubuntu/deploy-projects/54a555f2b47a82164d08de63/docker-compose.yaml",
-    "/home/ubuntu/deploy-projects/54a555f2b47a82164d08de63/src/main/java/org/hbase/async/App.java"
+    "logback.xml",
+    "src/main/java/org/hbase/async/App.java",
+    "/home/ubuntu/deploy-projects/54a555f2b47a82164d08de63/docker-compose.yaml"
   ]
 }
