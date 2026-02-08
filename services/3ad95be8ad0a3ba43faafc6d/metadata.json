@@ -1,0 +1,21 @@
+{
+  "service_id": "3ad95be8ad0a3ba43faafc6d",
+  "repo_name": "glitchassassin/lackey",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "473KB",
+  "language": "python",
+  "star": 634,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-02-08T19:53:49.317854",
+  "generated_files": [
+    "Dockerfile",
+    "docker-compose.yaml",
+    "web_server.py",
+    "requirements.txt",
+    "Dockerfile",
+    "docker-compose.yaml"
+  ]
+}
