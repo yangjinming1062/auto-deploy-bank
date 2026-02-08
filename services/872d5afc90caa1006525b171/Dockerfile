@@ -1,28 +1,25 @@
-# Stage 1: Builder
-FROM gradle:8.10-jdk17 AS builder
+# Stage 1: Copy pre-built JAR
+FROM eclipse-temurin:17-jdk-alpine AS builder
 
 WORKDIR /build
 
-# Copy build configuration files
-COPY demo-app/build.gradle demo-app/settings.gradle ./
-COPY demo-app/src ./src
-
-# Build the application
-RUN gradle bootJar --no-daemon -x test
+# Copy the pre-built JAR file
+COPY demo-app/build/libs/app.jar target.jar
 
 # Stage 2: Runtime
 FROM eclipse-temurin:17-jre-alpine
 
-# Install wget for healthcheck
-RUN apk add --no-cache wget
+WORKDIR /app
 
-WORKDIR /home/ubuntu/deploy-projects/872d5afc90caa1006525b171
+# Create non-root user for security
+RUN addgroup -S spring && adduser -S spring -G spring
+USER spring:spring
 
-# Copy the built JAR from builder stage
-COPY --from=builder /build/build/libs/*.jar app.jar
+# Copy the built JAR to target.jar for volume mount
+COPY --from=builder --chown=spring:spring /build/target.jar target.jar
 
-# Expose port
+# Expose the application port
 EXPOSE 8080
 
 # Run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "target.jar"]
