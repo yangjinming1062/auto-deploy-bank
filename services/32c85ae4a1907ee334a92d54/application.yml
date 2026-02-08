@@ -1,0 +1,32 @@
+# Spring Cloud Function Default Configuration
+# This file contains default configuration properties for Spring Cloud Function applications
+
+spring:
+  cloud:
+    function:
+      # Function Definition - specify which function to execute
+      # definition: ""
+      # Function Routing - SpEL expression for dynamic routing
+      # routing-expression: ""
+      # Enable/disable function catalog
+      # catalog:
+      #   enabled: true
+      # Available Functions - list of eligible function bean names
+      # available-functions: ""
+      # Function Location - location to scan for function definitions
+      # location: ""
+      # HTTP Function Properties
+      # http:
+      #   GET: ""
+      #   POST: ""
+      #   PUT: ""
+      #   DELETE: ""
+
+# Server Configuration
+# server:
+#   port: 8080
+
+# Logging Configuration
+# logging:
+#   level:
+#     org.springframework.cloud.function: INFO

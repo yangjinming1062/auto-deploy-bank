@@ -1,0 +1,20 @@
+{
+  "service_id": "32c85ae4a1907ee334a92d54",
+  "repo_name": "spring-cloud/spring-cloud-function",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "4.23MB",
+  "language": "java",
+  "star": 1065,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-02-08T11:18:48.332519",
+  "generated_files": [
+    "application.properties",
+    "application.yml",
+    "/home/ubuntu/deploy-projects/32c85ae4a1907ee334a92d54/docker-compose.yaml",
+    "/home/ubuntu/deploy-projects/32c85ae4a1907ee334a92d54/Dockerfile",
+    "/home/ubuntu/deploy-projects/32c85ae4a1907ee334a92d54/spring-cloud-function-web/src/main/java/org/springframework/cloud/function/web/RestApplication.java"
+  ]
+}
