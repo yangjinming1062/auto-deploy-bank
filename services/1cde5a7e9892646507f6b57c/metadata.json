@@ -1,0 +1,22 @@
+{
+  "service_id": "1cde5a7e9892646507f6b57c",
+  "repo_name": "impossibl/pgjdbc-ng",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "43KB",
+  "language": "java",
+  "star": 606,
+  "repo_flag": "JAVA",
+  "uploaded_at": "2026-02-09T01:06:24.000112",
+  "generated_files": [
+    "src/main/java/com/impossibl/postgres/Main.java",
+    "Dockerfile",
+    "docker-compose.yaml",
+    "pom.xml - Added Spring Boot Web dependency",
+    "src/main/java/com/impossibl/postgres/Main.java - Converted to Spring Boot REST controller with / and /health endpoints",
+    "Dockerfile - Added EXPOSE 8080",
+    "docker-compose.yaml - Added ports: 8080:8080 mapping"
+  ]
+}
