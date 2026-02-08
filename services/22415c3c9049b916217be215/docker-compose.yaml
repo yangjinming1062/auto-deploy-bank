@@ -1,0 +1,58 @@
+services:
+  train-ticket-bot:
+    build: .
+    container_name: train-ticket-bot
+    ports:
+      - "8888:8080"
+    environment:
+      - NO_PROXY=${NO_PROXY:-true}
+      - USER_NAME=${USER_NAME}
+      - USER_PWD=${USER_PWD}
+      - FROM_STATION=${FROM_STATION}
+      - TO_STATION=${TO_STATION}
+      - TRAIN_DATE=${TRAIN_DATE}
+      - PASSENGERS_ID=${PASSENGERS_ID}
+      - TOUR_FLAG=${TOUR_FLAG:-dc}
+      - POLICY_BILL=${POLICY_BILL:-1}
+      - COOKIE_SAVE_ADDRESS=${COOKIE_SAVE_ADDRESS:-./cookie.txt}
+      - leave_time=${leave_time}
+      - TRAINS_NO=${TRAINS_NO}
+      - SEAT_TYPE_CODE=${SEAT_TYPE_CODE}
+      - PASSENGER_TYPE_CODE=${PASSENGER_TYPE_CODE:-1}
+      - CHOOSE_SEATS=${CHOOSE_SEATS}
+      - HEART_BEAT_PER_REQUEST_TIME=${HEART_BEAT_PER_REQUEST_TIME:-30}
+      - QUERY_TICKET_REFERSH_INTERVAL=${QUERY_TICKET_REFERSH_INTERVAL:-0.4}
+      - SELECT_AUTO_CHECK_CAPTHCA=${SELECT_AUTO_CHECK_CAPTHCA:-1}
+      - IMAGE_OCR_SERVICE_CHOOSE=${IMAGE_OCR_SERVICE_CHOOSE:-1}
+      - IS_REFASH_IP_POOL=${IS_REFASH_IP_POOL:-false}
+      - THREAD_POOL_SIZE=${THREAD_POOL_SIZE:-20}
+      - THREAD_OR_PROCESS=${THREAD_OR_PROCESS:-true}
+      - mail_host=${mail_host}
+      - mail_user=${mail_user}
+      - mail_pass=${mail_pass}
+      - mailto_list=${mailto_list}
+      - ACCOUNT_SID=${ACCOUNT_SID}
+      - AUTO_TOKEN=${AUTO_TOKEN}
+      - FROM_NUM=${FROM_NUM}
+      - TO_NUM=${TO_NUM}
+      - BAIDU_APP_ID=${BAIDU_APP_ID}
+      - BAIDU_API_KEY=${BAIDU_API_KEY}
+      - BAIDU_SECRET_ID=${BAIDU_SECRET_ID}
+      - TENCENT_APP_ID=${TENCENT_APP_ID}
+      - TENCENT_SECRET_KEY=${TENCENT_SECRET_KEY}
+    volumes:
+      - ./cookie.txt:/app/cookie.txt
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8888/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s

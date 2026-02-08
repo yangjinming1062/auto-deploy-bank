@@ -1,0 +1,17 @@
+{
+  "service_id": "22415c3c9049b916217be215",
+  "repo_name": "V-I-C-T-O-R/12306",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "17.58MB",
+  "language": "python",
+  "star": 674,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-02-08T17:09:50.656983",
+  "generated_files": [
+    "web_server.py",
+    "entrypoint.sh"
+  ]
+}
