@@ -1,0 +1,32 @@
+services:
+  llamatuner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: llamatuner
+    ports:
+      - "42642:7860"
+    environment:
+      - MASTER_ADDR=127.0.0.1
+      - MASTER_PORT=29500
+      - LOCAL_RANK=0
+      - WORLD_SIZE=1
+      - NNODES=1
+      - RANK=0
+      - HF_ENDPOINT=https://huggingface.co
+      - DISABLE_VERSION_CHECK=0
+      - USE_MODELSCOPE_HUB=0
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s

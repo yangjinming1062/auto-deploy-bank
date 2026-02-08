@@ -1,0 +1,18 @@
+{
+  "service_id": "d52f558b9865e4483b6e62f3",
+  "repo_name": "jianzhnie/LLamaTuner",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "231KB",
+  "language": "python",
+  "star": 618,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-02-08T22:40:30.973575",
+  "generated_files": [
+    "/home/ubuntu/deploy-projects/d52f558b9865e4483b6e62f3/Dockerfile",
+    "/home/ubuntu/deploy-projects/d52f558b9865e4483b6e62f3/docker-compose.yaml",
+    "/home/ubuntu/deploy-projects/d52f558b9865e4483b6e62f3/demo_app.py"
+  ]
+}
