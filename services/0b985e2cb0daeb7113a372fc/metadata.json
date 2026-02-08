@@ -1,0 +1,23 @@
+{
+  "service_id": "0b985e2cb0daeb7113a372fc",
+  "repo_name": "bage2014/study",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "628.77MB",
+  "language": "java",
+  "star": 602,
+  "repo_flag": "JAVA",
+  "uploaded_at": "2026-02-09T05:56:46.866126",
+  "generated_files": [
+    "study-ai/myappendpoint/src/main/resources/local.properties.example",
+    "study-ai/myappendpoint/scripts/create-accounts.sh",
+    "Dockerfile",
+    "docker-compose.yaml",
+    "/home/ubuntu/deploy-projects/0b985e2cb0daeb7113a372fc/study-ai/myappendpoint/src/main/java/com/bage/my/app/end/point/controller/UserController.java",
+    "/home/ubuntu/deploy-projects/0b985e2cb0daeb7113a372fc/study-ai/myappendpoint/src/main/java/com/bage/my/app/end/point/controller/InfoController.java",
+    "/home/ubuntu/deploy-projects/0b985e2cb0daeb7113a372fc/study-ai/myappendpoint/src/main/java/com/bage/my/app/end/point/filter/AuthFilter.java",
+    "/home/ubuntu/deploy-projects/0b985e2cb0daeb7113a372fc/study-ai/myappendpoint/src/main/java/com/bage/my/app/end/point/config/AuthConfig.java"
+  ]
+}

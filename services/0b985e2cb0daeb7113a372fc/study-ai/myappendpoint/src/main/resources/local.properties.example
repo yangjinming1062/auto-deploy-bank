@@ -1,0 +1,26 @@
+# Local Configuration Override
+# Copy this file to local.properties and modify the values as needed
+
+# Server Configuration
+server.port=8080
+
+# Database Configuration (MySQL - uncomment and configure for production)
+# spring.datasource.default=mysql
+# spring.datasource.mysql.url=jdbc:mysql://localhost:3306/mydb?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+# spring.datasource.mysql.username=root
+# spring.datasource.mysql.password=password
+# spring.datasource.mysql.driver-class-name=com.mysql.cj.jdbc.Driver
+
+# H2 Database (default - for development)
+# spring.datasource.default=h2 (already set in application.properties)
+
+# File Upload Directory
+app.update.file-dir=./uploads
+
+# Mail Configuration (SMTP)
+# spring.mail.host=smtp.qq.com
+# spring.mail.port=587
+# spring.mail.username=your-email@example.com
+# spring.mail.password=your-email-password
+# spring.mail.properties.mail.smtp.auth=true
+# spring.mail.properties.mail.smtp.starttls.enable=true
