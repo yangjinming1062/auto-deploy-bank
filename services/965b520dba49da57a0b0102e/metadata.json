@@ -1,0 +1,17 @@
+{
+  "service_id": "965b520dba49da57a0b0102e",
+  "repo_name": "bxx2004/FUNGA",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "2.38MB",
+  "language": "java",
+  "star": 1020,
+  "repo_flag": "JAVA",
+  "uploaded_at": "2026-02-08T14:00:33.484335",
+  "generated_files": [
+    "/data/LifePhoton/prop/lifephoton.properties",
+    "scripts/create_accounts.sh"
+  ]
+}
