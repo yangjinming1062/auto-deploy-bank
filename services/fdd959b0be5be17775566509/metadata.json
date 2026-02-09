@@ -1,0 +1,17 @@
+{
+  "service_id": "fdd959b0be5be17775566509",
+  "repo_name": "evershopcommerce/evershop",
+  "platform": "github",
+  "ref": null,
+  "version": "commit:main",
+  "status": "deploying",
+  "package_size": "17.65MB",
+  "language": "nodejs",
+  "star": 9026,
+  "repo_flag": "Auto-CVE",
+  "uploaded_at": "2026-02-10T04:07:58.609848",
+  "generated_files": [
+    ".env",
+    "scripts/create-test-accounts.js"
+  ]
+}

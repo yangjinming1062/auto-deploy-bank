@@ -1,0 +1,81 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      # Database Configuration
+      DB_HOST: database
+      DB_PORT: 5432
+      DB_NAME: evershop
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_SSLMODE: disable
+
+      # JWT Configuration
+      JWT_ISSUER: evershop
+      JWT_ADMIN_SECRET: your_admin_jwt_secret_key_change_in_production
+      JWT_ADMIN_REFRESH_SECRET: your_admin_refresh_secret_key_change_in_production
+      JWT_CUSTOMER_SECRET: your_customer_jwt_secret_key_change_in_production
+      JWT_CUSTOMER_REFRESH_SECRET: your_customer_refresh_secret_key_change_in_production
+      JWT_ADMIN_TOKEN_EXPIRY: 1d
+      JWT_CUSTOMER_TOKEN_EXPIRY: 7d
+
+      # Application Configuration
+      PORT: 3000
+      NODE_ENV: production
+      ALLOW_CONFIG_MUTATIONS: false
+
+      # Admin Account (created during setup)
+      ADMIN_FULLNAME: Admin User
+      ADMIN_EMAIL: admin@example.com
+      ADMIN_PASSWORD: Admin@123
+
+    networks:
+      - evershop-network
+    depends_on:
+      database:
+        condition: service_healthy
+    ports:
+      - "46731:3000"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  database:
+    image: postgres:16
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: evershop
+    networks:
+      - evershop-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d evershop"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+networks:
+  evershop-network:
+    name: evershop-network
+    driver: bridge
+
+volumes:
+  postgres-data:
