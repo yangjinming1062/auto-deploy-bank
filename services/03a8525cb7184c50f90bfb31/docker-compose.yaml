@@ -1,0 +1,21 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "42085:7860"
+    environment:
+      - GRADIO_TEMP_DIR=.gradio_cache
+      - TOKENIZERS_PARALLELISM=false
+      - GRADIO_SERVER_NAME=0.0.0.0
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    volumes:
+      - ./outputs:/home/ubuntu/deploy-projects/03a8525cb7184c50f90bfb31/outputs
