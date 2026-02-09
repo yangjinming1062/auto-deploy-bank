@@ -13,4 +13,4 @@ COPY . .
 
 EXPOSE 8888
 
-CMD ["streamlit", "run", "web_demo.py", "--server.port", "8888", "--server.headless", "true"]
+CMD ["streamlit", "run", "web_demo.py", "--server.port", "8888"]

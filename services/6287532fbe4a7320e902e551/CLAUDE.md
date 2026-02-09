@@ -4,71 +4,95 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-DISC-MedLLM is a medical domain large language model designed for healthcare conversational scenarios, built on [Baichuan-13B-Base](https://github.com/baichuan-inc/Baichuan-13B). It provides medical consultation and treatment advice through high-quality health support services.
+DISC-MedLLM is a medical domain-specific large language model designed for conversational healthcare scenarios. It is fine-tuned from [Baichuan-13B-Base](https://github.com/baichuan-inc/Baichuan-13B) by Fudan-DISC lab to bridge general LLMs and real-world medical consultations.
 
 ## Commands
 
 ### Installation
-```bash
+```shell
 pip install -r requirements.txt
 ```
 
 ### Running Demos
-```bash
+```shell
 # Command-line demo
 python cli_demo.py
 
-# Web-based demo
+# Web demo (Streamlit)
 streamlit run web_demo.py --server.port 8888
 ```
 
-### Model Fine-tuning
-Training uses DeepSpeed for distributed training:
-```bash
+### Training
+Full-parameter fine-tuning using DeepSpeed ZeRO:
+```shell
 deepspeed --num_gpus={num_gpus} ./train/train.py --train_args_file ./train/train_args/sft.json
 ```
 
-Before training, configure `train/train_args/sft.json` with appropriate settings (output_dir, model_name_or_path, train_file, etc.).
+**Note:** Update `sft.json` configuration before training, particularly:
+- `output_dir` - Where checkpoints will be saved
+- `model_name_or_path` - Base model path (default: Flmc/DISC-MedLLM)
+- `train_file` - Path to training data JSONL file
 
 ## Architecture
 
-### Training Pipeline (`train/`)
-Built on [Firefly](https://github.com/yangjianxin1/Firefly) with modifications for medical conversation fine-tuning:
+### Training Pipeline
+The training system is built on HuggingFace Transformers with custom components:
 
-- **`train.py`**: Entry point for training; initializes model, tokenizer, dataset, and custom trainer
-- **`train/component/`**: Modular training components:
-  - **`dataset.py`**: `SFTDataset` class for loading conversation data
-  - **`collator.py`**: Data collation for batch processing
-  - **`trainer.py`**: Custom `Trainer` class extending transformers.Trainer with `TargetLMLoss`
-  - **`loss.py`**: `TargetLMLoss` computes cross-entropy loss only on assistant response tokens
-  - **`argument.py`**: Custom argument definitions
+- **Main entry point**: `train/train.py` - Initializes model, tokenizer, datasets, and custom Trainer
+- **Data format**: JSONL files with `{"_id": "...", "source": "...", "conversation": [{"role": "user"|"assistant", "content": "..."}]}` structure
+- **Custom tokens**: `user_token_id=195`, `assistant_token_id=196` (same as Baichuan-13B-Chat)
+- **Loss computation**: Only assistant response tokens contribute to loss via `TargetLMLoss` (see `train/component/loss.py`)
+- **Trainer**: Custom `Trainer` class in `train/component/trainer.py` that extends HuggingFace Trainer with custom loss handling
 
-### Conversation Data Format
-Training data uses JSONL format where each line contains:
-```json
-{"conversation": [{"role": "user", "content": "..."}, {"role": "assistant", "content": "..."}]}
+### Key Training Components (`train/component/`)
+| File | Purpose |
+|------|---------|
+| `dataset.py` | `SFTDataset` - Loads multi-turn conversations, tokenizes with special tokens |
+| `collator.py` | `SFTDataCollator` - Pads batches dynamically, maintains `target_mask` |
+| `trainer.py` | Custom Trainer with `compute_loss` override for target-only loss |
+| `loss.py` | `TargetLMLoss` - CrossEntropyLoss ignoring non-target tokens |
+| `argument.py` | `CustomizedArguments` dataclass for training config |
+
+### DeepSpeed Configuration
+Uses ZeRO stage 3 for distributed training (see `train/train_args/ds_z3_config.json`):
+- Optimizer: Adam with auto-tuned parameters
+- Mixed precision: BF16 enabled (auto-configured)
+- Gradient checkpointing: Controlled via `sft.json`
+
+### Dialogue Format for Custom Training
+If using external training code, format multi-turn conversations as:
+```
+<|195|>user_content<|196|>assistant_content<|195|>...
 ```
 
-Multi-turn conversations are formatted with special tokens:
-- `<b><$user_token>`: User utterance marker (token ID: 195)
-- `<$assistant_token>`: Assistant utterance marker (token ID: 196)
-- Format: `<s><$user_token>content<$assistant_token>response<eos_token>...`
+## Model Usage
 
-### Inference (`cli_demo.py`, `web_demo.py`)
-Both demos load the model from Hugging Face (`Flmc/DISC-MedLLM`) using:
-- `AutoModelForCausalLM` with `torch.float16` and `device_map="auto"`
-- `AutoTokenizer` with `use_fast=False` and `trust_remote_code=True`
-- `GenerationConfig` loaded from pretrained model
+```python
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
-### Evaluation (`eval/`)
-Contains evaluation datasets and results:
-- `dialogues/`: Multi-turn dialogue samples
-- `samples/`: Model-generated responses
-- `gpt4_scores/`: GPT-4 evaluation scores
+tokenizer = AutoTokenizer.from_pretrained("Flmc/DISC-MedLLM", use_fast=False, trust_remote_code=True)
+model = AutoModelForCausalLM.from_pretrained("Flmc/DISC-MedLLM", device_map="auto", torch_dtype=torch.float16, trust_remote_code=True)
 
-## Key Implementation Details
+messages = [{"role": "user", "content": "我感觉自己颈椎非常不舒服"}]
+response = model.chat(tokenizer, messages)
+```
 
-- Uses DeepSpeed ZeRO-3 optimization (config: `train/train_args/ds_z3_config.json`)
-- Supports BF16 training (`bf16: true` in config)
-- Custom loss masking: only assistant tokens contribute to loss calculation via `target_mask`
-- Multi-turn conversation handling with sequence length truncation (`max_seq_length: 1200`)
+## Evaluation (`eval/`)
+
+| Directory | Contents |
+|-----------|----------|
+| `dialogues/` | Multi-turn conversation samples from various models (DISC-MedLLM, Baichuan-Chat, GPT-3.5/4, etc.) |
+| `samples/` | Test case specifications (CMB-cases.json, cmd_samples.json, cmid_samples.json) |
+| `gpt4_scores/` | GPT-4 evaluation scores by criterion (proactivity, accuracy, helpfulness, linguistic quality) |
+
+### Evaluation Datasets
+- **Single-turn**: MLEC-QA (NMLEC exam categories), NEEP 306 (medical board questions)
+- **Multi-turn**: CMB-Clin (consultation simulation), CMD (department-specialized), CMID (intent-focused)
+
+## Important Implementation Details
+
+1. **Padding**: Uses tokenizer's `pad_token_id` (set to `unk_token_id` if None)
+2. **Sequence truncation**: Conversations truncated at `max_seq_length` to fit context window
+3. **Target masking**: Only assistant tokens (between `assistant_token_id` and `eos_token_id`) are optimized
+4. **Device mapping**: Supports auto device placement (`device_map="auto"`)
+5. **Quantization**: Supports int8/int4 inference (see Baichuan-13B repo) but with potential performance degradation

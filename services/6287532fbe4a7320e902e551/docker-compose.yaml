@@ -2,7 +2,7 @@ services:
   web:
     build: .
     ports:
-      - "42070:8888"
+      - "42065:8888"
     deploy:
       resources:
         limits:
@@ -16,4 +16,4 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s
+      start_period: 40s
