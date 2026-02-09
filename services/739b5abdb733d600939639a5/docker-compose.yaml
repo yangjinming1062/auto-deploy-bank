@@ -1,0 +1,41 @@
+services:
+  processor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: video-processor
+    image: video-processor:latest
+    ports:
+      - "43201:43107"
+    environment:
+      - VIDEO_FOLDER=/data/raw_videos
+      - OUTPUT_FOLDER=/data/cropped_videos
+      - WORKERS=4
+      - DEVICE_IDS=0
+      - PYTHONUNBUFFERED=1
+      - YOUTUBE_DL_PATH=/usr/local/bin/youtube-dl
+    volumes:
+      - raw_videos:/data/raw_videos
+      - cropped_videos:/data/cropped_videos
+      - ./data:/data/output
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:43107/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: "no"
+
+volumes:
+  raw_videos:
+    driver: local
+  cropped_videos:
+    driver: local
