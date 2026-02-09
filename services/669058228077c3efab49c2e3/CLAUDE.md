@@ -2,91 +2,90 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
+## Repository Structure
 
-This is a collection of machine learning web applications built with Flask, Streamlit, and FastAPI. Each subdirectory contains an independent ML web app demonstrating different ML integration patterns.
+This is a **collection of standalone ML web applications**, not a single unified project. Each subdirectory is an independent application with its own dependencies and structure.
 
-## Common Commands
+## Running Applications
 
-### Running Apps
+### Python Web Apps (Flask, Streamlit, FastAPI)
 
-**Flask Apps:**
+Navigate to the app directory and run:
+
 ```bash
+# Flask apps
 python app.py
-# App runs on http://127.0.0.1:5000 with debug=True
-```
 
-**Streamlit Apps:**
-```bash
+# Streamlit apps
 streamlit run app.py
-# App opens in browser automatically
+
+# FastAPI apps
+python app.py  # or uvicorn app:app --host 0.0.0.0 --port 8000
 ```
 
-**FastAPI Apps:**
+### Node.js/Express Apps
+
 ```bash
-uvicorn app:app --reload
-# API runs on http://127.0.0.1:8000
-# Or: python app.py (includes uvicorn.run)
+cd "Embedding-Machine-Learning-Into-Express.js App"
+npm install
+node app.js
 ```
 
-**Installing Dependencies:**
-```bash
-pip install -r requirements.txt
+## Architecture Patterns
+
+### Common ML Web App Structure
+- **app.py / main.py** - Main application entry point
+- **models/*.pkl** - Serialized sklearn models and vectorizers (joblib format)
+- **templates/*.html** - HTML templates for Flask apps
+- **static/** - CSS/JS assets
+- **data/** - Datasets used for training
+
+### Model Loading Pattern
+Most apps follow this pattern:
+```python
+import joblib
+
+# Load vectorizer and model at module level
+vectorizer = open("models/vectorizer_name.pkl", "rb")
+cv = joblib.load(vectorizer)
+
+model = open("models/model_name.pkl", "rb")
+clf = joblib.load(model)
+
+# Make predictions
+vect = cv.transform([input_data]).toarray()
+prediction = clf.predict(vect)
 ```
 
-### Common Dependencies Across Apps
-- `flask` - Web framework for Flask apps
-- `streamlit` - Web framework for Streamlit apps
-- `fastapi` + `uvicorn` - API framework
-- `scikit-learn` - ML algorithms
-- `pandas`, `numpy` - Data manipulation
-- `joblib` or `pickle` - Model serialization
-- `spacy` - NLP processing
-- `textblob` - Sentiment analysis
-- `nltk` - NLP tasks
-- `matplotlib`, `wordcloud` - Visualization
+### Frameworks Used
+- **Flask** - Most common web framework (with Bootstrap, Flask-Bootstrap, Materialize.css)
+- **Streamlit** - Quick ML UI apps
+- **FastAPI** - REST API services
+- **Express.js** - Node.js ML integration with brain.js
 
-## Architecture
+### ML Libraries
+- scikit-learn (CountVectorizer, Naive Bayes, Logistic Regression, Random Forest)
+- joblib - Model serialization
+- pandas, numpy - Data handling
+- NLTK, spaCy, TextBlob - NLP tasks
 
-### Flask App Structure
+## Key Dependencies
+
+### Python
 ```
-app.py           # Main application with routes
-templates/       # HTML Jinja2 templates
-static/          # CSS, JS, images
-data/            # CSV datasets, serialized models
-models/          # Trained ML models (.pkl files)
+flask, streamlit, fastapi, uvicorn
+scikit-learn, joblib, pandas, numpy
+spacy, nltk, textblob
 ```
 
-### Streamlit App Structure
+### Node.js
 ```
-app.py           # Single-file Streamlit app
-models/          # Trained ML models
-images/          # Static images
+express, body-parser, brain.js
 ```
 
-### FastAPI App Structure
-```
-app.py           # Main FastAPI application with endpoints
-models/          # Trained ML models
-```
+## Notes
 
-### Common ML Patterns
-
-1. **Model Loading**: Models are loaded at module level using `joblib.load("models/model_name.pkl")`
-2. **Vectorization**: Text inputs use `CountVectorizer` or similar from sklearn
-3. **Prediction**: `model.predict()` with reshaped input data
-4. **API Endpoints**: FastAPI uses `@app.get('/predict/')` or `@app.post('/predict/{name}')`
-
-### Note on sklearn.externals
-Older apps use `from sklearn.externals import joblib`. This is deprecated - use `import joblib` directly.
-
-## App List
-
-Key apps in this repository:
-- `Bible-Verse-Prediction-ML-App/` - Text classification with TextBlob sentiment
-- `Youtube-Spam-Detector-ML-Flask-App/` - Spam classification
-- `Serving_ML_Models_as_API_with_FastAPI/` - FastAPI gender prediction API
-- `gender_classifier_mlapp_with_streamlit/` - Streamlit gender classifier
-- `NLPIffy_NLP_Based_SpaCy_Flask_App&_API/` - NLP with SpaCy + REST API
-- `Iris-Species-Predictor-ML-Flask-App-With-Materialize.css/` - Multi-model iris prediction
-- `DisplaCify_App-Using-Displacy-in-Flask/` - Named entity visualization
+- Each project is self-contained - dependencies are typically defined in `requirements.txt` (Python) or `package.json` (Node.js)
+- Models are pre-trained and loaded at startup as `.pkl` files
+- Most apps run on `localhost:5000` (Flask) or `localhost:8501` (Streamlit) by default
+- Some projects have both completed and starter versions in the same directory

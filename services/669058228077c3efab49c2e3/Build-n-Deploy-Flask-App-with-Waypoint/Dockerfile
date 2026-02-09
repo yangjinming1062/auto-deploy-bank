@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.9-slim
 
 ENV PYTHONUNBUFFERED=1
 ENV LC_ALL=C.UTF-8
@@ -13,8 +13,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 RUN python -m spacy download en_core_web_sm
 
-COPY app/ .
+COPY . .
 
 EXPOSE 5000
 
-CMD ["python", "app.py"]
+CMD ["python", "app/app.py"]
