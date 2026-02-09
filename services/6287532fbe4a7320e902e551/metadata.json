@@ -1,0 +1,17 @@
+{
+  "service_id": "6287532fbe4a7320e902e551",
+  "repo_name": "FudanDISC/DISC-MedLLM",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "10.41MB",
+  "language": "python",
+  "star": 559,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-02-09T15:27:42.330733",
+  "generated_files": [
+    "Dockerfile",
+    "docker-compose.yaml"
+  ]
+}
