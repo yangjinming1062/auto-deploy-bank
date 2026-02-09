@@ -1,24 +1,21 @@
 services:
-  qwen2-service:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: qwen2-inference
+  llm-finetune:
+    build: .
     ports:
-      - "42648:8000"
-    environment:
-      - SWANLAB_API_KEY=${SWANLAB_API_KEY:-}
+      - "41295:41295"
     deploy:
       resources:
         limits:
-          cpus: '4.0'
-          memory: 8G
-        reservations:
           cpus: '2.0'
           memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD-SHELL", "curl -f http://localhost:41295/health"]
       interval: 30s
-      timeout: 60s
+      timeout: 10s
       retries: 3
-      start_period: 120s
+      start_period: 10s
+    tty: true
+    stdin_open: true

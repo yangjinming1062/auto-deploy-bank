@@ -9,10 +9,10 @@
   "language": "python",
   "star": 599,
   "repo_flag": "PYTHON",
-  "uploaded_at": "2026-02-09T08:37:11.476170",
+  "uploaded_at": "2026-02-09T12:52:08.936150",
   "generated_files": [
-    "/home/ubuntu/deploy-projects/443a5abcbfc6de916990347c/docker-compose.yaml",
-    "/home/ubuntu/deploy-projects/443a5abcbfc6de916990347c/main.py",
-    "/home/ubuntu/deploy-projects/443a5abcbfc6de916990347c/Dockerfile"
+    "/home/ubuntu/deploy-projects/443a5abcbfc6de916990347c/web_server.py",
+    "/home/ubuntu/deploy-projects/443a5abcbfc6de916990347c/Dockerfile",
+    "/home/ubuntu/deploy-projects/443a5abcbfc6de916990347c/docker-compose.yaml"
   ]
 }
