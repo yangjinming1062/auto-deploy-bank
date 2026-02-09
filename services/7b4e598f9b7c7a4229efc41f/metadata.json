@@ -1,0 +1,16 @@
+{
+  "service_id": "7b4e598f9b7c7a4229efc41f",
+  "repo_name": "pnpm/pnpm",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:master",
+  "status": "deploying",
+  "package_size": "3.43MB",
+  "language": "nodejs",
+  "star": 33927,
+  "repo_flag": "Auto-CVE",
+  "uploaded_at": "2026-02-09T21:52:14.134579",
+  "generated_files": [
+    "verdaccio.yaml"
+  ]
+}
