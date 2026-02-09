@@ -1,0 +1,22 @@
+{
+  "service_id": "7bc350fcb49796675f8671b9",
+  "repo_name": "knowitall/reverb",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "10.91MB",
+  "language": "java",
+  "star": 543,
+  "repo_flag": "JAVA",
+  "uploaded_at": "2026-02-09T20:34:44.675926",
+  "generated_files": [
+    "core/src/main/java/edu/washington/cs/knowitall/util/ReVerbHttpServer.java",
+    "core/Dockerfile",
+    "core/docker-compose.yaml",
+    "Dockerfile",
+    "docker-compose.yaml",
+    "/home/ubuntu/deploy-projects/7bc350fcb49796675f8671b9/docker-compose.yaml",
+    "/home/ubuntu/deploy-projects/7bc350fcb49796675f8671b9/core/src/main/java/edu/washington/cs/knowitall/util/ReVerbHttpServer.java"
+  ]
+}

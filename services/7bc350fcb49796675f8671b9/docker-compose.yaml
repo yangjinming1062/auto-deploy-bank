@@ -1,0 +1,23 @@
+services:
+  reverb:
+    build:
+      context: .
+      dockerfile: core/Dockerfile
+    ports:
+      - "42123:42122"
+    # Resource limits to prevent single service from consuming all system resources
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:42122/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
