@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatDB - AI Database Assistant</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 800px;
+            overflow: hidden;
+        }
+        .header {
+            background: #4a5568;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        .header p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        .content {
+            padding: 20px;
+        }
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 5px;
+        }
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #48bb78;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #4a5568;
+        }
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 5px;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 100px;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .response {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 5px;
+            min-height: 50px;
+        }
+        .response:empty {
+            display: none;
+        }
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #edf2f7;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            color: #718096;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ChatDB</h1>
+            <p>AI-Powered Database Assistant powered by OpenAI</p>
+        </div>
+        <div class="content">
+            <div class="status">
+                <div class="status-dot"></div>
+                <span id="db-status">Connecting to database...</span>
+            </div>
+            <form id="chat-form">
+                <div class="form-group">
+                    <label for="message">Ask a question about your database:</label>
+                    <textarea id="message" name="message" placeholder="e.g., Show me all users who signed up last week"></textarea>
+                </div>
+                <button type="submit">Send Request</button>
+            </form>
+            <div class="response" id="response"></div>
+            <div class="info">
+                <strong>Note:</strong> This interface sends queries to OpenAI's API which generates SQL statements to query your database.
+                Ensure OPENAI_API_KEY is configured in the environment.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('chat-form');
+        const responseDiv = document.getElementById('response');
+        const dbStatus = document.getElementById('db-status');
+
+        // Check database status
+        fetch('/health')
+            .then(r => r.json())
+            .then(data => {
+                dbStatus.textContent = 'Database: ' + data.database;
+            })
+            .catch(() => {
+                dbStatus.textContent = 'Database: disconnected';
+            });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = document.getElementById('message').value;
+            responseDiv.textContent = 'Processing...';
+
+            try {
+                const res = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({message})
+                });
+                const data = await res.json();
+
+                if (data.error) {
+                    responseDiv.textContent = 'Error: ' + data.error;
+                } else {
+                    responseDiv.textContent = data.response;
+                }
+            } catch (err) {
+                responseDiv.textContent = 'Error: ' + err.message;
+            }
+        });
+    </script>
+</body>
+</html>

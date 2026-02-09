@@ -1,0 +1,89 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chatdb-app
+    stdin_open: true
+    tty: true
+    ports:
+      - "42747:8080"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - TEMPERATURE=${TEMPERATURE:-0}
+      - USE_AZURE=${USE_AZURE:-False}
+      - OPENAI_API_TYPE=${OPENAI_API_TYPE:-azure}
+      - OPENAI_AZURE_API_BASE=${OPENAI_AZURE_API_BASE:-your-base-url-for-azure}
+      - OPENAI_AZURE_API_VERSION=${OPENAI_AZURE_API_VERSION:-api-version-for-azure}
+      - OPENAI_AZURE_DEPLOYMENT_ID=${OPENAI_AZURE_DEPLOYMENT_ID:-deployment-id-for-azure}
+      - OPENAI_AZURE_CHAT_DEPLOYMENT_ID=${OPENAI_AZURE_CHAT_DEPLOYMENT_ID:-deployment-id-for-azure-chat}
+      - OPENAI_AZURE_EMBEDDINGS_DEPLOYMENT_ID=${OPENAI_AZURE_EMBEDDINGS_DEPLOYMENT_ID:-deployment-id-for-azure-embeddings}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-rootpassword}
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=${MYSQL_USER:-root}
+      - MYSQL_PORT=${MYSQL_PORT:-3306}
+      - SMART_LLM_MODEL=${SMART_LLM_MODEL:-gpt-4}
+      - FAST_LLM_MODEL=${FAST_LLM_MODEL:-gpt-3.5-turbo}
+      - FAST_TOKEN_LIMIT=${FAST_TOKEN_LIMIT:-4096}
+      - SMART_TOKEN_LIMIT=${SMART_TOKEN_LIMIT:-8000}
+      - MEMORY_BACKEND=${MEMORY_BACKEND:-local}
+      - PINECONE_API_KEY=${PINECONE_API_KEY:-your-pinecone-api-key}
+      - PINECONE_ENV=${PINECONE_ENV:-your-pinecone-region}
+      - REDIS_HOST=${REDIS_HOST:-localhost}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+      - WIPE_REDIS_ON_START=${WIPE_REDIS_ON_START:-False}
+      - MEMORY_INDEX=${MEMORY_INDEX:-auto-gpt}
+      - IMAGE_PROVIDER=${IMAGE_PROVIDER:-dalle}
+      - HUGGINGFACE_API_TOKEN=${HUGGINGFACE_API_TOKEN:-your-huggingface-api-token}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-your-google-api-key}
+      - CUSTOM_SEARCH_ENGINE_ID=${CUSTOM_SEARCH_ENGINE_ID:-your-custom-search-engine-id}
+      - USE_MAC_OS_TTS=${USE_MAC_OS_TTS:-False}
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY:-your-elevenlabs-api-key}
+      - ELEVENLABS_VOICE_1_ID=${ELEVENLABS_VOICE_1_ID:-your-voice-id-1}
+      - ELEVENLABS_VOICE_2_ID=${ELEVENLABS_VOICE_2_ID:-your-voice-id-2}
+      - EXECUTE_LOCAL_COMMANDS=${EXECUTE_LOCAL_COMMANDS:-False}
+      - WEB_MODE=true
+    depends_on:
+      mysql:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -f 'start.sh' && exit 0 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  mysql:
+    image: mysql:8.0
+    container_name: chatdb-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=try1024
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+volumes:
+  mysql_data:
