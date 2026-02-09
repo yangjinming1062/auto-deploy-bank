@@ -1,0 +1,18 @@
+{
+  "service_id": "4e275622960389eeb720e1f6",
+  "repo_name": "johnsonhk88/AI-Bank-Statement-Document-Automation-By-LLM-And-Personal-Finanical-Analysis-Prediction",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "44.76MB",
+  "language": "python",
+  "star": 558,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-02-09T16:28:20.314278",
+  "generated_files": [
+    "/home/ubuntu/deploy-projects/4e275622960389eeb720e1f6/Dockerfile",
+    "/home/ubuntu/deploy-projects/4e275622960389eeb720e1f6/docker-compose.yaml",
+    "/home/ubuntu/deploy-projects/4e275622960389eeb720e1f6/src/requirements-minimal.txt"
+  ]
+}
