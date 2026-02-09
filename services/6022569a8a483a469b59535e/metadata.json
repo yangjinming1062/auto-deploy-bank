@@ -1,0 +1,20 @@
+{
+  "service_id": "6022569a8a483a469b59535e",
+  "repo_name": "microsoft/semantic-kernel",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main",
+  "status": "deploying",
+  "package_size": "24.41MB",
+  "language": "python",
+  "star": 27197,
+  "repo_flag": "Auto-CVE",
+  "uploaded_at": "2026-02-10T00:16:24.296838",
+  "generated_files": [
+    ".env.example",
+    "pyproject.toml",
+    "Dockerfile",
+    "docker-compose.yaml",
+    "dotnet/samples/Demos/QualityCheck/python-server/app/main.py"
+  ]
+}

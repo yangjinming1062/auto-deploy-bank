@@ -1,0 +1,50 @@
+[project]
+name = "semantic-kernel"
+description = "Semantic Kernel Python SDK"
+authors = [{ name = "Microsoft", email = "SK-Support@microsoft.com"}]
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+dependencies = [
+    "azure-ai-projects ~= 1.0.0b12",
+    "azure-ai-agents >= 1.2.0b3",
+    "aiohttp ~= 3.8",
+    "pydantic >=2.0,<2.12",
+    "pydantic-settings ~= 2.0",
+    "azure-identity >= 1.13",
+    "numpy >= 1.25.0",
+    "openai >= 1.98.0,<2",
+    "opentelemetry-api ~= 1.24",
+    "opentelemetry-sdk ~= 1.24",
+    "jinja2 ~= 3.1",
+    "nest-asyncio ~= 1.6",
+    "scipy>=1.15.1",
+    "protobuf",
+    "typing-extensions>=4.13",
+]
+
+[project.optional-dependencies]
+anthropic = ["anthropic ~= 0.32"]
+azure = ["azure-ai-inference >= 1.0.0b6"]
+pinecone = ["pinecone[asyncio, grpc] ~= 7.0"]
+postgres = ["psycopg[binary,pool] ~= 3.2"]
+redis = ["redis[hiredis] ~= 6.0"]
+
+[dependency-groups]
+dev = [
+    "pytest ~= 8.2",
+    "pytest-asyncio ~= 0.24",
+    "mypy >= 1.10",
+    "ruff ~= 0.9"
+]
+
+[tool.pytest.ini_options]
+testpaths = 'tests'
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 120
+
+[build-system]
+requires = ["flit-core >= 3.9,<4.0"]
+build-backend = "flit_core.buildapi"
