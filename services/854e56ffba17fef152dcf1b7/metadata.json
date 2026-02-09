@@ -1,0 +1,16 @@
+{
+  "service_id": "854e56ffba17fef152dcf1b7",
+  "repo_name": "GRAAL-Research/poutyne",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "6.14MB",
+  "language": "python",
+  "star": 578,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-02-09T12:31:26.870151",
+  "generated_files": [
+    "scripts/health_server.py"
+  ]
+}

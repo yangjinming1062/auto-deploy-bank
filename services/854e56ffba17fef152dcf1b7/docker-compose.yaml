@@ -1,0 +1,28 @@
+services:
+  poutyne:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: poutyne-service
+    ports:
+      - "40375:8080"
+    environment:
+      - POUTYNE_RELEASE_BUILD=${POUTYNE_RELEASE_BUILD:-}
+      - CUDA_DEVICE=${CUDA_DEVICE:-0}
+      - MULTI_GPUS=${MULTI_GPUS:-0}
+      - WANDB_MODE=${WANDB_MODE:-}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
