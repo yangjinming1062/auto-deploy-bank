@@ -1,0 +1,19 @@
+{
+  "service_id": "37e8503f9f8861a8e6385b1e",
+  "repo_name": "seth814/Audio-Classification",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "96.61MB",
+  "language": "python",
+  "star": 582,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-02-09T11:10:11.246741",
+  "generated_files": [
+    "docker-compose.yaml",
+    "app.py",
+    "docker-compose.yaml",
+    "requirements.txt"
+  ]
+}
