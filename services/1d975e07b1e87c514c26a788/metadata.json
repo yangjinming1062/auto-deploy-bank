@@ -1,0 +1,17 @@
+{
+  "service_id": "1d975e07b1e87c514c26a788",
+  "repo_name": "albertpumarola/D-NeRF",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "2.25MB",
+  "language": "python",
+  "star": 582,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-02-09T09:59:06.414813",
+  "generated_files": [
+    "web_server.py",
+    "docker-compose.yaml"
+  ]
+}

@@ -1,0 +1,33 @@
+services:
+  dnerf:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dnerf-container
+    environment:
+      - PYTHONPATH=/home/ubuntu/deploy-projects/1d975e07b1e87c514c26a788
+      - CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-}
+      - D_NERF_BASEDIR=/home/ubuntu/deploy-projects/1d975e07b1e87c514c26a788/logs
+      - D_NERF_DATADIR=/home/ubuntu/deploy-projects/1d975e07b1e87c514c26a788/data
+      - D_NERF_DATASET_TYPE=llff
+      - D_NERF_NERF_TYPE=direct_temporal
+      - D_NERF_LRATE=0.01
+      - D_NERF_N_ITER=800000
+      - D_NERF_DO_HALF_PRECISION=False
+    volumes:
+      - ./data:/home/ubuntu/deploy-projects/1d975e07b1e87c514c26a788/data
+      - ./logs:/home/ubuntu/deploy-projects/1d975e07b1e87c514c26a788/logs
+    ports:
+      - "8000:8000"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: "no"
+    # Run Flask web server for service status and health checks
+    command: >
+      sh -c "python /home/ubuntu/deploy-projects/1d975e07b1e87c514c26a788/web_server.py"
