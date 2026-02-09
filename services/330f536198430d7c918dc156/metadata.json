@@ -1,0 +1,19 @@
+{
+  "service_id": "330f536198430d7c918dc156",
+  "repo_name": "business-science/free-ai-tips",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "12.78MB",
+  "language": "python",
+  "star": 567,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-02-09T15:11:48.768398",
+  "generated_files": [
+    ".streamlit/config.toml",
+    "credentials.yml",
+    "/home/ubuntu/deploy-projects/330f536198430d7c918dc156/Dockerfile",
+    "/home/ubuntu/deploy-projects/330f536198430d7c918dc156/docker-compose.yaml"
+  ]
+}
