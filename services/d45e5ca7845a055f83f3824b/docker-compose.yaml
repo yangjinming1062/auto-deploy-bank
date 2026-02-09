@@ -1,13 +1,18 @@
 services:
   jspdf:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     container_name: jspdf-service
     ports:
-      - "43367:8000"
+      - "41672:8000"
     environment:
       - NODE_ENV=production
+      - PORT=8000
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     deploy:
       resources:
         limits:
@@ -16,9 +21,4 @@ services:
         reservations:
           cpus: '1.0'
           memory: 1G
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8000"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
+    restart: unless-stopped

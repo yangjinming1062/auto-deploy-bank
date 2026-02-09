@@ -2,95 +2,82 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Commands
+## Project Overview
 
-```sh
+jsPDF is a JavaScript library for generating PDF documents in the browser and Node.js. It implements parts of the PDF 1.3 specification and supports multiple output formats (UMD, ES modules, CommonJS).
+
+## Build Commands
+
+```bash
 # Install dependencies
 npm install
 
-# Build the library (generates dist/ folder)
+# Build the library (produces dist/ with UMD, ES, and Node bundles)
 npm run build
 
-# Run all tests (builds first, then runs browser + node tests)
-npm run test
+# Run local development server for examples
+npm start
 
-# Run only unit tests (browser-based with Karma)
+# Format code with Prettier
+npm run prettier
+
+# Check code formatting (lint)
+npm run lint
+
+# Generate JSDoc documentation
+npm run generate-docs
+```
+
+## Testing
+
+```bash
+# Run only unit tests (browser-based via Karma)
 npm run test-unit
 
-# Run Node.js specific tests
+# Run only Node.js tests (Jasmine)
 npm run test-node
 
-# Run deployment tests for all module formats (ES, UMD, AMD, globals, TypeScript, webworker)
+# Run all tests (unit, node, amd, esm, globals, typescript, webworker)
 npm run test-local
 
-# Run CI tests (headless Chrome, coverage, CodeClimate)
-npm run test-ci
+# Full CI test (builds first, then runs all tests)
+npm run test
 
 # Check TypeScript typings
 npm run test-typings
 
-# Check code formatting
-npm run lint
-
-# Auto-format code
-npm run prettier
-
-# Generate JSDoc documentation
-npm run generate-docs
-
-# Start local dev server (localhost:8000)
-npm start
+# Generate new reference PDFs for tests (run in background)
+npm run test-training
 ```
+
+**Note:** Uses `yarpm` internally to support both yarn and npm.
 
 ## Architecture
 
-jsPDF is a JavaScript library for generating PDF documents. The codebase is organized as follows:
+**Entry point:** `src/index.js` - exports the jsPDF class and imports all feature modules.
 
-### Source Structure
-- **`src/jspdf.js`** - Core PDF generation engine containing the main `jsPDF` class, page management, coordinate systems, and low-level PDF operators
-- **`src/index.js`** - Entry point that exports the public API and imports all feature modules
-- **`src/modules/`** - Feature modules that extend the core jsPDF class (each file adds methods via prototype extension)
-  - Key modules: `addimage.js`, `html.js`, `cell.js`, `context2d.js`, `acroform.js`, `ttfsupport.js`, `utf8.js`
-  - Image support: `png_support.js`, `jpeg_support.js`, `gif_support.js`, `bmp_support.js`, `webp_support.js`
-- **`src/libs/`** - Internal utility libraries
-  - `FileSaver.js` - File saving functionality
-  - `ttffont.js` - TTF font parsing and embedding
-  - `bidiEngine.js` - Bidirectional text support
-  - `pdfsecurity.js` - PDF encryption and permissions
+**Core:**
+- `src/jspdf.js` - Main jsPDF class (~180KB)
+- `src/modules/` - Feature modules (imported side-effects in index.js):
+  - `addimage.js` - Image support (PNG, JPEG, GIF, BMP, WebP)
+  - `acroform.js` - PDF form support
+  - `html.js` - HTML to PDF via html2canvas
+  - `ttfsupport.js` / `utf8.js` - Unicode/font support
+  - `context2d.js` - Canvas 2D API implementation
+  - Plus: annotations, arabic, canvas, cell, filters, split_text_to_size, etc.
 
-### Build System
-- **Rollup** bundles source into three formats:
-  - ES modules (`dist/jspdf.es.min.js`)
-  - UMD for browsers (`dist/jspdf.umd.min.js`)
-  - CommonJS for Node.js (`dist/jspdf.node.min.js`)
-- **Babel** transpiles for target environments (configured per format in `rollup.config.js`)
-- Polyfills are bundled separately (`dist/polyfills.es.js`, `dist/polyfills.umd.js`)
+**Libraries:** `src/libs/` - External-like dependencies (bidiEngine, ttffont)
 
-### API Modes
-jsPDF supports two API modes:
-- **"compat" mode** (default) - Backward-compatible API from original jsPDF
-- **"advanced" mode** - Full API with patterns, FormObjects, transformation matrices
+**Types:** `types/index.d.ts` - TypeScript definitions
 
-Switch modes using:
-```javascript
-doc.advancedAPI((doc) => { /* advanced features */ });
-doc.compatAPI((doc) => { /* compat features */ });
-```
+**Tests:**
+- `test/specs/` - Unit test specs matching module names
+- `test/deployment/` - Module format tests (AMD, ESM, globals, TypeScript, webworker)
+- `test/reference/` - Reference PDF files for comparison
 
-### Testing
-- **Unit tests** (`test/unit/`) - Browser-based Karma tests for core functionality
-- **Deployment tests** (`test/deployment/`) - Tests for each module format (ES, UMD, AMD, globals, TypeScript, webworker)
-- **Reference PDFs** (`test/reference/`) - Baseline PDF files for visual regression testing
-- **Node tests** (`test/deployment/node/`) - Server-side PDF generation tests
+## Key Concepts
 
-### TypeScript
-- Type definitions in `types/index.d.ts` must be updated when adding new API surface
-- Run `npm run test-typings` to validate TypeScript compatibility
-
-## Key Conventions
-
-- New features are implemented as modules in `src/modules/` and imported in `src/index.js`
-- When adding new APIs, update `types/index.d.ts` for TypeScript support
-- Use modern JavaScript (ES6+) - the build process handles transpilation
-- Polyfills for new browser APIs should be added to `src/polyfills.js`
-- Reference PDFs can be regenerated by running `npm run test-training` in the background
+- **API modes:** Use `doc.advancedAPI()` and `doc.compatAPI()` to switch between advanced features (patterns, FormObjects) and legacy compat mode.
+- **Polyfills:** `src/polyfills.js` - required polyfills for older browsers; `dist/polyfills.es.js` and `dist/polyfills.umd.js` are built separately.
+- **Optional dependencies:** canvg, dompurify, html2canvas are loaded dynamically when features are used.
+- **Build output:** Three formats are built to `dist/`: ES modules (modern browsers), UMD (script tag/AMD), CommonJS (Node.js).
