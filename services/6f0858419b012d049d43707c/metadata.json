@@ -1,0 +1,14 @@
+{
+  "service_id": "6f0858419b012d049d43707c",
+  "repo_name": "remix-run/react-router",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main",
+  "status": "deploying",
+  "package_size": "2.54MB",
+  "language": "nodejs",
+  "star": 56222,
+  "repo_flag": "Auto-CVE",
+  "uploaded_at": "2026-02-10T01:38:25.499873",
+  "generated_files": []
+}
