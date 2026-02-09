@@ -1,0 +1,16 @@
+{
+  "service_id": "312057c7a639a8e25cc79244",
+  "repo_name": "urllib3/urllib3",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main",
+  "status": "deploying",
+  "package_size": "499KB",
+  "language": "python",
+  "star": 4005,
+  "repo_flag": "Auto-CVE",
+  "uploaded_at": "2026-02-10T04:30:01.022687",
+  "generated_files": [
+    "account_creation_not_applicable.py"
+  ]
+}
