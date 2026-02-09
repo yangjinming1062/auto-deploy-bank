@@ -9,11 +9,6 @@
   "language": "python",
   "star": 565,
   "repo_flag": "PYTHON",
-  "uploaded_at": "2026-02-09T16:34:09.023906",
-  "generated_files": [
-    "Dockerfile",
-    "docker-compose.yaml",
-    "requirements.txt",
-    "/home/ubuntu/deploy-projects/03a8525cb7184c50f90bfb31/docker-compose.yaml"
-  ]
+  "uploaded_at": "2026-02-09T16:35:40.144506",
+  "generated_files": []
 }
