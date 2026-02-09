@@ -1,0 +1,16 @@
+{
+  "service_id": "802c54d7be5873d2e508d31f",
+  "repo_name": "webpack/webpack",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main",
+  "status": "deploying",
+  "package_size": "12.17MB",
+  "language": "nodejs",
+  "star": 65947,
+  "repo_flag": "Auto-CVE",
+  "uploaded_at": "2026-02-10T00:09:34.177005",
+  "generated_files": [
+    "server.js"
+  ]
+}
