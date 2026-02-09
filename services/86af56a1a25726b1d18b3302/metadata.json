@@ -1,0 +1,18 @@
+{
+  "service_id": "86af56a1a25726b1d18b3302",
+  "repo_name": "axios/axios",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main@2026-02-10",
+  "status": "deploying",
+  "package_size": "726KB",
+  "language": "nodejs",
+  "star": 108576,
+  "repo_flag": "Auto-CVE",
+  "uploaded_at": "2026-02-10T06:50:49.265012",
+  "generated_files": [
+    "Dockerfile",
+    "docker-compose.yaml",
+    "sandbox/server.js"
+  ]
+}
