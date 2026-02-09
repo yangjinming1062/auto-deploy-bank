@@ -1,0 +1,16 @@
+{
+  "service_id": "cfee529e899d87a2ee3532fa",
+  "repo_name": "cyrildiagne/ar-facedoodle",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "6.81MB",
+  "language": "nodejs",
+  "star": 552,
+  "repo_flag": "NODEJS",
+  "uploaded_at": "2026-02-09T19:15:13.095846",
+  "generated_files": [
+    "/home/ubuntu/deploy-projects/cfee529e899d87a2ee3532fa/docker-compose.yaml"
+  ]
+}
