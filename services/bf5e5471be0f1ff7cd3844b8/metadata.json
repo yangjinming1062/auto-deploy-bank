@@ -9,16 +9,9 @@
   "language": "python",
   "star": 598,
   "repo_flag": "",
-  "uploaded_at": "2026-02-09T08:23:59.377627",
+  "uploaded_at": "2026-02-09T08:27:22.438919",
   "generated_files": [
-    ".env.template",
-    "config.py",
-    "Dockerfile",
-    "docker-compose.yaml",
-    "/home/ubuntu/deploy-projects/bf5e5471be0f1ff7cd3844b8/webapp.py",
-    "/home/ubuntu/deploy-projects/bf5e5471be0f1ff7cd3844b8/templates/index.html",
-    "/home/ubuntu/deploy-projects/bf5e5471be0f1ff7cd3844b8/requirements.txt",
-    "/home/ubuntu/deploy-projects/bf5e5471be0f1ff7cd3844b8/docker-compose.yaml",
-    "/home/ubuntu/deploy-projects/bf5e5471be0f1ff7cd3844b8/start.sh"
+    ".env",
+    "start.sh"
   ]
 }
