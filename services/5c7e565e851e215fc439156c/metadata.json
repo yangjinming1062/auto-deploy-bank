@@ -1,0 +1,17 @@
+{
+  "service_id": "5c7e565e851e215fc439156c",
+  "repo_name": "Hakky54/mutual-tls-ssl",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "424KB",
+  "language": "java",
+  "star": 615,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-02-09T09:22:54.162297",
+  "generated_files": [
+    "server/src/main/resources/application.yml",
+    "/home/ubuntu/deploy-projects/5c7e565e851e215fc439156c/docker-compose.yaml"
+  ]
+}
