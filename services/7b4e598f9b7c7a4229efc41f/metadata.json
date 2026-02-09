@@ -9,8 +9,6 @@
   "language": "nodejs",
   "star": 33927,
   "repo_flag": "Auto-CVE",
-  "uploaded_at": "2026-02-09T21:52:14.134579",
-  "generated_files": [
-    "verdaccio.yaml"
-  ]
+  "uploaded_at": "2026-02-09T21:55:12.289255",
+  "generated_files": []
 }
