@@ -1,0 +1,18 @@
+{
+  "service_id": "23925512b06c16b5890f4803",
+  "repo_name": "zhihuili/flower",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "12.70MB",
+  "language": "java",
+  "star": 583,
+  "repo_flag": "SBOM",
+  "uploaded_at": "2026-02-09T11:45:05.992063",
+  "generated_files": [
+    "flower.center/flower.center.impl/src/main/resources/application.yml",
+    "flower.sample/src/main/resources/application.yml",
+    "build-and-run.sh"
+  ]
+}
