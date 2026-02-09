@@ -1,0 +1,14 @@
+services:
+  bokeh-app:
+    build: .
+    container_name: bokeh-server
+    ports:
+      - "47266:5006"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G

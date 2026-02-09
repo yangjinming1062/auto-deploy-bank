@@ -1,0 +1,20 @@
+{
+  "service_id": "761c56c09d24e19f004066e7",
+  "repo_name": "bokeh/bokeh",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main",
+  "status": "deploying",
+  "package_size": "38.17MB",
+  "language": "python",
+  "star": 20327,
+  "repo_flag": "Auto-CVE",
+  "uploaded_at": "2026-02-10T05:16:21.163207",
+  "generated_files": [
+    "test_auth.py",
+    "/home/ubuntu/deploy-projects/761c56c09d24e19f004066e7/docker-compose.yaml",
+    "/home/ubuntu/deploy-projects/761c56c09d24e19f004066e7/Dockerfile",
+    "/home/ubuntu/deploy-projects/761c56c09d24e19f004066e7/server.py",
+    "/home/ubuntu/deploy-projects/761c56c09d24e19f004066e7/login.html"
+  ]
+}
