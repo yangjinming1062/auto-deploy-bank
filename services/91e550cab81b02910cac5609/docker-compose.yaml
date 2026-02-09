@@ -1,0 +1,48 @@
+services:
+  flashback-admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: flashback-admin
+    expose:
+      - "8080"
+    environment:
+      - TZ=UTC
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./target.jar:/app/target.jar:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/admin/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - flashback-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: flashback-nginx
+    ports:
+      - "40069:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - flashback-admin
+    restart: unless-stopped
+    networks:
+      - flashback-network
+
+networks:
+  flashback-network:
+    driver: bridge

@@ -1,0 +1,21 @@
+{
+  "service_id": "91e550cab81b02910cac5609",
+  "repo_name": "linkedin/flashback",
+  "platform": "github",
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "446KB",
+  "language": "java",
+  "star": 577,
+  "repo_flag": "JAVA",
+  "uploaded_at": "2026-02-09T13:17:20.846488",
+  "generated_files": [
+    "Dockerfile",
+    "docker-compose.yaml",
+    "target.jar -> flashback-admin/build/libs/flashback-admin-0.0.10.jar (symlink)",
+    "docker-compose.yaml",
+    "nginx.conf",
+    "target.jar"
+  ]
+}
