@@ -1,0 +1,16 @@
+{
+  "service_id": "0d22562c88b4e00a2ad3aaef",
+  "repo_name": "Westlake-AGI-Lab/AppAgentX",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "15.54MB",
+  "language": "python",
+  "star": 600,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-02-09T10:11:57.580080",
+  "generated_files": [
+    "start.py"
+  ]
+}

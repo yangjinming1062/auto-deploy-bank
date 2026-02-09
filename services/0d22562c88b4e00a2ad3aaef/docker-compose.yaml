@@ -1,0 +1,47 @@
+services:
+  neo4j:
+    image: neo4j:5.12.0
+    environment:
+      NEO4J_AUTH: neo4j/12345678
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:7474 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "40138:7860"
+    environment:
+      - Neo4j_URI=neo4j://neo4j:7687
+      - LLM_BASE_URL=${LLM_BASE_URL:-}
+      - LLM_API_KEY=${LLM_API_KEY:-sk-}
+      - LLM_MODEL=${LLM_MODEL:-gpt-4o}
+      - PINECONE_API_KEY=${PINECONE_API_KEY:-pcsk_}
+      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY:-}
+      - LANGCHAIN_TRACING_V2=false
+    depends_on:
+      neo4j:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:7860"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+networks:
+  default:
+    name: app-network
