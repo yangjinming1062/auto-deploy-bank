@@ -1,0 +1,14 @@
+{
+  "service_id": "cb145d60880b5e6eef7740c8",
+  "repo_name": "aio-libs/aiohttp",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:master",
+  "status": "deploying",
+  "package_size": "1.21MB",
+  "language": "python",
+  "star": 16256,
+  "repo_flag": "Auto-CVE",
+  "uploaded_at": "2026-02-10T00:11:04.510199",
+  "generated_files": []
+}
