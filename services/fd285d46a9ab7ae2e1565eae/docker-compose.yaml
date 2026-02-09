@@ -1,0 +1,22 @@
+services:
+  web:
+    build: .
+    ports:
+      - "47250:8000"
+    environment:
+      - AUTHLIB_INSECURE_TRANSPORT=false
+      - DJANGO_SETTINGS_MODULE=tests.django_settings
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s

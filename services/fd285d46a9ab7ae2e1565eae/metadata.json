@@ -1,0 +1,22 @@
+{
+  "service_id": "fd285d46a9ab7ae2e1565eae",
+  "repo_name": "authlib/authlib",
+  "platform": "github",
+  "ref": null,
+  "version": "commit:main",
+  "status": "deploying",
+  "package_size": "562KB",
+  "language": "python",
+  "star": 5206,
+  "repo_flag": "Auto-CVE",
+  "uploaded_at": "2026-02-10T05:11:53.111245",
+  "generated_files": [
+    "requirements.txt",
+    "Dockerfile",
+    "docker-compose.yaml",
+    "demoapp/__init__.py",
+    "demoapp/views.py",
+    "demoapp/urls.py",
+    "demoapp/wsgi.py"
+  ]
+}

@@ -1,0 +1,14 @@
+# Authlib project dependencies
+cryptography>=41.0.0
+joserfc>=1.6.0
+
+# Django and dependencies
+django>=4.2
+cachelib
+
+# WSGI server
+gunicorn>=21.0.0
+
+# Testing (for development)
+pytest
+pytest-django
