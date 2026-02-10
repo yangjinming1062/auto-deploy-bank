@@ -1,0 +1,21 @@
+{
+  "service_id": "05a65c4984f3b859e6976eaf",
+  "repo_name": "quarkusio/quarkus",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main",
+  "status": "deploying",
+  "package_size": "63.15MB",
+  "language": "java",
+  "star": 15454,
+  "repo_flag": "Auto-CVE",
+  "uploaded_at": "2026-02-10T09:22:18.106766",
+  "generated_files": [
+    "src/main/resources/application.properties",
+    "src/main/resources/test-users.properties",
+    "src/main/resources/test-roles.properties",
+    "docker-compose.yaml",
+    "create_test_accounts.sh",
+    "/home/ubuntu/deploy-projects/05a65c4984f3b859e6976eaf/capture_session.py"
+  ]
+}
