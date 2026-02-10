@@ -1,0 +1,16 @@
+{
+  "service_id": "8fed5bad8e9231a5397e4f4e",
+  "repo_name": "vega/vega",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main",
+  "status": "deploying",
+  "package_size": "13.87MB",
+  "language": "nodejs",
+  "star": 11798,
+  "repo_flag": "Auto-CVE",
+  "uploaded_at": "2026-02-10T08:28:04.703418",
+  "generated_files": [
+    "/home/ubuntu/deploy-projects/8fed5bad8e9231a5397e4f4e/Dockerfile"
+  ]
+}

@@ -1,0 +1,26 @@
+services:
+  vega:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vega-service
+    ports:
+      - "44452:8080"
+    environment:
+      - NODE_ENV=production
+      - DISABLE_POSTINSTALL_SCRIPT=true
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
