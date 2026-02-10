@@ -1,0 +1,18 @@
+{
+  "service_id": "b533596a92b480e90fb0b6bf",
+  "repo_name": "homarr-labs/homarr",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main",
+  "status": "deploying",
+  "package_size": "4.15MB",
+  "language": "nodejs",
+  "star": 2931,
+  "repo_flag": "Auto-CVE",
+  "uploaded_at": "2026-02-10T09:59:08.036099",
+  "generated_files": [
+    ".env",
+    "scripts/create-test-accounts.ts",
+    "/home/ubuntu/deploy-projects/b533596a92b480e90fb0b6bf/docker-compose.yaml"
+  ]
+}
