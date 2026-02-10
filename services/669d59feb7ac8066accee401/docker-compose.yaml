@@ -1,0 +1,65 @@
+services:
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: siyuan-nginx
+    ports:
+      - "40746:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - siyuan
+    restart: unless-stopped
+
+  siyuan:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: siyuan
+    expose:
+      - "6806"
+      - "6808"
+    environment:
+      - GODEBUG=prefer_ipv4=1
+      - SIYUAN_ACCESS_AUTH_CODE=Admin@123
+      - SIYUAN_ACCESS_AUTH_CODE_BYPASS=true
+      - SIYUAN_LANG=en_US
+      - SIYUAN_WORKSPACE_PATH=/siyuan/workspace
+      # OpenAI API (optional)
+      - SIYUAN_OPENAI_API_KEY=
+      - SIYUAN_OPENAI_API_TIMEOUT=30
+      - SIYUAN_OPENAI_API_PROXY=
+      - SIYUAN_OPENAI_API_MAX_TOKENS=16384
+      - SIYUAN_OPENAI_API_TEMPERATURE=0.7
+      - SIYUAN_OPENAI_API_MAX_CONTEXTS=4
+      - SIYUAN_OPENAI_API_BASE_URL=
+      - SIYUAN_OPENAI_API_USER_AGENT=
+      # Tesseract OCR (optional)
+      - SIYUAN_TESSERACT_ENABLED=false
+      - SIYUAN_TESSERACT_TIMEOUT=30
+      - SIYUAN_TESSERACT_MAX_SIZE=52428800
+      - SIYUAN_TESSERACT_LANG=eng+chi_sim
+      # Performance settings
+      - SIYUAN_PERFORMANCE_TIMING=15000
+      - SIYUAN_SYNC_INDEX_TIMING=5000
+      - SIYUAN_PDF_ASSET_CONTENT_INDEX_MAX_SIZE=52428800
+    volumes:
+      - siyuan_data:/siyuan/workspace
+      - ./target.jar:/opt/siyuan/target.jar
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider -t 1 http://localhost:6806/ 2>/dev/null || true"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+
+volumes:
+  siyuan_data:
