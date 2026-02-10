@@ -1,4 +1,5 @@
-# Stage 1: Build the uber-jar application
+# Multi-stage Dockerfile for Quarkus application
+# Stage 1: Build stage with Maven
 FROM maven:3.9-eclipse-temurin-17 AS builder
 
 WORKDIR /app
@@ -10,31 +11,16 @@ RUN mvn dependency:go-offline -B
 # Copy source code
 COPY src ./src
 
-# Build uber-jar (single JAR with all dependencies)
+# Build the application (skip tests for production build)
 RUN mvn clean package -DskipTests -B
 
-# Stage 2: Runtime image
-FROM eclipse-temurin:17-jre-alpine
+# Stage 2: Runtime stage
+FROM eclipse-temurin:17-jre-alpine AS runtime
 
 WORKDIR /app
-
-# Install curl for healthcheck
-RUN apk add --no-cache curl
-
-# Create non-root user for security
-RUN addgroup -S quarkus && adduser -S quarkus -G quarkus
-USER quarkus
-
-# Copy the uber-jar from builder stage
-# Quarkus uber-jar naming: quarkus-app-{version}-runner.jar
-COPY --from=builder /app/target/quarkus-app-1.0.0-SNAPSHOT-runner.jar target.jar
 
 # Expose the HTTP port
 EXPOSE 8080
 
-# Set environment variables
-ENV QUARKUS_HTTP_PORT=8080
-ENV QUARKUS_HTTP_HOST=0.0.0.0
-
-# Run the application
+# Set the startup command - JAR comes from volume mount at /app/target.jar
 CMD ["java", "-jar", "target.jar"]

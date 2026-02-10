@@ -4,120 +4,175 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Quarkus is a Cloud Native, (Linux) Container First framework for writing Java applications. It unifies imperative and reactive programming models and is based on standards and frameworks like JAX-RS, Hibernate ORM, Netty, Eclipse Vert.x, and MicroProfile.
+Quarkus is a Kubernetes-native Java framework. It's a multi-module Maven project with a unique build architecture based on **build chains** and **build items**.
 
 ## Build Commands
 
 ```bash
-# Quick build (skips tests, docs, native builds)
-./mvnw -Dquickly
+# Full build (skip tests, docs, and format validation)
+./mvnw clean install -DskipTests -Dformat.skip -Denforcer.skip -DskipDocs
 
-# Fast build - skips more, faster iteration
-./mvnw -e -DskipDocs -DskipTests -DskipITs -Dinvoker.skip -DskipExtensionValidation -Dskip.gradle.tests -Dtruststore.skip clean install
+# Build with tests
+./mvnw test
 
-# Build with multiple threads (0.8 threads per CPU core)
-./mvnw install -T0.8C
+# Run integration tests
+./mvnw verify -pl integration-tests -am
 
-# Format code (Eclipse formatter)
-./mvnw process-sources -Denforcer.skip -Dprotoc.skip
+# Build native executable
+./mvnw package -Dnative
 
-# Build docs
-./mvnw -DquicklyDocs && ./mvnw -f docs clean install
+# Run a single test class
+./mvnw test -pl core/deployment -Dtest=QuarkusAugmentorTest
+
+# Run a single test method
+./mvnw test -pl core/deployment -Dtest=QuarkusAugmentorTest#testAugmentorFailure
+
+# Dev mode (live coding)
+./mvnw quarkus:dev -pl <module>
+
+# Skip format validation only
+./mvnw clean install -Dformat.skip
+
+# Skip format validation (enforce format checking)
+./mvnw clean install -Dno-format
 ```
 
-### Testing
+Maven 3.9.12 is required. The project uses Maven Wrapper (`./mvnw`).
 
-```bash
-# Run a single test in an integration test module
-./mvnw test -f integration-tests/<name>/ -Dtest=TestName
-
-# Run integration tests in native mode (required for @QuarkusIntegrationTest tests)
-./mvnw verify -f integration-tests/<name>/ -Dnative
-
-# Run Maven Invoker tests
-./mvnw verify -f integration-tests/<path>/ -Dinvoker.test=test-name
-
-# Skip test modules entirely
-./mvnw install -Dno-test-modules
-```
-
-### Building Specific Modules
-
-```bash
-# Build an extension and all its submodules
-./mvnw install -f extensions/<extension>/
-
-# Build a single module of an extension
-./mvnw install -f extensions/<extension>/deployment
-
-# Build with relocations (for compatibility testing)
-./mvnw -Dquickly -Prelocations
-```
+Code formatting (Java formatter, import sorting) and Kotlin formatting (ktfmt) are active by default. Disable with `-Dno-format` or skip individual checks with `-Dformat.skip`.
 
 ## Architecture
 
-### Directory Structure
+### Build Chain System
 
-- **core/** - Core runtime and deployment modules (builder, class-change-agent, deployment, devmode-spi, launcher, processor, runtime)
-- **extensions/** - 165+ extensions, each with runtime, deployment, and spi modules
-- **integration-tests/** - Integration test modules (~277 directories)
-- **independent-projects/** - Standalone projects (Arc DI, Qute templating, JUnit virtual threads, RESTEasy Reactive, tools)
-- **devtools/** - Developer tools including CLI and Maven plugins
-- **tcks/** - Technology Compatibility Kits (MicroProfile)
-- **test-framework/** - Shared test utilities
-- **docs/** - Asciidoc documentation
-- **bom/** - Bill of Materials artifacts
-- **relocations/** - Relocation artifacts for compatibility
+Quarkus uses a custom build chain mechanism defined in `core/builder/`:
+- **BuildStep**: Individual build tasks annotated with `@BuildStep`
+- **BuildItem**: Data objects passed between build steps (in `core/deployment/src/main/java/io/quarkus/deployment/builditem/`)
+- **BuildChainBuilder**: Constructs the dependency graph of build steps
 
-### Extension Model
+Extension build steps produce and consume build items to transform the application during augmentation.
 
-Each extension follows a multi-module structure:
-- **runtime/** - User-facing artifacts, configurations, and runtime behavior
-- **deployment/** - Build-time logic, processors, and default configurations
-- **spi/** - Service Provider Interface for extending the extension
+#### Common BuildItem Types
 
-Extension metadata is defined in `runtime/src/main/resources/META-INF/quarkus-extension.yaml`.
+| Type | Purpose |
+|------|---------|
+| `FeatureBuildItem` | Declares extension name for logging |
+| `CapabilityBuildItem` | Registers capability for other extensions to consume |
+| `CombinedCapabilityBuildItem` | Combines multiple capabilities |
+| `NativeImageBuildItem` | GraalVM configuration |
+| `GeneratedClassBuildItem` | Runtime class generation |
+| `ProductionPropertyBuildItem` | Configuration properties |
 
-Key extensions include:
-- **arc/** - CDI implementation (dependency injection)
-- **resteasy-reactive/** and **resteasy/** - JAX-RS REST frameworks
-- **hibernate-orm/** - JPA/database ORM
-- **vertx/** - Reactive engine
-- **kubernetes/** - Kubernetes integration
-- **grpc/** - gRPC support
+#### Build Item Production Patterns
 
-### Key Dependencies
+- **Single**: `BuildItem` - produced once per build
+- **Optional**: `OptionalSupplierBuildItem` / `OptionalBuildItem` - may not be produced
+- **Multiple**: `MultiBuildItem` - can be produced multiple times
+- **Flexible**: `FlexibleBuildItem` - combines optional and multiple
 
-- Jakarta EE APIs (jakarta.*)
-- SmallRye (MicroProfile implementations)
-- Hibernate (ORM, Validator, Search)
-- gRPC, Netty, Undertow
+### Core Modules (`core/`)
 
-### Build Configuration
+| Module | Purpose |
+|--------|---------|
+| `runtime/` | Runtime classes included in the final application |
+| `deployment/` | Build steps that run during augmentation, produces build items |
+| `processor/` | Annotation processor for CDI and config |
+| `builder/` | Core build chain infrastructure |
+| `devmode-spi/` | SPI for dev mode extensions |
+| `launcher/` | Application launcher |
+| `class-change-agent/` | Hot reload agent |
 
-- Maven-based with `./mvnw` wrapper
-- Requires Java 17+ (Java 21 recommended)
-- Parent POM: `independent-projects/parent/pom.xml`
-- Extension parent: `extensions/pom.xml`
+### Extension Structure
+
+Each extension follows this pattern (e.g., `extensions/arc/`):
+
+```
+extension/
+├── deployment/    # Build steps for this extension
+├── runtime/       # Runtime classes provided to applications
+├── runtime-dev/   # Dev mode utilities (optional)
+└── test-supplement/  # Additional test support (optional)
+```
+
+### Independent Projects (`independent-projects/`)
+
+Core libraries that Quarkus depends on, maintained as separate concerns:
+
+| Project | Purpose |
+|---------|---------|
+| `arc/` | Quarkus CDI implementation - a build-time CDI container |
+| `qute/` | Type-safe template engine |
+| `resteasy-reactive/` | Reactive JAX-RS implementation |
+| `bootstrap/` | Application model and class loading |
+| `enforcer-rules/` | Maven enforcer rules for dependency management |
+| `extension-maven-plugin/` | Maven plugin for extension development |
+| `revapi/` | API compatibility checking configuration |
+| `tools/` | Shared build tools and utilities |
+
+### Extension Categories (`extensions/`)
+
+Extensions are organized by functional area:
+
+- **Plumbing**: Arc, scheduler, quartz
+- **HTTP**: Vert.x HTTP, RESTEasy (classic/reactive), Undertow, websockets
+- **Data Access**: Hibernate ORM/Reactive, Panache, Agroal, JDBC, MongoDB, Redis
+- **Reactive**: Mutiny, Vert.x, gRPC, Reactive messaging (Kafka, AMQP, MQTT, Pulsar, RabbitMQ)
+- **Security**: Security, OIDC, JWT, Elytron, Keycloak
+- **Monitoring**: SmallRye Health, Micrometer, OpenTelemetry
+- **Cloud**: Kubernetes, Amazon Lambda, Azure Functions, Google Cloud Functions
+- **Messaging**: Kafka, RabbitMQ, AMQP, Pulsar
+- **Integration**: Spring compatibility, Funqy
+
+### Deployment ClassLoader Pattern
+
+Quarkus uses a two-classloader architecture:
+1. **Runtime ClassLoader**: Loads runtime dependencies only
+2. **Deployment ClassLoader**: Loads deployment-time dependencies (build steps, processors)
+
+This keeps the final application JAR lean.
+
+### Code Generation System
+
+Extensions can register code generators that run during build. Implement `CodeGenProvider` to add generators for:
+- Configuration schema generation
+- Schema migrations (Flyway, Liquibase)
+- OpenAPI schema generation
+- GraphQL schema generation
+
+## Module Hierarchy
+
+The main parent POMs are:
+1. `build-parent/pom.xml` - Plugin versions, dependency versions
+2. `extensions/pom.xml` - Extension aggregation
+3. `core/pom.xml` - Core module aggregation
+4. `integration-tests/pom.xml` - Integration test modules (activated via profile `test-modules`)
 
 ## Development Notes
 
-- Code style is enforced via Eclipse formatter (`independent-projects/ide-config/`)
-- No `@author` tags in Javadoc - use Git history for attribution
-- Lambda expressions and streams should be minimized in runtime code
-- All contributions require DCO sign-off
-- CI runs on GitHub Actions with incremental builds via gitflow-incremental-builder
+- API compatibility is checked via RevAPI. Run `jbang revapi-update` to update API checks.
+- Extensions register capabilities via `CapabilityBuildItem` for discoverability
+- Use `@Record` annotation to access recorder objects for runtime value capture
+- Build steps should avoid heavy computation - consider using `Supplier` for deferred execution
 
-## Common Tasks
+### Testing (`test-framework/`)
 
-### Adding a new extension
+Quarkus provides a rich testing framework:
 
-Extensions are typically created using the Quarkus CLI or Maven archetype. See `independent-projects/tools/extension-maven-plugin/` for the Maven-based approach.
+| Module | Purpose |
+|--------|---------|
+| `junit/` | Main `@QuarkusTest` annotation and utilities |
+| `junit-component/` | Testing for CDI components |
+| `junit-mockito/` | Mockito integration |
+| `common/` | Shared test utilities |
+| `devmode-test-utils/` | Dev mode testing support |
+| `kubernetes-client/` | Kubernetes test infrastructure |
+| `mongodb/` | MongoDB test containers |
+| `oidc-server/` | OIDC test server |
 
-### Updating extension metadata
+### Dev Services
 
-Edit `runtime/src/main/resources/META-INF/quarkus-extension.yaml`. If adding/removing extensions, rebuild `devtools/bom-descriptor-json` without `-Dincremental`.
+Most extensions include Dev Services - auto-started test containers for databases (PostgreSQL, MySQL, MongoDB, etc.), message brokers (Kafka, RabbitMQ), and services (Elasticsearch, Redis). Enabled automatically in `@QuarkusTest`.
 
-### Updating dependencies to extensions
+### DevUI (`extensions/devui/`)
 
-Run `./update-extension-dependencies.sh` to refresh extension dependencies.
+The dev console (`/q/dev`) provides runtime insights, configuration editing, health checks, and metrics. Extensions can contribute via `DevUIBuildItem`.

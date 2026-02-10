@@ -9,13 +9,14 @@
   "language": "java",
   "star": 15454,
   "repo_flag": "Auto-CVE",
-  "uploaded_at": "2026-02-10T09:22:18.106766",
+  "uploaded_at": "2026-02-10T16:36:12.810047",
   "generated_files": [
     "src/main/resources/application.properties",
     "src/main/resources/test-users.properties",
     "src/main/resources/test-roles.properties",
-    "docker-compose.yaml",
-    "create_test_accounts.sh",
-    "/home/ubuntu/deploy-projects/05a65c4984f3b859e6976eaf/capture_session.py"
+    "scripts/create-users.sh",
+    "/home/ubuntu/deploy-projects/05a65c4984f3b859e6976eaf/Dockerfile",
+    "/home/ubuntu/deploy-projects/05a65c4984f3b859e6976eaf/docker-compose.yaml",
+    "/home/ubuntu/deploy-projects/05a65c4984f3b859e6976eaf/pom.xml"
   ]
 }
