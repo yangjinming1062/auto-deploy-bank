@@ -4,14 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Aether is a "Geometric-Aware Unified World Modeling" framework that unifies three capabilities:
-1. **4D Dynamic Reconstruction**: Reconstruct dynamic point clouds from videos by estimating depths and camera poses
-2. **Action-Conditioned Video Prediction**: Predict future frames based on initial observations with camera trajectory actions
-3. **Goal-Conditioned Visual Planning**: Generate planning paths from observation/goal image pairs
+Aether is a geometric-aware unified world modeling system that unifies three capabilities: 4D dynamic reconstruction, action-conditioned video prediction, and goal-conditioned visual planning. Built on CogVideoX, it accepts video/image inputs with optional camera raymap actions or goal images.
 
-Built on CogVideoX (diffusers), using diffusion transformers for video generation with multi-task outputs (RGB video, disparity/depth, raymap for camera poses).
-
-## Common Commands
+## Commands
 
 ```bash
 # Install dependencies
@@ -20,61 +15,40 @@ pip install -r requirements.txt
 # 4D reconstruction from video
 python scripts/demo.py --task reconstruction --video ./assets/example_videos/moviegen.mp4
 
-# Action-conditioned prediction
+# Action-conditioned video prediction
 python scripts/demo.py --task prediction --image ./assets/example_obs/car.png --raymap_action assets/example_raymaps/raymap_forward_right.npy
 
-# Goal-conditioned planning
+# Goal-conditioned visual planning
 python scripts/demo.py --task planning --image ./assets/example_obs_goal/01_obs.png --goal ./assets/example_obs_goal/01_goal.png
 
-# Gradio web interface
+# Interactive Gradio demo
 python scripts/demo_gradio.py
 
-# Video depth evaluation (requires data/ with sintel, kitti, bonn folders)
-bash evaluation/video_depth/run_aether.sh
+# Run evaluation
+bash evaluation/video_depth/run_aether.sh   # Video depth evaluation
+bash evaluation/rel_pose/run_aether.sh      # Relative camera pose evaluation
 
-# Relative camera pose evaluation (requires data/ with tum, sintel, scannetv2 folders)
-bash evaluation/rel_pose/run_aether.sh
-
-# Run pre-commit hooks
-pre-commit run --all-files
+# Linting and formatting
+pre-commit run --all-files  # Runs ruff (format + lint) and other hooks
 ```
 
-## Code Architecture
+## Architecture
 
-### Core Pipeline (`aether/pipelines/aetherv1_pipeline_cogvideox.py`)
-- `AetherV1PipelineCogVideoX` - Main inference class extending `CogVideoXImageToVideoPipeline`
-- Supports three tasks: "reconstruction", "prediction", "planning"
-- Default inference: 4 steps for reconstruction, 50 steps for prediction/planning
-- Output: `AetherV1PipelineOutput(rgb, disparity, raymap)`
+- **Pipeline Core**: `aether/pipelines/aetherv1_pipeline_cogvideox.py` implements `AetherV1PipelineCogVideoX`, extending `CogVideoXImageToVideoPipeline`. Handles three tasks via the `__call__` method with configurable inference steps and guidance scales.
+- **Utility Modules**: `aether/utils/` contains preprocessing (`preprocess_utils.py`: center cropping), postprocessing (`postprocess_utils.py`: depth/pose transforms, camera raymap conversions), and visualization (`visualize_utils.py`: predictions to GLB/trimesh scenes).
+- **Model Components**: Uses `diffusers` library components - `CogVideoXTransformer3DModel`, `AutoencoderKLCogVideoX`, `CogVideoXDPMScheduler`, T5 encoder for text/prompt processing.
+- **Evaluation**: `evaluation/` contains sliding-window inference scripts that handle 480x720 input dimensions, blending outputs across spatial and temporal windows.
 
-### Utilities (`aether/utils/`)
-- `postprocess_utils.py`: Camera pose handling (`raymap_to_poses`, `camera_pose_to_raymap`), depth processing, point cloud generation (`postprocess_pointmap`, `project`)
-- `preprocess_utils.py`: Input preprocessing
-- `visualize_utils.py`: 3D visualization, GLB export with `predictions_to_glb`
+## Input Conventions
 
-### Key Data Flow
-1. Input (video/image/goal) + optional raymap action → Pipeline
-2. Diffusion inference → latents (RGB channels, disparity channels, camera channels)
-3. Decode → RGB video, disparity video, raymap
-4. Postprocess → Camera poses, point clouds, depth visualization
+- **Reconstruction**: Video file (processed with center-crop to 480x720 if needed)
+- **Prediction**: Single image + raymap action numpy array (N, 6, H/8, W/8) representing camera trajectory
+- **Planning**: Observation image + goal image pair
 
-### Raymap Format
-Raymaps encode camera poses as (num_frames, 6, h, w) tensors where:
-- 6 channels: 3 for ray origin (camera position), 3 for ray direction
-- h = image_height // 8, w = image_width // 8
-- Convert camera poses using `camera_pose_to_raymap()` in `postprocess_utils.py`
+Camera poses must be in the coordinate system of the first frame. Use `camera_pose_to_raymap()` in `aether/utils/postprocess_utils.py` to convert camera trajectories to raymap actions.
 
-### Sliding Window Processing
-Long videos use sliding windows with overlap blending:
-- Window size: `num_frames` (default 41)
-- Stride: `sliding_window_stride` (default 24)
-- Blending in `blend_and_merge_window_results()` handles temporal overlap
+## Key Configuration
 
-## Development Notes
-
-- **Linting**: Ruff configured in `pyproject.toml` (line-length: 88, ignores C901, E501, E741, F402, F823)
-- **Pre-commit**: `.pre-commit-config.yaml` runs ruff and ruff-format
-- **Device**: CUDA required for inference; code checks `torch.cuda.is_available()`
-- **Project root**: Identified by `.project-root` file; used by `rootutils.setup_root()`
-- **Output directory**: Results saved to `./outputs/` by default
-- **Frame constraints**: Height/width must be divisible by 8; num_frames in [17, 25, 33, 41]; fps in [8, 10, 12, 15, 24]
+- Linting: Ruff configured in `pyproject.toml` with 88-char line length
+- Pre-commit: `ruff` (fix + format) and basic checks in `.pre-commit-config.yaml`
+- Model weights: Download from Hugging Face (`AetherWorldModel/AetherV1`)

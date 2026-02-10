@@ -1,21 +1,23 @@
-FROM python:3.10-slim
+FROM python:3.11-slim
 
 # Install curl for healthcheck and protobuf for tokenizers
 RUN apt-get update && apt-get install -y curl protobuf-compiler libprotobuf-dev && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
 WORKDIR /home/ubuntu/deploy-projects/03a8525cb7184c50f90bfb31
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
-ENV GRADIO_TEMP_DIR=.gradio_cache
 ENV TOKENIZERS_PARALLELISM=false
+ENV GRADIO_TEMP_DIR=.gradio_cache
+ENV GRADIO_SERVER_NAME=0.0.0.0
+ENV GRADIO_SERVER_PORT=7860
 
 # Copy requirements first for better caching
 COPY requirements.txt .
 
-# Install dependencies
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir tiktoken protobuf
 
 # Copy application code
 COPY . .
@@ -23,12 +25,8 @@ COPY . .
 # Create necessary directories
 RUN mkdir -p .gradio_cache outputs
 
-# Expose the internal port
+# Expose the Gradio port
 EXPOSE 7860
 
-# Healthcheck
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:7860/ || exit 1
-
 # Run the application
-CMD ["python", "scripts/demo_gradio.py"]
+CMD ["python", "scripts/entrypoint.py"]
