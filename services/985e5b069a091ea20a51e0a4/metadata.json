@@ -1,0 +1,21 @@
+{
+  "service_id": "985e5b069a091ea20a51e0a4",
+  "repo_name": "carboneio/carbone",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:master",
+  "status": "deploying",
+  "package_size": "2.05MB",
+  "language": "nodejs",
+  "star": 1900,
+  "repo_flag": "Auto-CVE",
+  "uploaded_at": "2026-02-10T10:38:01.545166",
+  "generated_files": [
+    ".env.example",
+    "server.js",
+    "Dockerfile",
+    "docker-compose.yaml",
+    ".env",
+    "/home/ubuntu/deploy-projects/985e5b069a091ea20a51e0a4/server.js"
+  ]
+}
