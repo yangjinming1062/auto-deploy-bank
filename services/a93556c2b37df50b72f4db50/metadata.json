@@ -9,6 +9,10 @@
   "language": "java",
   "star": 1096,
   "repo_flag": "JAVA",
-  "uploaded_at": "2026-02-08T18:04:54.122321",
-  "generated_files": []
+  "uploaded_at": "2026-02-10T16:53:19.344186",
+  "generated_files": [
+    "Dockerfile",
+    "docker-compose.yaml",
+    "docker-compose.yaml"
+  ]
 }

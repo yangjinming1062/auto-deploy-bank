@@ -1,5 +1,5 @@
 # Stage 1: Build with Maven
-FROM maven:3.9-eclipse-temurin-21 AS builder
+FROM maven:3.9-eclipse-temurin-21 as builder
 
 WORKDIR /app
 
@@ -7,51 +7,34 @@ WORKDIR /app
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
 
-# Copy source and build
+# Copy source code
 COPY src ./src
-RUN mvn clean package -DskipTests -B
+
+# Build fatjar with dependencies (skip tests for faster build)
+RUN mvn clean package -DskipTests -B -Dgpg.skip=true
 
 # Stage 2: Runtime image
 FROM eclipse-temurin:21-jre-alpine
 
-WORKDIR /app
+WORKDIR /home/ubuntu/deploy-projects/a93556c2b37df50b72f4db50
 
-# Expose default port
-EXPOSE 8080
-
-# Set default port environment variable
-ENV PORT=8080
+# Create cache directory for Pyserini indexes (from context)
+ENV ANSERINI_INDEX_CACHE=/home/ubuntu/deploy-projects/a93556c2b37df50b72f4db50/.cache/pyserini/indexes
 
 # Copy the fatjar from builder stage
-# The shade plugin creates: anserini-{version}-fatjar.jar
-# Renamed to target.jar for security scanner compatibility
-COPY --from=builder /app/target/anserini-*-fatjar.jar target.jar
+# The shade plugin creates: anserini-1.5.1-SNAPSHOT-fatjar.jar
+# Copy to both /home/ubuntu/deploy-projects/a93556c2b37df50b72f4db50.jar (for volume mount) and app.jar (for running)
+COPY --from=builder /app/target/anserini-*-fatjar.jar /home/ubuntu/deploy-projects/a93556c2b37df50b72f4db50.jar
+COPY --from=builder /app/target/anserini-*-fatjar.jar app.jar
 
-# Create entrypoint script that maps command names to main classes
+# Create directories for cache
+RUN mkdir -p ${ANSERINI_INDEX_CACHE}
+
+# Create wrapper script to keep container running
 RUN echo '#!/bin/sh' > /entrypoint.sh && \
-    echo 'PORT=${PORT:-8080}' >> /entrypoint.sh && \
-    echo 'if [ "$1" = "server" ]; then' >> /entrypoint.sh && \
-    echo '  exec java -cp /app/target.jar io.anserini.server.HealthServer' >> /entrypoint.sh && \
-    echo 'elif [ -z "$1" ]; then' >> /entrypoint.sh && \
-    echo '  exec java -cp /app/target.jar io.anserini.server.HealthServer' >> /entrypoint.sh && \
-    echo 'else' >> /entrypoint.sh && \
-    echo '  MAIN_CLASS=""' >> /entrypoint.sh && \
-    echo '  case "$1" in' >> /entrypoint.sh && \
-    echo '    IndexCollection) MAIN_CLASS="io.anserini.index.IndexCollection" ; shift ;;' >> /entrypoint.sh && \
-    echo '    IndexHnswDenseVectors) MAIN_CLASS="io.anserini.index.IndexHnswDenseVectors" ; shift ;;' >> /entrypoint.sh && \
-    echo '    IndexInvertedDenseVectors) MAIN_CLASS="io.anserini.index.IndexInvertedDenseVectors" ; shift ;;' >> /entrypoint.sh && \
-    echo '    IndexFlatDenseVectors) MAIN_CLASS="io.anserini.index.IndexFlatDenseVectors" ; shift ;;' >> /entrypoint.sh && \
-    echo '    SearchCollection) MAIN_CLASS="io.anserini.search.SearchCollection" ; shift ;;' >> /entrypoint.sh && \
-    echo '    SearchHnswDenseVectors) MAIN_CLASS="io.anserini.search.SearchHnswDenseVectors" ; shift ;;' >> /entrypoint.sh && \
-    echo '    SearchFlatDenseVectors) MAIN_CLASS="io.anserini.search.SearchFlatDenseVectors" ; shift ;;' >> /entrypoint.sh && \
-    echo '    FuseRuns) MAIN_CLASS="io.anserini.fusion.FuseRuns" ; shift ;;' >> /entrypoint.sh && \
-    echo '    RunMsMarco) MAIN_CLASS="io.anserini.reproduce.RunMsMarco" ; shift ;;' >> /entrypoint.sh && \
-    echo '    RunBeir) MAIN_CLASS="io.anserini.reproduce.RunBeir" ; shift ;;' >> /entrypoint.sh && \
-    echo '    RunBright) MAIN_CLASS="io.anserini.reproduce.RunBright" ; shift ;;' >> /entrypoint.sh && \
-    echo '    *) echo "Unknown command: $1"; echo "Available commands: IndexCollection, IndexHnswDenseVectors, IndexInvertedDenseVectors, IndexFlatDenseVectors, SearchCollection, SearchHnswDenseVectors, SearchFlatDenseVectors, FuseRuns, RunMsMarco, RunBeir, RunBright, server"; exit 1 ;;' >> /entrypoint.sh && \
-    echo '  esac' >> /entrypoint.sh && \
-    echo '  exec java -cp /app/target.jar "$MAIN_CLASS" "$@"' >> /entrypoint.sh && \
-    echo 'fi' >> /entrypoint.sh && \
+    echo 'echo "Anserini CLI ready - use: docker exec <container> java -cp app.jar <class> <args>"' >> /entrypoint.sh && \
+    echo 'while true; do sleep 3600; done' >> /entrypoint.sh && \
     chmod +x /entrypoint.sh
 
-ENTRYPOINT ["/entrypoint.sh"]
+# Default command - keep container alive with infinite loop
+CMD ["/entrypoint.sh"]

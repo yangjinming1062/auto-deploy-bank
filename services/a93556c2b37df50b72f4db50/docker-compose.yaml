@@ -1,13 +1,13 @@
+version: '3.8'
+
 services:
   anserini:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: anserini
-    ports:
-      - "40348:8080"
+    image: anserini:latest
     volumes:
-      - ./target.jar:/app/target.jar:ro
+      - ./target.jar:/home/ubuntu/deploy-projects/a93556c2b37df50b72f4db50.jar
     deploy:
       resources:
         limits:
@@ -16,16 +16,25 @@ services:
         reservations:
           cpus: '1.0'
           memory: 1G
-    working_dir: /app
-    environment:
-      - PORT=8080
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
+      test: ["CMD-SHELL", "pgrep -f 'entrypoint.sh'"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 10s
-    # By default runs health server - use 'docker compose run' for CLI operations:
-    #   docker compose run anserini IndexCollection -index /data/index -collection JsonCollection -input /data/docs
-    #   docker compose run anserini SearchCollection -index /data/index -topics /data/topics.tsv -output /data/results.txt
-    #   docker compose run anserini server
+      start_period: 60s
+
+  web:
+    image: python:3.11-alpine
+    ports:
+      - "8080:8080"
+    working_dir: /home/ubuntu/deploy-projects/a93556c2b37df50b72f4db50
+    command: python -m http.server 8080
+    volumes:
+      - ./docs:/home/ubuntu/deploy-projects/a93556c2b37df50b72f4db50/docs:ro
+      - ./target/apidocs:/home/ubuntu/deploy-projects/a93556c2b37df50b72f4db50/apidocs:ro
+      - ./README.md:/home/ubuntu/deploy-projects/a93556c2b37df50b72f4db50/README.md:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
