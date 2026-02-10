@@ -5,22 +5,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: quality-check-server
-    ports:
-      - "43844:8000"
-    environment:
-      - PYTHONUNBUFFERED=1
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-    deploy:
-      resources:
-        limits:
-          cpus: '2.0'
-          memory: 4G
-        reservations:
-          cpus: '1.0'
-          memory: 1G
+      secrets:
+        - hf_token
+    ports: 
+      - "8080:80"
+    secrets:
+      - hf_token
+secrets:
+  hf_token:
+    file: .env/hf_token.txt

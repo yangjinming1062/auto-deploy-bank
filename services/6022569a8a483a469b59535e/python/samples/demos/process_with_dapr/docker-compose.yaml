@@ -1,11 +1,11 @@
 services:
-  app:
+  sk-process:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: /home/ubuntu/deploy-projects/6022569a8a483a469b59535e
+      dockerfile: python/samples/demos/process_with_dapr/Dockerfile
     container_name: sk-process-app
     ports:
-      - "0.0.0.0:40421:5001"
+      - "40421:5001"
     environment:
       - PYTHONUNBUFFERED=1
     healthcheck:
