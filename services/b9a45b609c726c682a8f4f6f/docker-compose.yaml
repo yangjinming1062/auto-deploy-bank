@@ -1,0 +1,22 @@
+services:
+  jsonpath:
+    build: .
+    ports:
+      - "40474:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf -X POST -d '{\"json\":{\"test\":1},\"path\":\"$.test\"}' http://localhost:3000/query > /dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G

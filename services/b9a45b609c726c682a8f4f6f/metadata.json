@@ -1,0 +1,19 @@
+{
+  "service_id": "b9a45b609c726c682a8f4f6f",
+  "repo_name": "dchester/jsonpath",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:master",
+  "status": "deploying",
+  "package_size": "103KB",
+  "language": "nodejs",
+  "star": 1421,
+  "repo_flag": "Auto-CVE",
+  "uploaded_at": "2026-02-10T10:25:05.294349",
+  "generated_files": [
+    "server.js",
+    "server.js",
+    "docker-compose.yaml",
+    "Dockerfile"
+  ]
+}
