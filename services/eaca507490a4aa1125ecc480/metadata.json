@@ -1,0 +1,19 @@
+{
+  "service_id": "eaca507490a4aa1125ecc480",
+  "repo_name": "langchain-ai/langsmith-sdk",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main@2026-02-10",
+  "status": "deploying",
+  "package_size": "1.77MB",
+  "language": "python",
+  "star": 773,
+  "repo_flag": "Auto-CVE",
+  "uploaded_at": "2026-02-10T13:59:12.521606",
+  "generated_files": [
+    "main.py",
+    "requirements.txt",
+    "Dockerfile",
+    "docker-compose.yaml"
+  ]
+}

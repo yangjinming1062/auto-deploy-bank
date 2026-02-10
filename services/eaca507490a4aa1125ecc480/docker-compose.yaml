@@ -1,0 +1,30 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: langsmith-demo
+    ports:
+      - "43631:8080"
+    environment:
+      - LANGSMITH_API_KEY=${LANGSMITH_API_KEY}
+      - LANGSMITH_TRACING=${LANGSMITH_TRACING:-false}
+      - LANGSMITH_ENDPOINT=${LANGSMITH_ENDPOINT:-https://api.smith.langchain.com}
+      - LANGSMITH_PROJECT=${LANGSMITH_PROJECT:-default}
+      - LANGSMITH_WORKSPACE_ID=${LANGSMITH_WORKSPACE_ID}
+      - LANGSMITH_TRACING_SAMPLING_RATE=${LANGSMITH_TRACING_SAMPLING_RATE}
+      - LANGCHAIN_TRACING_V2=${LANGCHAIN_TRACING_V2}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
