@@ -1,0 +1,26 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: msgpack-java:latest
+    ports:
+      - "40417:40417"
+    volumes:
+      # Volume mount for security scanner to access the JAR
+      # Mount specific jar file after build (pattern will be resolved by naming output jar as target.jar)
+      - ./target.jar:/app/app.jar
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:40417/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

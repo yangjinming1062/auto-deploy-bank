@@ -1,0 +1,20 @@
+{
+  "service_id": "9386581ab1dd4850b82b6a7f",
+  "repo_name": "msgpack/msgpack-java",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main",
+  "status": "deploying",
+  "package_size": "245KB",
+  "language": "java",
+  "star": 1466,
+  "repo_flag": "Auto-CVE",
+  "uploaded_at": "2026-02-10T10:34:41.852939",
+  "generated_files": [
+    "Dockerfile",
+    "docker-compose.yaml",
+    "msgpack-core/src/main/java/org/msgpack/core/Server.java",
+    "Dockerfile",
+    "docker-compose.yaml"
+  ]
+}
