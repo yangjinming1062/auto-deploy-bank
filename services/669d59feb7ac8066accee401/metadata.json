@@ -1,0 +1,25 @@
+{
+  "service_id": "669d59feb7ac8066accee401",
+  "repo_name": "siyuan-note/siyuan",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:master",
+  "status": "deploying",
+  "package_size": "191.52MB",
+  "language": "java",
+  "star": 41181,
+  "repo_flag": "Auto-CVE",
+  "uploaded_at": "2026-02-10T08:05:58.247036",
+  "generated_files": [
+    "create_test_accounts.sh",
+    "docker-compose.yaml",
+    "nginx.conf",
+    "login-capture.js",
+    "login-normal.js",
+    "login-result-admin.json",
+    "login-result-normal.json",
+    "package.json",
+    "package-lock.json",
+    "final-report.json"
+  ]
+}
