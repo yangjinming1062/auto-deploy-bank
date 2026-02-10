@@ -4,172 +4,91 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is the **Code Spell Checker** - a VS Code extension that provides spell checking for source code. It uses cspell internally for spell checking and implements a Language Server Protocol (LSP) architecture where the heavy lifting is done in a separate server process.
+Code Spell Checker is a VS Code extension that provides spell checking for source code. It uses a Language Server Protocol (LSP) architecture where the heavy spell-checking logic runs in a separate server process, while the client handles VS Code integration, diagnostics display, and user interactions.
 
-## Monorepo Structure
-
-This is an npm workspaces monorepo with the following key packages:
-
-- **`client`** - VS Code extension (activation, settings UI, server communication)
-- **`_server`** - Language server that performs spell checking using cspell
-- **`_settingsViewer`** - Webapp providing visual configuration interface
-- **`_integrationTests`** - VS Code integration test suite using @vscode/test-electron
-- **`webview-ui`** - Svelte-based webview for settings configuration UI
-- **`__utils`** - Shared utilities used by both client and server
-- **`utils-disposables`** - Disposable pattern utilities
-- **`utils-logger`** - Logging utilities
-- **`json-rpc-api`** - JSON-RPC API framework
-- **`webview-api`** - Webview communication API
-- **`webview-rpc`** - RPC for webview communication
-- **`__locale-resolver`** - Locale resolution utilities
-- **`_serverPatternMatcher`** - File pattern matching for the server
-
-## Build Commands
+## Commands
 
 ```bash
 # Install dependencies
 npm install
 
-# Build all workspaces
+# Build all packages and generate schema
 npm run build
 
-# Watch and rebuild on changes (for development)
-npm run watch  # Client: cd packages/client && npm run watch
+# Build only (without schema generation)
+npm run build:workspaces
 
-# Clean build artifacts
-npm run clean
+# Run tests in all packages
+npm test
 
-# Build just the schema (configuration definitions)
-npm run build-schema
+# Run tests in a specific package
+npm workspace code-spell-checker-server test
+npm workspace client test
 
-# Build the VSIX extension package
-npm run package-extension
+# Watch mode for development
+npm run watch  # In client package
 
-# Build documentation
-npm run build:docs
-
-# Build everything including docs and extension
-npm run build:all
-```
-
-## Test Commands
-
-```bash
-# Run all tests across all workspaces
-npm run test
-
-# Run a single test file
-cd packages/client && npx vitest run src/commands.test.mts
-
-# Run integration tests in VS Code
-npm run test-client-integration
-
-# Run client package tests
-cd packages/client && npm run test
-
-# Run server package tests
-cd packages/_server && npm run test
-
-# Run tests with file watcher (in package directory)
-npm run test-watch
-```
-
-## Lint Commands
-
-```bash
-# Check linting and formatting
-npm run prettier:check
-npm run lint:eslint
-
-# Fix linting and formatting issues
+# Lint and format code
 npm run lint
-npm run prettier:fix
+npm run lint:eslint  # ESLint only
+npm run prettier:fix # Prettier only
 
-# Lint check only (CI)
-npm run lint:eslint
+# Package the extension for release
+npm run build-release
+
+# Run integration tests
+npm run test-client-integration
 ```
 
-## Debugging the Extension
+**Note:** Requires Node >= 22.20.0
 
-Open the workspace `Spell Checker.code-workspace` in VS Code, then:
+## Architecture
 
-1. **Launch extension** - Press `F5` with `Client: Launch Extension (Spell Checker Root)` selected
-2. **Attach to server** - After launching the client, use `Server: Attach Server (Server - Spell Checker)` to debug the server process
-3. **Test current file** - Use the Vitest launch configurations to run tests on the current file
+### Package Structure
 
-The server runs on port 60048. To check if it's locked: `lsof -i tcp:60048`
+- **client** - VS Code extension client that handles UI, commands, and LSP client lifecycle. Entry: `packages/client/src/extension.mts`
+- **_server** - Language server that performs spell checking using cspell-lib. Entry: `packages/_server/src/main.mts`
+- **webview-ui** - Svelte-based webviews for configuration UI and info views
+- **webview-api / webview-rpc** - Communication layer between VS Code and webviews
+- **json-rpc-api** - Shared RPC definitions
+- **__utils** - Shared utilities across all packages
 
-## Key Development Files
+### Communication Layers
 
-- **Workspace file**: `Spell Checker.code-workspace` - recommended for debugging
-- **Extension activation**: `packages/client/src/extension.mts`
-- **Server main**: `packages/_server/src/server.mts`
-- **Settings configuration**: `packages/client/src/settings/`
-- **Language server handlers**: `packages/_server/src/api/`
-- **VS Code contribution**: root `package.json` `contributes` section
-- **Test files**: `*.test.*` or `*.spec.*` (vitest)
+1. **Standard LSP** - Document synchronization, diagnostics, and code actions
+2. **Custom JSON-RPC** - Extended operations like "Trace Word", configuration sync
+3. **Webview RPC** - Communication between VS Code and Svelte webviews
 
-## Architecture Notes
+### Spell Check Flow
 
-### Configuration Synchronization
+1. Client opens document → sends to server via LSP
+2. Server validates using RxJS streams (debounced)
+3. Server invokes cspell-lib to check spelling
+4. Diagnostics sent back to client → displayed as underlines
+5. Quick Fix requests send to server → suggestions returned
 
-Configuration fields are defined in two places and must be kept synchronized:
-- Server config: `packages/_server/src/config/cspellConfig.ts` - defines `SpellCheckerSettings` interface
-- Client config: `packages/client/src/settings/configFields.ts` - exports config field names
+### Adding New Configuration
 
-After modifying either file, run:
-```bash
-npm run build-package-schema
-```
+When adding a new configuration option:
 
-### Settings Flow
+1. Define in `packages/_server/src/config/cspellConfig.ts` using JSDoc annotations
+2. Add to `packages/client/src/settings/configFields.ts`
+3. Run `npm run build-package-schema` to update package.json schemas
 
-1. User changes setting in VS Code settings or `cspell.json`
-2. Client receives notification and forwards to server via JSON-RPC
-3. Server applies configuration and re-checks documents as needed
+## Key Technologies
 
-### Webview Communication
+- **Language**: TypeScript
+- **Build**: tsdown (bundling), tsc (type checking)
+- **Testing**: Vitest
+- **Linting**: ESLint + Prettier
+- **Webviews**: Svelte + custom RPC
+- **Reactive**: RxJS (server-side validation streams)
+- **Spell Engine**: cspell-lib
 
-Settings UI uses Svelte webviews communicating via RPC:
-- `webview-rpc` - handles the RPC layer
-- `webview-api` - defines the API contract
-- `webview-ui` - the Svelte-based UI implementation
+## VS Code Debugging
 
-## Node.js Version
+Open `Spell Checker.code-workspace` and press F5 to launch the extension in a new VS Code window. Attach to port 60048 to debug the server process.
 
-Requires Node.js >= 22.20.0 as specified in all package.json `engines` fields.
+## Related Repositories
 
-## Package Management
-
-The project uses npm workspaces (not yarn or pnpm). Common npm workspace commands:
-
-```bash
-# Run command in specific workspace
-npm --workspace=code-spell-checker-server run build-schema
-
-# Run command in all workspaces
-npm --workspaces --if-present run build
-```
-
-## cspell Configuration
-
-The project's own spelling is configured in `cspell.config.yaml`. Run spell check locally with: `npx cspell .`
-
-To add words to the project dictionary, add them to the `words` section of `cspell.config.yaml`.
-
-## ESLint Configuration
-
-The project uses ESLint with custom rules defined in `eslint.config.js`. Key configurations:
-- TypeScript support via @typescript-eslint
-- Simple import sorting with simple-import-sort
-- Node.js/EJS patterns for `eslint-plugin-n`
-- Unicorn rules for best practices
-
-## Adding New Configuration Options
-
-When adding a new cSpell setting:
-
-1. Define the setting in `packages/_server/src/config/cspellConfig.ts` (SpellCheckerSettings interface)
-2. Add the field name to `packages/client/src/settings/configFields.ts`
-3. Run `npm run build-package-schema` to sync the schema
-4. Use the setting in code via `getSettingFromVSConfig(ConfigFields.settingName, document)`
+- Dictionaries have been migrated to [cspell-dicts](https://github.com/streetsidesoftware/cspell-dicts)

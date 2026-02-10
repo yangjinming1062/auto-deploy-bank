@@ -9,6 +9,10 @@
   "language": "nodejs",
   "star": 1630,
   "repo_flag": "Auto-CVE",
-  "uploaded_at": "2026-02-10T11:26:55.314882",
-  "generated_files": []
+  "uploaded_at": "2026-02-10T20:41:39.715993",
+  "generated_files": [
+    "Dockerfile",
+    "docker-compose.yaml",
+    "packages/_server/src/main.mts"
+  ]
 }

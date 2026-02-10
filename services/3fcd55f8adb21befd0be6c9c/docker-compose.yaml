@@ -1,10 +1,20 @@
 services:
-  website:
+  spell-checker-server:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "40956:3000"
+      - "41964:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HTTP_MODE=true
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     deploy:
       resources:
         limits:
@@ -13,9 +23,4 @@ services:
         reservations:
           cpus: '1.0'
           memory: 1G
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    restart: unless-stopped
