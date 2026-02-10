@@ -9,12 +9,12 @@
   "language": "python",
   "star": 20327,
   "repo_flag": "Auto-CVE",
-  "uploaded_at": "2026-02-10T05:16:21.163207",
+  "uploaded_at": "2026-02-10T18:37:54.243486",
   "generated_files": [
-    "test_auth.py",
-    "/home/ubuntu/deploy-projects/761c56c09d24e19f004066e7/docker-compose.yaml",
-    "/home/ubuntu/deploy-projects/761c56c09d24e19f004066e7/Dockerfile",
-    "/home/ubuntu/deploy-projects/761c56c09d24e19f004066e7/server.py",
-    "/home/ubuntu/deploy-projects/761c56c09d24e19f004066e7/login.html"
+    "templates/login.html",
+    "auth_module.py",
+    "Dockerfile",
+    "docker-compose.yaml",
+    "auth_module.py"
   ]
 }

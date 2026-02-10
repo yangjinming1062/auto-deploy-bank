@@ -4,50 +4,38 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Bokeh is an interactive visualization library for modern web browsers. It consists of two main components:
+Bokeh is an interactive visualization library for modern web browsers with two tightly coupled components:
 
-1. **Python library** (`src/bokeh/`): High-level API for creating plots, dashboards, and data applications
-2. **BokehJS** (`bokehjs/`): TypeScript/JavaScript library that handles rendering and interactivity in the browser
+1. **Python library** (`src/bokeh/`) - Server-side Python API for creating plots, dashboards, and data applications
+2. **BokehJS** (`bokehjs/`) - Front-end TypeScript library that renders visualizations in browsers
 
-The Python and BokehJS components are tightly coupled—Python code serializes model definitions and data to JSON, which BokehJS deserializes and renders.
+The Python library serializes models to JSON and communicates with BokehJS via WebSocket protocol.
 
-## Common Commands
+## Build Commands
 
-### Python Development
+### Python Package
 
 ```bash
-# Install in editable mode (builds BokehJS automatically)
+# Install in editable mode (requires pre-built BokehJS)
 pip install -e .
 
-# Build wheel/sdist packages
-python -m build .
+# Build from source with automatic BokehJS build
+python setup.py develop
 
-# Run unit tests
-pytest tests/unit
-
-# Run codebase checks (code quality, flake8, isort, etc.)
-pytest tests/codebase
-
-# Run integration tests (if re-enabled)
-pytest tests/integration
-
-# Run examples tests
-pytest tests/test_examples.py
-
-# Type checking with mypy
-mypy
+# Build wheel/sdist (requires BokehJS to be pre-built)
+BOKEHJS_ACTION=install python -m build .
 ```
 
-### BokehJS Development
+### BokehJS
 
 ```bash
 cd bokehjs
 
-# Install dependencies
-npm ci
-
-# Build BokehJS
+# Full build (default task)
 node make build
+
+# Development build (faster, only lib)
+node make dev
 
 # Run tests
 node make test
@@ -55,64 +43,54 @@ node make test
 # Run linter
 node make lint
 
-# Start dev server for testing
-node make dev-build && node make test:spawn:headless
+# Available tasks: node make help
 ```
 
-### Pre-commit Hooks
-
-Pre-commit runs codebase checks that include code quality, ESLint, isort, flake8, JSON validation, license checks, and Windows filename checks:
+## Test Commands
 
 ```bash
-pre-commit run --all-files
+# All unit tests
+pytest tests/unit
+
+# Single test file
+pytest tests/unit/bokeh/models/test_plots.py
+
+# Run tests matching pattern
+pytest -k "test_plot"
+
+# With coverage
+pytest --cov=bokeh tests/unit
+
+# Codebase quality checks (isort, flake8, eslint, json, license)
+pytest tests/codebase
+
+# Integration tests
+pytest tests/integration
+
+# Mypy type checking
+mypy
 ```
+
+**Note:** Examples tests (`tests/test_examples.py`) require a running Chrome/Chromium headless browser.
 
 ## Architecture
 
-### Python Side (`src/bokeh/`)
+### Key Design Patterns
 
-- **core/**: Fundamental building blocks including:
-  - `properties.py`: Property descriptor system for models
-  - `has_props.py`: Base class for all models with property initialization
-  - `serialization.py`: JSON encoding/decoding for communicating with BokehJS
-  - `validation.py`: Error and warning code definitions
+1. **HasProps Property System** (`bokeh/core/properties.py`, `has_props.py`): Models use descriptors for type-safe properties with validation, serialization, and change notification. Defines `Bool`, `String`, `Float`, `Array`, `Instance`, etc.
 
-- **models/**: User-facing model classes (axes, plots, glyphs, tools, etc.)
-  - These Python models must stay synchronized with their TypeScript counterparts in BokehJS
-  - Changes often require updates in both `src/bokeh/models/` and `bokehjs/src/lib/models/`
+2. **Document Model** (`bokeh/document/`): Central container holding all models. Manages references, sessions, and JSON serialization for transmission to BokehJS via WebSocket.
 
-- **plotting/**: High-level `figure()` function for creating plots
+3. **Protocol Bridge** (`bokeh/protocol/` ↔ `bokehjs/src/lib/protocol/`): JSON message format for Python↔BokehJS communication. Python serializes; BokehJS deserializes and renders.
 
-- **server/**: Bokeh server implementation for real-time interactivity
+4. **Model Mirror**: BokehJS (`bokehjs/src/lib/models/`) mirrors Python models (`bokeh/models/`) - changes to either may require corresponding updates.
 
-- **io/**: Input/output utilities (saving, exporting, showing plots)
+### Distribution Bundles
 
-### BokehJS Side (`bokehjs/src/lib/`)
+BokehJS is split: `bokeh` (core), `bokeh-widgets`, `bokeh-tables`, `bokeh-api`, `bokeh-gl`, `bokeh-mathjax`.
 
-- **core/**: Core TypeScript infrastructure mirroring Python's core
-- **models/**: TypeScript model implementations that mirror Python models
-- **api/**: High-level APIs for working with Bokeh programmatically
-- **protocol/**: WebSocket protocol for server communications
-- **document/**: Document model managing the object graph
+## Code Quality
 
-### Build System
-
-- Python's `setup.py` triggers BokehJS build before packaging
-- BokehJS uses its own `make` build system (`bokehjs/make/`) written in TypeScript
-- BokehJS builds to `bokehjs/build/js/` and the outputs are copied to `src/bokeh/server/static/`
-
-## Key Conventions
-
-- Tests use `pytest` with `asyncio_mode = "strict"`
-- Python code follows type hints with mypy (many modules have `ignore_errors = true` pending migration)
-- Codebase checks enforce consistent styling via pytest-based tests
-- JavaScript/TypeScript code uses ESLint and the BokehJS `make lint` command
-- License headers (BSD-3-Clause) required on all files
-
-## Important Files
-
-- `pyproject.toml`: Python project configuration, pytest settings, mypy configuration
-- `bokehjs/package.json`: BokehJS npm configuration
-- `setup.py`: Custom build hooks that invoke BokehJS build
-- `.pre-commit-config.yaml`: Pre-commit hooks configuration
-- `tests/codebase/`: Non-test code quality checks
+- **Pre-commit**: Run `pre-commit run --all-files` for code quality checks (isort, flake8, eslint, json validation, license)
+- **Max line length**: 165 characters
+- **Python typing**: MyPy configured with some modules typed, others ignore_errors

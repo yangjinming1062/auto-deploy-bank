@@ -1,9 +1,32 @@
 services:
-  bokeh-app:
+  bokeh:
     build: .
     container_name: bokeh-server
     ports:
-      - "47266:5006"
+      - "40877:5006"
+    environment:
+      - BOKEH_SECRET_KEY=${BOKEH_SECRET_KEY:-default-secret-key}
+      - BOKEH_SIGN_SESSIONS=false
+      - BOKEH_AUTH_MODULE=auth_module.py
+      - BOKEH_COOKIE_SECRET=${BOKEH_COOKIE_SECRET:-cookie-secret}
+      - BOKEH_LOG_LEVEL=info
+      - BOKEH_PY_LOG_LEVEL=none
+      - BOKEH_RESOURCES=cdn
+      - BOKEH_MINIFIED=true
+      - BOKEH_XSRF_COOKIES=false
+      - BOKEH_DEV=false
+      - BOKEH_ICO_PATH=default
+      - BOKEH_VALIDATE_DOC=true
+      - BOKEH_PRETTY=false
+      - BOKEH_SIMPLE_IDS=true
+      - BOKEH_VALIDATION_LEVEL=none
+      - BOKEH_IGNORE_FILENAME=false
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5006/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     deploy:
       resources:
         limits:
