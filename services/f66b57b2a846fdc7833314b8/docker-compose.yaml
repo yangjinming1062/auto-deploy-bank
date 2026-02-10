@@ -3,9 +3,14 @@ version: '3.8'
 services:
   parsl:
     build: .
-    container_name: parsl-service
     ports:
-      - "44362:8080"
+      - "42012:42012"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:42012/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
     deploy:
       resources:
         limits:
@@ -14,10 +19,3 @@ services:
         reservations:
           cpus: '1.0'
           memory: 1G
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-    restart: unless-stopped

@@ -2,87 +2,134 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Build and Test Commands
+## Project Overview
+
+Parsl (Parallel Scripting Library) extends Python parallelism beyond a single computer. It enables workflow execution across multiple cores and nodes using a dataflow model where tasks are chained together and executed as resources become available.
+
+## Development Commands
 
 ```bash
-# Install dependencies
-make deps
+# Setup
+make virtualenv              # Create virtual environment
+source .venv/bin/activate    # Activate the virtual environment
+make deps                    # Install dependencies from requirements.txt and test-requirements.txt
+pip install ".[monitoring]"  # Install with extras (monitoring, visualization, workqueue, etc.)
 
-# Run linting (isort, flake8, mypy, lint scripts)
-make lint isort flake8 mypy
+# Linting and Type Checking
+make isort                   # Check isort formatting
+make flake8                  # Run flake8 linter
+make lint                    # Verify all directories have __init__.py files
+make mypy                    # Run mypy type checking
 
-# Run tests with local thread executor (fastest, smallest test set)
-make local_thread_test
+# Testing
+pytest parsl/tests/test_python_apps/test_basic.py::test_simple  # Run single test
+pytest parsl/tests/ -k "test_name" --config parsl/tests/configs/local_threads.py  # Run test by name
+make local_thread_test       # Run tests with local_thread config
+make htex_local_test         # Run tests with htex_local config (requires `pip install .`)
+make config_local_test       # Run tests with local config (installs monitoring, viz, proxystore, kubernetes)
+make test                    # Run all tests (isort, lint, flake8, mypy, all test configs)
+pytest parsl/tests/ -k "not cleannet" --config local  # Run tests excluding network-dependent tests
 
-# Run full local test suite with monitoring, HTEX, etc.
-make config_local_test  # Requires: pip install ".[monitoring,visualization,proxystore,kubernetes]"
-
-# Run all tests (full suite)
-make test
-
-# Run a single test
-pytest parsl/tests/test_python_apps/test_basic.py::test_simple
-
-# Clean environment
-make clean
+# Cleanup
+make clean                   # Remove .venv, dist, eggs, mypy cache, coverage, pytest cache
 ```
 
-## Code Architecture
-
-Parsl is a parallel scripting library that enables workflow execution across multiple compute resources. Key components:
+## Architecture
 
 ### Core Components
 
-1. **DataFlowKernel (`parsl/dataflow/dflow.py`)** - Central orchestrator managing task dependencies and execution. Creates AppFutures for apps, submits tasks to executors, and handles retries/memoization.
+**DataFlowKernel (DFK)** (`parsl/dataflow/dflow.py`)
+- Central orchestrator managing task futures and dependencies
+- Handles task state transitions (pending -> runnable -> executing -> done)
+- Integrates with monitoring, memoization, and data staging
 
-2. **Apps (`parsl/app/app.py`)** - Decorators (`@python_app`, `@bash_app`, `@join_app`) that convert functions into asynchronous apps returning AppFutures.
+**App Decorators** (`parsl/app/app.py`)
+- `@python_app`: Decorate functions to run as parallel tasks
+- `@bash_app`: Decorate shell command functions
+- `@join_app`: Decorate functions that collect results from dependent apps (internal executor)
 
-3. **Executors (`parsl/executors/`)** - abstractions for different compute resources:
-   - `ThreadPoolExecutor` - Local multi-threaded execution
-   - `HighThroughputExecutor` - MPI-based distributed execution with worker pools
-   - `WorkQueueExecutor` - Cooperative scheduling via Work Queue
-   - `TaskVineExecutor` - Cooperative scheduling via TaskVine
-   - `RadicalPilotExecutor`, `FluxExecutor`, `GlobusComputeExecutor` - External scheduler integration
+**Config** (`parsl/config.py`)
+- Central configuration class specifying executors, providers, and monitoring
+- Must be loaded via `parsl.load(config=config)` before executing apps
+- Test configs in `parsl/tests/configs/` use `fresh_config()` pattern returning new Config instances
 
-4. **Providers (`parsl/providers/`)** - Resource managers for batch systems and clouds:
-   - Slurm, PBS, LSF, GridEngine, Condor - HPC schedulers
-   - AWS, Azure, GoogleCloud - Cloud providers
-   - Kubernetes - Container orchestration
-   - Local - Direct execution
+### Executors (`parsl/executors/`)
 
-5. **Monitoring (`parsl/monitoring/`)** - Database logging of workflow execution via `MonitoringHub`
+All executors inherit from `parsl/executors/base.py::ParslExecutor`.
 
-### Key Patterns
+- **ThreadPoolExecutor** (`parsl/executors/threads.py`): Simple thread-pool for single-node parallelism
+- **HighThroughputExecutor** (`parsl/executors/high_throughput/`): Process-based executor using ZMQ interchange
+- **WorkQueueExecutor** (`parsl/executors/workqueue/`): For WorkQueue/Condor batch systems
+- **TaskVineExecutor** (`parsl/executors/taskvine/`): For TaskVine distributed scheduler
+- **GlobusComputeExecutor** (`parsl/executors/globus_compute.py`): Remote execution via Globus Compute
+- **RadicalPilotExecutor** (`parsl/executors/radical/`): For Radical Pilot on HPC resources
+- **FluxExecutor** (`parsl/executors/flux/`): For Flux scheduler
 
-- **AppFutures** (`parsl/dataflow/futures.py`) - Wraps executor futures, enables `.result()` blocking and dependency chaining via `__getitem__`
-- **Config** (`parsl/config.py`) - Defines executors, strategy, retries, monitoring, etc. Loaded via `parsl.load(config)`
-- **Type checking** - Uses `typeguard` for runtime type validation on public APIs
-- **Serialization** - Uses `dill` for task/closure serialization; `tblib` for exception traceback pickling
+### Providers (`parsl/providers/`)
 
-### Data Flow
+Resource providers manage job submission and lifecycle on specific schedulers/systems:
+- **LocalProvider**: Single machine execution
+- **SlurmProvider**: SLURM cluster scheduling
+- **CondorProvider**: HTCondor batch system
+- **KubernetesProvider**: K8s cluster
+- **AWSProvider, GoogleCloudProvider, AzureProvider**: Cloud providers
+- Others: PBSPro, Torque, LSF, GridEngine
 
+### Data Management (`parsl/data_provider/`)
+
+- **File**: Represents input/output files with automatic staging
+- **DataManager**: Handles file staging between tasks and storage systems
+- Staging providers for FTP, HTTP, Globus, rsync transfers
+
+### Monitoring (`parsl/monitoring/`)
+
+- **MonitoringHub**: Central service receiving task/resource monitoring messages
+- Records to SQL database (requires `.[monitoring]` extra)
+- Visualization via `parsl-visualize` CLI
+
+### Jobs Layer (`parsl/jobs/`)
+
+Low-level job management:
+- **JobStatusPoller**: Tracks job state across resource providers
+- **Strategy**: Scaling logic for elastic resources
+
+## Key Patterns
+
+### Configuration and Execution
+```python
+import parsl
+from parsl import python_app
+from parsl.config import Config
+from parsl.executors.threads import ThreadPoolExecutor
+
+config = Config(executors=[ThreadPoolExecutor()])
+parsl.load(config)
+
+@python_app
+def my_task(x):
+    return x * 2
+
+future = my_task(10)
+result = future.result()  # Blocks until complete
 ```
-User Code → @python_app decorator → AppFuture
-AppFuture → DataFlowKernel.submit() → Executor.submit() → Worker Process/Thread
-Result → AppFuture.result()
+
+### Chained Workflows
+```python
+a1 = app1(inputs=[data])
+a2 = app2(inputs=[a1])
+a3 = app3(inputs=[a1])
+combined = app4(inputs=[a2, a3])  # Executes when both deps complete
 ```
 
-### Directory Structure
+### App Parameters
+Apps support `stdout`, `stderr`, `walltime`, `inputs`, `outputs`, and `parsl_resource_specification` parameters.
 
-- `parsl/app/` - App decorators and futures
-- `parsl/dataflow/` - DFK, memoization, dependency resolution
-- `parsl/executors/` - Executor implementations and base class
-- `parsl/providers/` - Resource provisioning for various schedulers/clouds
-- `parsl/data_provider/` - File staging (local, HTTP, Globus, etc.)
-- `parsl/jobs/` - Job status polling and status handling
-- `parsl/launchers/` - Parallel job launchers (mpi_exec, aprun, srun, etc.)
-- `parsl/monitoring/` - Monitoring hub and database schema
-- `parsl/tests/` - Test suite organized by feature area
+## Code Conventions
 
-## Development Notes
-
-- **Python version**: 3.10+
-- **Style**: PEP-8 enforced via flake8; import sorting via isort; type hints checked with mypy
-- **Testing**: Use pytest with `--config` flag for executor-specific tests. Tests requiring no DFK use `@pytest.mark.local`
-- **Versioning**: Calendar versioning (YYYY.MM.DD) - updates in `parsl/version.py`
-- **Documentation**: NumPy/SciPy style docstrings; built with Sphinx on ReadTheDocs
+- **Style**: PEP-8, enforced by flake8 in CI
+- **Naming**: `ClassName`, `ExceptionName`, `GLOBAL_CONSTANT`, `lowercase_with_underscores`
+- **Documentation**: NumPy/SciPy docstring style
+- **Versioning**: CalVer (YYYY.MM.DD)
+- **Tests**: Located in `parsl/tests/`, use pytest with `--config` pointing to config file
+- **Type hints**: Runtime checking enabled via `typeguard.typechecked` decorator
+- **Test markers**: `@pytest.mark.local` for tests needing custom config, `-k "not cleannet"` to exclude network tests
