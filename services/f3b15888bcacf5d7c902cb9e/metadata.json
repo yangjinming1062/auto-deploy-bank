@@ -1,0 +1,20 @@
+{
+  "service_id": "f3b15888bcacf5d7c902cb9e",
+  "repo_name": "yeqifu/warehouse",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:master",
+  "status": "deploying",
+  "package_size": "5.12MB",
+  "language": "java",
+  "star": 981,
+  "repo_flag": "Auto-CVE",
+  "uploaded_at": "2026-02-10T16:13:37.066949",
+  "generated_files": [
+    "create_test_accounts.sh",
+    "/home/ubuntu/deploy-projects/f3b15888bcacf5d7c902cb9e/.env",
+    "/home/ubuntu/deploy-projects/f3b15888bcacf5d7c902cb9e/src/main/java/com/yeqifu/sys/controller/LoginController.java",
+    "/home/ubuntu/deploy-projects/f3b15888bcacf5d7c902cb9e/src/main/java/com/yeqifu/sys/realm/UserRealm.java",
+    "/home/ubuntu/deploy-projects/f3b15888bcacf5d7c902cb9e/src/main/java/com/yeqifu/sys/config/ShiroAutoConfiguration.java"
+  ]
+}

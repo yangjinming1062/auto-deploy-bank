@@ -1,0 +1,64 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: warehouse-app
+    ports:
+      - "40441:8888"
+    environment:
+      - SPRING_DATASOURCE_DRUID_URL=jdbc:mysql://mysql:3306/warehouse?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_DRUID_USERNAME=root
+      - SPRING_DATASOURCE_DRUID_PASSWORD=123456
+      - SPRING_DATASOURCE_DRUID_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
+      - SPRING_DATASOURCE_DRUID_MAX_ACTIVE=20
+      - SPRING_DATASOURCE_DRUID_MAX_WAIT=5000
+      - DRUID_STAT_VIEW_SERVLET_ENABLED=true
+      - DRUID_STAT_VIEW_SERVLET_LOGIN_USERNAME=root
+      - DRUID_STAT_VIEW_SERVLET_LOGIN_PASSWORD=123456
+      - SERVER_PORT=8888
+      - SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE=1MB
+      - SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE=10MB
+      - MYBATIS_PLUS_MAPPER_LOCATIONS=classpath*:mapper/**/*Mapper.xml
+      - MYBATIS_PLUS_GLOBAL_CONFIG_DB_CONFIG_ID_TYPE=auto
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    volumes:
+      - ./target.jar:/app.jar
+
+  mysql:
+    image: mysql:8.0
+    container_name: warehouse-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=warehouse
+      - MYSQL_CHARACTER_SET=utf8
+      - MYSQL_COLLATION=utf8_general_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  mysql_data:
