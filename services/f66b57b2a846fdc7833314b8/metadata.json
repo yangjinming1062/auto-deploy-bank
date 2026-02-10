@@ -1,0 +1,17 @@
+{
+  "service_id": "f66b57b2a846fdc7833314b8",
+  "repo_name": "Parsl/parsl",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:master",
+  "status": "deploying",
+  "package_size": "8.66MB",
+  "language": "python",
+  "star": 603,
+  "repo_flag": "Auto-CVE",
+  "uploaded_at": "2026-02-10T15:03:39.606109",
+  "generated_files": [
+    "Dockerfile",
+    "docker-compose.yaml"
+  ]
+}
