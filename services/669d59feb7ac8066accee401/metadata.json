@@ -1,0 +1,21 @@
+{
+  "service_id": "669d59feb7ac8066accee401",
+  "repo_name": "siyuan-note/siyuan",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:master",
+  "status": "deploying",
+  "package_size": "191.52MB",
+  "language": "java",
+  "star": 41181,
+  "repo_flag": "Auto-CVE",
+  "uploaded_at": "2026-02-10T12:45:34.848773",
+  "generated_files": [
+    "docker-compose.yaml",
+    "Dockerfile",
+    "target.jar",
+    "/home/ubuntu/deploy-projects/669d59feb7ac8066accee401/docker-compose.yaml",
+    "/home/ubuntu/deploy-projects/669d59feb7ac8066accee401/nginx/nginx.conf",
+    "/home/ubuntu/deploy-projects/669d59feb7ac8066accee401/stage/"
+  ]
+}

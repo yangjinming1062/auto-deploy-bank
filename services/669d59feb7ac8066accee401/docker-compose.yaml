@@ -1,0 +1,72 @@
+services:
+  siyuan:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: siyuan
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Shanghai
+      - RUN_IN_CONTAINER=true
+      - SIYUAN_ACCESS_AUTH_CODE=${SIYUAN_ACCESS_AUTH_CODE:-siyuan123}
+      - SIYUAN_ACCESS_AUTH_CODE_BYPASS=${SIYUAN_ACCESS_AUTH_CODE_BYPASS:-true}
+      - SIYUAN_WORKSPACE_PATH=/siyuan/workspace
+      - SIYUAN_LANG=${SIYUAN_LANG:-en_US}
+      # OpenAI API settings (optional)
+      - SIYUAN_OPENAI_API_KEY=${SIYUAN_OPENAI_API_KEY:-}
+      - SIYUAN_OPENAI_API_BASE_URL=${SIYUAN_OPENAI_API_BASE_URL:-https://api.openai.com/v1}
+      - SIYUAN_OPENAI_API_TIMEOUT=${SIYUAN_OPENAI_API_TIMEOUT:-30}
+      - SIYUAN_OPENAI_API_MAX_TOKENS=${SIYUAN_OPENAI_API_MAX_TOKENS:-4096}
+      - SIYUAN_OPENAI_API_TEMPERATURE=${SIYUAN_OPENAI_API_TEMPERATURE:-1.0}
+      - SIYUAN_OPENAI_API_MAX_CONTEXTS=${SIYUAN_OPENAI_API_MAX_CONTEXTS:-7}
+      - SIYUAN_OPENAI_API_PROXY=${SIYUAN_OPENAI_API_PROXY:-}
+      - SIYUAN_OPENAI_API_USER_AGENT=${SIYUAN_OPENAI_API_USER_AGENT:-}
+      # Performance settings
+      - SIYUAN_PERFORMANCE_TIMING=${SIYUAN_PERFORMANCE_TIMING:-15000}
+      # PDF and OCR settings
+      - SIYUAN_PDF_ASSET_CONTENT_INDEX_MAX_SIZE=${SIYUAN_PDF_ASSET_CONTENT_INDEX_MAX_SIZE:-10485760}
+      - SIYUAN_TESSERACT_TIMEOUT=${SIYUAN_TESSERACT_TIMEOUT:-30}
+      - SIYUAN_TESSERACT_MAX_SIZE=${SIYUAN_TESSERACT_MAX_SIZE:-5242880}
+      - SIYUAN_TESSERACT_ENABLED=${SIYUAN_TESSERACT_ENABLED:-true}
+      - SIYUAN_TESSERACT_LANGS=${SIYUAN_TESSERACT_LANGS:-eng}
+      # User settings
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - USER_NAME=${USER_NAME:-siyuan}
+      - GROUP_NAME=${GROUP_NAME:-siyuan}
+    volumes:
+      - ./workspace:/siyuan/workspace
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./stage:/var/www/html:ro
+    expose:
+      - "6806"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:6806/api/system/version", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
+
+  nginx:
+    image: nginx:alpine
+    container_name: siyuan-nginx
+    restart: unless-stopped
+    ports:
+      - "40420:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./stage:/usr/share/nginx/html:ro
+    depends_on:
+      - siyuan
+
+networks:
+  default:
+    name: siyuan-network
