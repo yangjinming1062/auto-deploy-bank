@@ -4,110 +4,57 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a collection of **Generative AI/ML tutorials and applications** by Business Science. The repository contains 15+ standalone data science examples demonstrating AI-powered workflows including customer churn prediction, SQL database agents, exploratory data analysis, and automated feature engineering.
+This is a collection of 15+ Streamlit applications demonstrating AI/ML-powered data science workflows using LLMs (OpenAI GPT models). Each numbered directory (001-015) is a standalone project demonstrating a specific use case like SQL querying, data cleaning, feature engineering, EDA, and ML automation.
 
-## Running Applications
+## Common Commands
 
-**Streamlit Apps** (most examples):
+**Run a Streamlit app:**
 ```bash
-streamlit run <directory>/app.py
+streamlit run <project_directory>/app.py
+# Example: streamlit run 010_sql_database_agent_app/app.py
 ```
 
-Example:
+**Install dependencies (per project):**
 ```bash
-streamlit run 010_sql_database_agent_app/app.py
+pip install -r <project_directory>/requirements.txt
 ```
 
-**Standalone Python Scripts**:
+**Install the core ai-data-science-team library (used across most apps):**
 ```bash
-python <directory>/<script_name>.py
+pip install git+https://github.com/business-science/ai-data-science-team.git --upgrade
 ```
 
-Example:
-```bash
-python 002_customer_churn_ai_ml/customer_churn_ai_ml.py
-```
+## Architecture
 
-**Jupyter Notebooks**:
-```bash
-jupyter notebook temp/<notebook_name>.ipynb
-```
+Each project follows a consistent structure:
+- `app.py` or `<project_name>.py` - Main entry point (Streamlit app or standalone script)
+- `requirements.txt` - Project-specific dependencies (not all projects have this)
+- `data/` - SQLite databases or sample datasets
+- `ai_functions/` - AI agent logic modules (in some projects)
+- `utils/` - Utility functions (in some projects)
 
-## Dependencies
+Most apps use the `ai-data-science-team` library which provides agents like `SQLDatabaseAgent`, `DataVisualizationAgent`, and multi-agent workflows. They follow a pattern of:
+1. Setup LLM with OpenAI API key (via sidebar or environment/credentials.yml)
+2. Initialize agent with connection/config
+3. Handle user input async
+4. Display results (dataframes, plots, SQL queries)
 
-Most apps share common dependencies defined in `requirements.txt` files:
+## Key Dependencies
 
-- `streamlit` - Web app framework
-- `openai` - OpenAI API client
-- `langchain`, `langchain-openai`, `langgraph` - LLM orchestration
-- `pandas`, `sqlalchemy` - Data manipulation and SQL
-- `ai-data-science-team` - Custom agent library (install via `pip install git+https://github.com/business-science/ai-data-science-team.git`)
+- **streamlit** - UI framework
+- **openai** - OpenAI API client
+- **langchain / langchain-openai** - LLM orchestration
+- **ai-data-science-team** - Custom AI agent library
+- **pandas** - Data handling
+- **sqlalchemy** - Database connections
 
-Install all dependencies for an app:
-```bash
-pip install -r <directory>/requirements.txt
-```
+## Configuration
 
-## Common Architecture Patterns
+Streamlit theme is configured in `.streamlit/config.toml` (dark theme with purple accents). Some apps load credentials from `../credentials.yml` using `yaml.safe_load()`.
 
-### Streamlit Apps
+## API Keys
 
-All Streamlit apps follow a consistent pattern:
-
-1. **Configuration section** - Set page title, config options
-2. **Sidebar** - API key input, model selection, data upload
-3. **Session state** - Store dataframes, messages, API keys
-4. **Chat interface** - Chat input with `st.chat_message` and `StreamlitChatMessageHistory`
-5. **Agent integration** - Async agent invocation using `ai_data_science_team` agents
-
-Example model list for OpenAI apps:
-```python
-MODEL_LIST = ['gpt-4o-mini', 'gpt-4o']
-```
-
-### Database Apps
-
-SQL-based apps use SQLAlchemy connections:
-```python
-sql_engine = sql.create_engine(st.session_state["PATH_DB"])
-conn = sql_engine.connect()
-```
-
-Default database: Northwind SQLite database at `data/northwind.db`
-
-### Data Science Workflows
-
-Typical patterns:
-1. Load data (CSV via `pd.read_csv()` or database via SQLAlchemy)
-2. Generate LLM summaries / text embeddings
-3. Feature engineering (LabelEncoder, embedding expansion to DataFrame)
-4. ML model training (XGBoost, scikit-learn)
-5. Model interpretation (feature importance plots)
-
-### API Key Handling
-
-Apps require OpenAI API key via `st.sidebar.text_input` with `type="password"`. Key validation:
-```python
-client = OpenAI(api_key=api_key)
-models = client.models.list()  # Validate key
-```
-
-## Key Directories
-
-- `00X_*` - Numbered example directories (1-15+)
-- `data/` - Shared datasets (churn_data.csv, northwind.db)
-- `.streamlit/` - Streamlit theming (dark theme configured)
-- `temp/002_csv_semantic_search/` - Alternative implementation path
-
-## Editor Configuration
-
-VS Code settings in `.vscode/settings.json`:
-- Jupyter notebooks use interactive window with selection execution
-- Notebook root: workspace folder
-
-## Streamlit Theme
-
-Dark theme configured in `.streamlit/config.toml`:
-- Primary color: #d33682 (magenta)
-- Dark background (#000000)
-- Sans-serif font
+Apps requiring OpenAI API keys accept them via:
+- Environment variable: `os.environ['OPENAI_API_KEY']`
+- YAML file: `../credentials.yml`
+- Streamlit sidebar text input (type="password")
