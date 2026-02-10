@@ -9,11 +9,11 @@
   "language": "python",
   "star": 773,
   "repo_flag": "Auto-CVE",
-  "uploaded_at": "2026-02-10T13:59:12.521606",
+  "uploaded_at": "2026-02-10T19:29:45.370811",
   "generated_files": [
-    "main.py",
-    "requirements.txt",
     "Dockerfile",
-    "docker-compose.yaml"
+    "docker-compose.yaml",
+    "python/demo_app.py",
+    "python/requirements-demo.txt"
   ]
 }

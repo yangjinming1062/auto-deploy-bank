@@ -1,7 +1,7 @@
 services:
   langsmith-demo:
     build:
-      context: ./python
+      context: .
       dockerfile: Dockerfile
     container_name: langsmith-demo
     ports:

@@ -4,150 +4,154 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is the LangSmith SDK repository containing both Python and JavaScript/TypeScript client libraries for the [LangSmith observability platform](https://smith.langchain.com/). The SDK enables tracing, evaluating, and monitoring LLM applications.
+This is the LangSmith SDK repository containing both Python and JavaScript/TypeScript clients for the [LangSmith observability platform](https://smith.langchain.com/). The SDK enables tracing, monitoring, and evaluation of LLM applications.
 
 ## Development Commands
 
-### Python (in `python/` directory)
+### Python SDK (python/ directory)
 
 ```bash
+cd python
+
 # Install dependencies (uses uv)
-cd python && uv sync
-
-# Run unit tests (uses pytest with auto-parallelization, socket disabled)
-make tests                    # All unit tests
-make tests TEST=path/to/test  # Specific test file
-make tests_watch              # Watch mode with pytest-watch
-
-# Run integration tests
-make integration_tests
-make integration_tests_fast   # Parallelized with -n auto
-make integration_tests_watch  # Watch mode
-
-# Run evaluation tests
-make evals
-
-# Lint and format
-make lint        # ruff check + mypy
-make format      # ruff format + ruff check --fix
-
-# Build package
-make build
-
-# Run doctests
-make doctest
-
-# Run benchmarks
-make benchmark         # Rigorous benchmark
-make benchmark-fast    # Fast benchmark
-```
-
-### JavaScript/TypeScript (in `js/` directory)
-
-```bash
-# Install dependencies
-cd js && yarn install
-
-# Build (compiles TypeScript to dist/, generates entrypoints)
-yarn build
+uv sync
 
 # Run tests
-yarn test                    # Unit tests (jest)
-yarn test:integration        # Integration tests
-yarn test:single path/to/test.ts  # Single test file
-yarn watch:single path/to/test.ts  # Watch mode for single test
-yarn test:vitest             # Vitest runner
-yarn test:eval:vitest        # Evaluation vitest tests
+pytest                                    # All tests
+pytest -m slow                            # Slow tests only
+pytest tests/unit_tests/test_client.py    # Single test file
 
-# Lint and format
-yarn lint        # ESLint
-yarn lint:fix    # ESLint with auto-fix
-yarn format      # Prettier
-yarn format:check
+# Linting and formatting
+make format                               # Format all code
+make lint                                 # Lint all code
+uv run ruff check --fix .                  # Auto-fix linting
+uv run mypy langsmith                     # Type checking
 
-# Type check
-yarn check:types
+# Build and publish
+pip install -e .                          # Editable install
 ```
 
-### Root-level commands
+### JavaScript SDK (js/ directory)
 
 ```bash
-make format    # Format both Python and JS
-make lint      # Lint both Python and JS
-```
+cd js
 
-### Pre-commit Hooks
+# Install dependencies
+yarn install
 
-```bash
-# Install pre-commit hooks
-pre-commit install
+# Build
+yarn build                                # Builds ESM and CJS outputs
+yarn build:typedoc                        # Build Typedoc API reference
 
-# Run all hooks manually
-pre-commit run --all-files
+# Testing
+yarn test                                 # Jest unit tests
+yarn test:single path/to/test.ts          # Run single test file
+yarn test:integration                     # Integration tests
+yarn test:vitest                          # Vitest evaluation tests
+yarn test:eval:vitest                     # Eval-specific vitest tests
+
+# Linting and formatting
+yarn lint                                 # ESLint
+yarn lint:fix                             # Auto-fix linting
+yarn format                               # Prettier format
+yarn format:check                         # Check formatting
+yarn check:types                          # TypeScript type check
 ```
 
 ## Architecture
 
-### Python SDK (`python/langsmith/`)
+### Python SDK (langsmith/)
 
-**Core Components:**
-- `client.py` (~380KB) - Main synchronous `Client` class for API interactions (datasets, runs, projects)
-- `async_client.py` (~72KB) - Async `AsyncClient` counterpart
-- `run_trees.py` (~46KB) - `RunTree` class for creating and managing trace runs
-- `run_helpers.py` (~76KB) - `@traceable` decorator and tracing utilities
-- `schemas.py` (~44KB) - Pydantic models for API data structures
-- `evaluation/` - Evaluation framework and evaluators
+- **Client (`client.py`)**: Main API client for CRUD operations on runs, datasets, projects. Uses background threads to asynchronously post traces to the LangSmith API.
+- **RunTree (`run_trees.py`)**: Core tracing primitive. Represents a trace span with parent/child relationships. Methods: `post()`, `end()`, `patch()`.
+- **Tracing Decorator (`run_helpers.py`)**: Contains the `@traceable` decorator that wraps functions to automatically create RunTree spans. Manages tracing context via context variables.
+- **Schemas (`schemas.py`)**: Pydantic models for API request/response types.
+- **Evaluation (`evaluation/`)**: Evaluation framework with `StringEvaluator`, `LLMEnumerator`, and batch evaluation runners.
+- **Wrappers (`wrappers/`)**: LLM SDK wrappers for OpenAI, Anthropic, and Gemini to auto-trace API calls.
+- **Internal (`_internal/`)**: Private implementation details including background thread handling, serialization, and OpenTelemetry support.
+- **Sandbox (`sandbox/`)**: Sandboxed execution environment for running code in isolated containers.
+- **Integrations (`integrations/`)**: Third-party integrations (OpenAI Agents SDK, Claude Agent SDK, Google ADK, OpenTelemetry).
 
-**Utilities:**
-- `_internal/` - Internal utilities (`_background_thread.py`, `_orjson.py`, `_uuid.py`, etc.)
-- `wrappers/` - LLM SDK wrappers (OpenAI, Anthropic, etc.) for automatic tracing
-- `integrations/` - Third-party framework integrations (LangChain, OpenAI Agents, Claude Agent SDK)
-- `testing/` - Testing utilities including pytest plugin (`pytest_plugin.py`)
+### JavaScript SDK (js/src/)
 
-**Pattern:** The SDK uses lazy imports in `__init__.py` for faster module loading. Public API is exposed via `__getattr__` for most major classes.
+- **Client (`client.ts`)**: API client with batched trace uploading and retry logic.
+- **RunTree (`run_trees.ts`)**: Core trace span class mirroring Python implementation.
+- **Traceable (`traceable.ts`)**: Function wrapper for automatic tracing with configurable options.
+- **Evaluation (`evaluation/`)**: Evaluation framework with evaluators and batch runners.
+- **Wrappers (`wrappers/`)**: LLM wrappers for OpenAI (`wrapOpenAI`), Anthropic (`wrapSDK`), and Gemini.
+- **Testing Integration (`jest/`, `vitest/`)**: Test reporters and utilities for running evaluations within test frameworks.
+- **Experimental (`experimental/`)**: OpenTelemetry setup, Vercel AI SDK integration, and sandbox features.
 
-### JavaScript/TypeScript SDK (`js/src/`)
+### Shared Concepts
 
-**Core Components:**
-- `client.ts` (~172KB) - Main `Client` class
-- `run_trees.ts` (~36KB) - `RunTree` class
-- `traceable.ts` (~39KB) - `traceable` function and run management
-- `schemas.ts` - Type definitions for API responses
+Both SDKs implement:
+- **Run Trees**: Hierarchical trace spans with typed run_type (llm, chain, tool)
+- **Batched Uploads**: Traces are collected and sent asynchronously in batches
+- **Context Variables**: Tracing state propagates through function calls
+- **Datasets**: Collections of examples for evaluation
+- **Feedback**: Metrics/scores attached to runs
 
-**Integration Points:**
-- `wrappers/` - OpenAI, Anthropic, Gemini SDK wrappers
-- `jest/` and `vitest/` - Testing framework integrations
-- `langchain.ts` - LangChain integration
-- `experimental/` - Experimental features (OpenTelemetry, Vercel, Sandbox)
-
-**Build Output:** Compiled to `dist/` (ESM) and `dist-cjs/` (CommonJS), then merged with entrypoint generation scripts.
-
-## Key Concepts
-
-### Tracing
-- `@traceable` decorator / `traceable()` function - Wrap functions to automatically trace their execution
-- `RunTree` - Manual run tree construction for advanced use cases
-- `Client` - Create projects, list runs, manage datasets
-
-### Evaluation
-- `evaluate()` / `aevaluate()` - Run evaluations against datasets
-- `RunEvaluator` - Base class for custom evaluators
-- String, threshold, and label evaluators provided
+## Key Configuration
 
 ### Environment Variables
-- `LANGSMITH_TRACING` - Enable tracing
-- `LANGSMITH_API_KEY` - API authentication
-- `LANGSMITH_PROJECT` - Default project name
-- `LANGSMITH_ENDPOINT` - API endpoint (defaults to https://api.smith.langchain.com)
-- `LANGSMITH_WORKSPACE_ID` - Required for org-scoped API keys
 
-### Testing with VCR Cassettes
+```
+LANGSMITH_API_KEY        # API key (required)
+LANGSMITH_TRACING        # Enable tracing (set to "true")
+LANGSMITH_PROJECT        # Project name (default: "default")
+LANGSMITH_ENDPOINT       # API URL (default: https://api.smith.langchain.com)
+LANGSMITH_WORKSPACE_ID   # Workspace ID for org-scoped keys
+```
 
-Integration tests use VCR.py to record and replay HTTP interactions to avoid hitting live APIs:
-- Python cassettes: `tests/cassettes/` and `tests/integration_tests/test_data/`
-- When modifying API request/response formats, delete and regenerate cassettes:
-  ```bash
-  # Regenerate cassettes (requires API keys)
-  uv run pytest tests/integration_tests/ --record-mode=all
-  ```
-- Tests are marked with `slow` for long-running tests: `pytest -m slow`
+### Python pyproject.toml Key Settings
+
+- Build: `hatchling` with dynamic versioning from `langsmith/__init__.py`
+- Python: `>=3.10`
+- Linting: `ruff` (Google docstring convention) and `mypy` with pydantic plugin
+- Testing: `pytest` with `pytest-asyncio`, `vcrpy` for cassette tests, `pytest-xdist` for parallel runs
+
+### JavaScript package.json Key Settings
+
+- TypeScript with ESM and CJS builds
+- Jest for unit tests (with `experimental-vm-modules`)
+- Vitest for evaluation tests
+- Prettier + ESLint for formatting/linting
+- Entry points defined via `exports` field for conditional module resolution
+
+## Testing Patterns
+
+### Python
+
+- Tests use VCRpy cassettes in `tests/cassettes/` to record/replay HTTP responses
+- Integration tests use `@pytest.mark.vcr()` or test against live API with `LANGSMITH_API_KEY`
+- Evaluation tests in `tests/evaluation/`
+- Unit tests in `tests/unit_tests/`
+
+### JavaScript
+
+- Jest for unit tests in `src/tests/`
+- Integration tests tagged with `.int.test.ts` suffix
+- Vitest for evaluation tests with custom config `ls.vitest.config.ts`
+- Mock clients in `src/tests/utils/mock_client.ts`
+
+## Code Style
+
+### Python
+
+- Use Pydantic v2 for data validation
+- Google-style docstrings (enforced by ruff)
+- Type hints required (`disallow_untyped_defs` in mypy)
+- Prefer `orjson` for JSON serialization in hot paths
+
+### JavaScript
+
+- TypeScript strict mode
+- Prettier for formatting (2-space indent)
+- ESLint with TypeScript parser
+- Named exports preferred over default exports
+
+## Pre-commit Hooks
+
+Run `pre-commit install` to set up automatic formatting/linting on commit. Hooks enforce:
+- Python: ruff format, ruff check --fix, mypy type check
+- JavaScript: prettier format, eslint --fix, TypeScript type check
