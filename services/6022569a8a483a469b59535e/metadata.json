@@ -9,13 +9,11 @@
   "language": "python",
   "star": 27197,
   "repo_flag": "Auto-CVE",
-  "uploaded_at": "2026-02-10T23:47:23.433703",
+  "uploaded_at": "2026-02-11T14:54:56.923096",
   "generated_files": [
+    "python/.env",
     "Dockerfile",
     "docker-compose.yaml",
-    "python/samples/demos/process_with_dapr/requirements.txt",
-    "python/samples/demos/process_with_dapr/fastapi_app.py",
-    "/home/ubuntu/deploy-projects/6022569a8a483a469b59535e/docker-compose.yaml",
-    "/home/ubuntu/deploy-projects/6022569a8a483a469b59535e/python/samples/demos/process_with_dapr/fastapi_app.py"
+    "app.py"
   ]
 }

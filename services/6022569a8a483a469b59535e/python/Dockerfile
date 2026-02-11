@@ -14,10 +14,8 @@ ENV PYTHONDONTWRITEBYTECODE=1
 RUN pip install --no-cache-dir flit-core
 
 # Copy the package source and metadata first
-COPY python/pyproject.toml python/README.md python/LICENSE ./
-
-# Copy semantic_kernel to root level so pip can find it
-COPY python/semantic_kernel/ ./semantic_kernel/
+COPY pyproject.toml README.md LICENSE ./
+COPY semantic_kernel/ ./semantic_kernel/
 
 # Install the semantic-kernel package with all dependencies
 # This installs pybars4 first (required by the package), then installs the package with all deps
@@ -27,8 +25,8 @@ RUN pip install --no-cache-dir "pybars4 ~= 0.9" && \
 # Install dapr dependencies separately (they're optional for the demo)
 RUN pip install --no-cache-dir "dapr>=1.14.0" "dapr-ext-fastapi>=1.14.0" "flask-dapr>=1.14.0"
 
-# Copy application code
-COPY python/app.py .
+# Copy remaining application code
+COPY app.py .
 
 # Expose the internal port
 EXPOSE 5001
