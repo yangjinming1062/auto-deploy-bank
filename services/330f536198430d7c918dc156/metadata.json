@@ -9,8 +9,9 @@
   "language": "python",
   "star": 567,
   "repo_flag": "PYTHON",
-  "uploaded_at": "2026-02-11T05:10:30.370219",
+  "uploaded_at": "2026-02-11T23:41:57.840076",
   "generated_files": [
+    ".env",
     ".streamlit/config.toml",
     "Dockerfile",
     "docker-compose.yaml"

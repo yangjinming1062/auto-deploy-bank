@@ -7,9 +7,11 @@ services:
       dockerfile: Dockerfile
     container_name: sql-database-agent-app
     ports:
-      - "40537:8501"
+      - "58697:8501"
     environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - ./data:/home/ubuntu/deploy-projects/330f536198430d7c918dc156/data
     deploy:
       resources:
         limits:
