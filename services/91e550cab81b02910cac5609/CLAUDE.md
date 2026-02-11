@@ -2,106 +2,102 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
-
-Flashback is an HTTP/HTTPS mocking library for testing purposes. It records HTTP transactions and replays them later, enabling tests without external network connections. It supports partial matching via customizable match rules and can generate SSL certificates on the fly for HTTPS mocking.
-
 ## Build Commands
 
 ```bash
-# Full build
+# Build all projects
 ./gradlew build
 
-# Clean build artifacts
-./gradlew clean
-
-# Build without running tests
-./gradlew build -x test
+# Build without tests
+./gradlew assemble
 
 # Run all tests
 ./gradlew test
 
-# Run tests for a specific module
+# Run a single test class
+./gradlew :flashback-core-impl:test --tests "com.linkedin.flashback.matchrules.MatchRuleUtilsTest"
+
+# Run tests in a specific module
 ./gradlew :flashback-core-impl:test
-
-# Run a specific test class
-./gradlew test --tests "*SceneAccessLayerTest"
-
-# Run a specific test method
-./gradlew test --tests "*SceneAccessLayerTest.testCanReplayScene"
-
-# Start the admin REST API server
-./gradlew :flashback-admin:startAdminServer --Args="-port 1234"
-
-# Or use the startup script directly
-./startAdminServer.sh -port 1234
 
 # Generate IntelliJ IDEA project files
 ./gradlew idea
+
+# Start the Flashback admin server (Rest.li API)
+./gradlew :flashback-admin:startAdminServer --Args="-port 1234"
+
+# Clean build artifacts
+./gradlew clean
 ```
+
+## Dependencies Between Modules
+
+```
+flashback-admin → flashback-smartproxy → flashback-netty, flashback-core-impl, mitm
+flashback-test-util → flashback-smartproxy, flashback-netty, flashback-core-impl
+flashback-smartproxy → flashback-netty, flashback-core-impl, mitm
+flashback-netty → flashback-core-impl
+```
+
+## Project Overview
+
+Flashback is an HTTP/HTTPS mocking library that records and replays HTTP transactions ("scenes") for testing without external network dependencies. It operates as a MITM (Man-in-the-Middle) proxy supporting both HTTP and HTTPS protocols.
 
 ## Architecture
 
 ### Module Structure
 
-- **flashback-core-impl**: Core functionality - Scene management, HTTP serialization/deserialization, MatchRule implementations
-- **flashback-netty**: Netty HTTP message builders and response mappers for converting between Netty and internal HTTP representations
-- **flashback-smartproxy**: Main proxy server entry point - FlashbackRunner, RecordController, ReplayController
-- **mitm**: Man-in-the-middle infrastructure - Certificate generation, SSL/TLS handling, proxy connection flows
-- **flashback-admin**: Rest.li-based admin API server for remote proxy control
-- **flashback-test-util**: FlashbackBaseTest base class for integration tests
-- **flashback-all**: Meta-project aggregating all dependencies
+- **flashback-core-impl**: Core domain models (Scene, MatchRule), serialization/deserialization, HTTP request/response wrappers
+- **flashback-netty**: Netty-specific builders and mappers for converting between Netty HTTP types and Flashback's serializable types
+- **flashback-smartproxy**: Main proxy logic - `FlashbackRunner` (entry point), `RecordController` (record mode), `ReplayController` (playback mode)
+- **flashback-admin**: Rest.li API (`FlashbackAdminResource`) for remote proxy control via HTTP endpoints
+- **flashback-test-util**: `FlashbackBaseTest` base class for integration tests
+- **mitm**: Generic MITM proxy infrastructure (not Flashback-specific) - `ProxyServer`, SSL/TLS certificate generation, connection flow handling
 
-### Core Concepts
+### Key Concepts
 
-**Scene**: Container for recorded HTTP transactions. Created via SceneFactory from SceneConfiguration. Stores requests/responses in memory and optionally serializes to JSON files.
+**Scene**: Contains recorded HTTP request/response pairs stored as JSON. Supports two modes:
+- `RECORD`: Intercepts and stores client requests and server responses
+- `PLAYBACK`: Matches incoming requests against recorded scenes and returns responses
 
-**SceneMode**: Four modes:
-- `RECORD`: Records incoming requests and forward responses
-- `PLAYBACK`: Matches requests against recorded scene and replays responses
-- `SEQUENTIAL_RECORD`: Records in sequence, plays back in sequence
-- `SEQUENTIAL_PLAYBACK`: Sequential matching without rules
+**MatchRule**: `BiPredicate<RecordedHttpRequest, RecordedHttpRequest>` interface for flexible request matching. Implementations include `MatchUri`, `MatchBody`, `MatchHeaders`, `MatchMethod`, and composite rules via `CompositeMatchRule`.
 
-**MatchRule**: Interface (`BiPredicate<RecordedHttpRequest, RecordedHttpRequest>`) for matching incoming requests to recorded ones. Implementations:
-- `MatchUri`, `MatchMethod`, `MatchHeaders`, `MatchBody` - Single aspect matchers
-- `CompositeMatchRule` - Combines multiple rules
-- `MatchRuleWhitelistTransform`, `MatchRuleBlacklistTransform` - Filter fields for comparison
+**ProxyModeController**: Interface with two implementations per connection:
+- `RecordController`: Forwards requests to server, records request/response pairs
+- `ReplayController`: Matches requests against scenes, returns recorded responses
 
-**FlashbackRunner**: Main proxy bootstrap class. Creates ProxyServer in record or replay mode with SSL support. Use the Builder pattern to configure:
-```java
-new FlashbackRunner.Builder()
-    .mode(SceneMode.PLAYBACK)
-    .sceneAccessLayer(new SceneAccessLayer(scene, matchRule))
-    .host("localhost").port(5555)
-    .certificateAuthority(certificateAuthority)
-    .rootCertificateInputStream(certStream).rootCertificatePassphrase("changeit")
-    .build()
-```
+### Request Flow
 
-**ProxyModeController**: Per-connection controller handling request/response flow. Two implementations:
-- `RecordController`: Forwards requests to server, records response
-- `ReplayController`: Matches request against scene, returns recorded response
+1. `FlashbackRunner` starts `ProxyServer` (Netty-based) configured with `ProxyModeControllerFactory`
+2. For each client connection, a new `RecordController` or `ReplayController` is created
+3. **Record mode**: Client request → RecordController → Server → RecordController (records response) → Client
+4. **Playback mode**: Client request → RecordController → MatchScene → Return recorded response
 
-### Key Classes
+### Serialization
 
-- `SceneAccessLayer`: Bridges FlashbackRunner with Scene; handles matching and playback
-- `RecordedHttpRequest/Response`: Serializable HTTP messages stored in scenes
-- `NettyHttpResponseMapper`: Converts RecordedHttpResponse to Netty FullHttpResponse
-- `FlashbackAdminResource`: Rest.li resource exposing admin actions (startFlashback, changeScene, shutDownFlashback)
-- `FlashbackBaseTest`: TestNG base class providing Flashback integration for tests
+Scenes are serialized to JSON using Jackson. Key classes:
+- `SceneSerializer` / `SceneDeserializer`: Serialize/deserialize scenes to/from JSON files
+- `RecordedHttpRequest` / `RecordedHttpResponse`: Serializable representations of HTTP messages
+- `RecordedHttpExchange`: Pairs a request with its corresponding response
 
-### Data Flow
+## Testing
 
-1. Client connects to FlashbackRunner proxy
-2. FlashbackRunner creates per-connection ProxyModeController (RecordController or ReplayController)
-3. RecordController: Client request → Server → Response → Scene
-4. ReplayController: Client request → Match against Scene via MatchRule → Return recorded Response or 400
+Tests use **TestNG** (not JUnit). The `FlashbackBaseTest` class provides helper methods:
+- `withMatchRule(MatchRule, Callable)`: Execute code with a specific match rule
+- `withScene(String/SceneConfiguration, Callable)`: Execute code with a specific scene
+- Override `flashbackTestClassSetUp()` to configure default scene/mode
 
-### Important Notes
+## Important File Patterns
 
-- **Test Framework**: Uses TestNG (`org.testng.annotations`), not JUnit
-- **SSL Certificates**: HTTPS support requires CertificateAuthority configuration and root certificate with passphrase
-- **Sensitive Data**: Scenes may contain API keys, tokens, secrets. Use match rule transformations to mask sensitive fields
-- **Dependency Management**: TestNG is a `testCompile` dependency, not `compile`
-- **Netty Version**: 4.0.27.Final - legacy Netty version
-- **Contribution Requirements**: All new features must include tests; bug fixes must include a test case demonstrating the fix
+- Match rule implementations: `flashback-core-impl/src/main/java/com/linkedin/flashback/matchrules/`
+- Proxy controllers: `flashback-smartproxy/src/main/java/com/linkedin/flashback/smartproxy/proxycontroller/`
+- Netty mappers: `flashback-netty/src/main/java/com/linkedin/flashback/netty/`
+- MITM proxy core: `mitm/src/main/java/com/linkedin/mitm/proxy/`
+
+## Contribution Guidelines
+
+Per CONTRIBUTING.md:
+- All new features must include tests that pass
+- Bug fixes must include a test case demonstrating the error it fixes
+- Large features require opening an issue first for discussion
+- Security vulnerabilities should be reported to security@linkedin.com (not filed on GitHub)

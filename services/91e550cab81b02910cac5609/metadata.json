@@ -9,13 +9,9 @@
   "language": "java",
   "star": 577,
   "repo_flag": "JAVA",
-  "uploaded_at": "2026-02-09T13:17:20.846488",
+  "uploaded_at": "2026-02-11T09:21:41.894943",
   "generated_files": [
-    "Dockerfile",
     "docker-compose.yaml",
-    "target.jar -> flashback-admin/build/libs/flashback-admin-0.0.10.jar (symlink)",
-    "docker-compose.yaml",
-    "nginx.conf",
-    "target.jar"
+    "nginx.conf"
   ]
 }
