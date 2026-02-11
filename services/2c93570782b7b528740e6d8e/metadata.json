@@ -1,0 +1,18 @@
+{
+  "service_id": "2c93570782b7b528740e6d8e",
+  "repo_name": "earthgecko/skyline",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "18.22MB",
+  "language": "python",
+  "star": 581,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-02-11T09:13:20.189705",
+  "generated_files": [
+    "create_test_accounts.py",
+    "/home/ubuntu/deploy-projects/2c93570782b7b528740e6d8e/skyline/webapp/webapp.py",
+    "/home/ubuntu/deploy-projects/2c93570782b7b528740e6d8e/Dockerfile"
+  ]
+}
