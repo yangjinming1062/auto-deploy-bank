@@ -4,100 +4,152 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-The `cryptography` library is the Python cryptographic standard library. It provides both high-level recipes (Fernet, utils) and low-level primitives (hazmat). The project has a hybrid Python/Rust architecture where:
+This is the **pyca/cryptography** library - a major Python cryptography library providing cryptographic recipes and primitives. It uses a hybrid Python/Rust architecture:
 
-- **Python** provides the public API and high-level interfaces
-- **Rust** implements core cryptographic operations via PyO3 bindings
-- **CFFI** provides bindings to OpenSSL C library functions
+- **Python** (`src/cryptography/`) - Public API, hazmat primitives, high-level interfaces
+- **Rust** (`src/rust/`) - Performance-critical code via PyO3 bindings
+- **CFFI** (`src/_cffi_src/`) - Bindings to OpenSSL C library
 
-## Build & Test Commands
+## Common Commands
 
+### Development Setup
 ```bash
-# Install development dependencies
-pip install -e ".[test,pep8test,nox,ssh]"
+# Install development environment (lint, type check, build, test)
+nox -e local
 
-# Run all Python tests
-nox -s tests
+# Install package in editable mode for C binding development
+pip install -e .
+```
 
-# Run a specific test file or path
-nox -s tests -- tests/x509/test_x509.py
+### Running Tests
+```bash
+# Run all Python tests with coverage
+nox -e tests
+
+# Run specific test file
+nox -e tests -- tests/x509/test_certificate.py
+
+# Run specific test class
+nox -e tests -- tests/test_fernet.py::TestFernet
+
+# Run specific test method
+nox -e tests -- tests/test_fernet.py::TestFernet::test_init
 
 # Run Rust tests
-nox -s rust
+nox -e rust
 
-# Run linting (ruff + mypy + check-sdist)
-nox -s flake
+# Run tests in random order
+nox -e tests-randomorder
 
-# Full local development workflow (format, lint, build, test)
-nox -s local
+# Build in debug mode (faster builds, slower tests)
+nox -e tests-rust-debug
+```
 
-# Build documentation
-nox -s docs
+### Linting and Type Checking
+```bash
+# Run all linting (ruff, mypy, check-sdist)
+nox -e flake
 
-# Build in development mode (useful for live debugging)
-maturin develop --release --uv
+# Run just ruff
+ruff check
+ruff format --check
+
+# Run mypy
+mypy src/cryptography/ tests/ noxfile.py
+```
+
+### Documentation
+```bash
+# Build docs (requires libenchant)
+nox -e docs
+
+# Link check
+nox -e docs-linkcheck
 ```
 
 ## Architecture
 
-### Python Module Hierarchy
+### Python/Rust Integration Pattern
 
+Most cryptographic primitives follow this pattern:
+
+**Python side** (`src/cryptography/hazmat/primitives/hashes.py`):
+- Defines abstract base classes (`HashAlgorithm`, `HashContext`)
+- Algorithm parameter classes (`SHA256`, `BLAKE2b`, etc.)
+- Imports implementation from `cryptography.hazmat.bindings._rust.openssl`
+- Registers Rust classes as implementations of ABCs
+
+```python
+from cryptography.hazmat.bindings._rust import openssl as rust_openssl
+
+class HashContext(metaclass=abc.ABCMeta):
+    @abc.abstractmethod
+    def update(self, data: Buffer) -> None: ...
+
+Hash = rust_openssl.hashes.Hash
+HashContext.register(Hash)
 ```
-cryptography/
-├── x509/              # X.509 certificate & CSR handling
-├── hazmat/            # "Hazardous Materials" - low-level crypto
-│   ├── primitives/   # Symmetric ciphers, hashes, HMAC, KDF, asymmetric
-│   ├── bindings/     # Rust (_rust) and OpenSSL CFFI bindings
-│   ├── decrepit/     # Deprecated/legacy algorithms
-│   └── backends/     # Backend selector logic
-├── fernet.py          # High-level symmetric encryption
-└── utils.py           # Utility functions
+
+**Rust side** (`src/rust/src/backend/hashes.rs`):
+- Implements `#[pyclass]` structs with `#[pymethods]`
+- Uses PyO3 to expose as Python classes
+- Wraps OpenSSL operations via the `openssl` Rust crate
+
+```rust
+#[pyo3::pyclass(module = "cryptography.hazmat.bindings._rust.openssl.hashes")]
+pub(crate) struct Hash { ... }
+
+#[pyo3::pymethods]
+impl Hash {
+    #[new]
+    pub(crate) fn new(...) -> CryptographyResult<Hash> { ... }
+}
 ```
 
-### Rust Workspace Crates
+### Key Python Modules
+- `cryptography/` - Public API
+  - `fernet.py` - High-level symmetric encryption (Fernet)
+  - `utils.py` - Utility functions
+  - `exceptions.py` - Exception classes
+- `cryptography/hazmat/` - Cryptographic primitives (the "hazardous materials" layer)
+  - `primitives/` - Low-level primitives (ciphers, hashes, KDFs, asymmetric crypto)
+  - `bindings/` - CFFI and Rust bindings (`_rust/` for PyO3, `openssl/` for CFFI)
+  - `backends/` - Backend support (OpenSSL)
+  - `decrepit/` - Deprecated/legacy ciphers (3DES, RC4, etc.)
 
-The `src/rust/` directory contains a Cargo workspace with these crates:
+### Rust Crates (Cargo workspace)
+- `cryptography-rust` - Main crate, exports PyO3 modules (src/rust/src/lib.rs)
+  - `src/backend/` - OpenSSL operations (aead, ciphers, hashes, hmac, kdf, keys, rsa, ec, etc.)
+  - `src/x509/` - X.509 certificate parsing and verification
+- `cryptography-cffi` - FFI helpers for Rust/OpenSSL interop
+- `cryptography-crypto` - Core crypto primitives (AEAD, hashes, MACs, ciphers)
+- `cryptography-key-parsing` - Private key parsing (PEM/DER)
+- `cryptography-openssl` - OpenSSL wrapper types
+- `cryptography-x509` - X.509 certificate handling
+- `cryptography-x509-verification` - Certificate verification policy
 
-| Crate | Purpose |
-|-------|---------|
-| `cryptography-rust` | Main library; PyO3 module exports |
-| `cryptography-cffi` | CFFI bindings for low-level functions |
-| `cryptography-crypto` | Core cryptographic primitives |
-| `cryptography-key-parsing` | Private/public key parsing |
-| `cryptography-openssl` | OpenSSL integration & FIPS |
-| `cryptography-x509` | X.509 certificate handling |
-| `cryptography-x509-verification` | Certificate verification policies |
+### CFFI Bindings
+Bindings to OpenSSL live in `src/_cffi_src/openssl/`. When modifying these:
+1. Recompile with `pip install -e .` or `nox -e local` to test changes
+2. Use `CONDITIONAL_NAMES` in `_conditional.py` for version-gated features
+3. Follow C style guidelines (no parameter names, C-style comments, 80-char lines)
+4. Define `Cryptography_HAS_*` constants for feature detection
 
-Rust modules expose submodules to Python via PyO3:
-- `cryptography.hazmat.bindings._rust` - main Rust module
-- `cryptography.hazmat.bindings._rust.openssl` - OpenSSL operations
-- `cryptography.hazmat.bindings._rust.x509` - X.509 operations
+### Build System
+- **Build backend**: `maturin` (for Rust/Python interop)
+- **Python dependencies**: Managed via `pyproject.toml`
+- **Rust MSRV**: 1.83.0
+- **Python version**: 3.8+ (excluding 3.9.0, 3.9.1)
 
-### Key Integration Points
+### Test Configuration
+- Tests use `pytest` with `pytest-xdist` for parallel execution
+- Coverage tracking for both Python (`coverage.py`) and Rust (`llvm-cov`)
+- Backend fixture in `conftest.py` provides OpenSSL backend for tests
+- Tests verify error stack is clear before and after each test
 
-- **build.rs**: Detects OpenSSL/LibreSSL/BoringSSL/AWS-LC at build time, sets cfg flags
-- **OpenSSL version flags**: `CRYPTOGRAPHY_OPENSSL_309_OR_GREATER`, `CRYPTOGRAPHY_OPENSSL_320_OR_GREATER`, etc.
-- **Backend flags**: `CRYPTOGRAPHY_IS_LIBRESSL`, `CRYPTOGRAPHY_IS_BORINGSSL`, `CRYPTOGRAPHY_IS_AWSLC`
-- **ASN1**: Uses `asn1` Rust crate for DER encoding/decoding
+## Adding New Features
 
-### Test Organization
-
-- `tests/` - Python tests with pytest
-- `tests/hazmat/primitives/` - Primitive-specific tests
-- `tests/x509/` - X.509 tests
-- `tests/wycheproof/` - Wycheproof vector tests
-- Rust tests are in `src/rust/**/tests/` and run via `cargo test`
-
-### Adding New Features
-
-1. **Python-only**: Add to appropriate `src/cryptography/` submodule
-2. **Rust implementation**: Add to relevant crate in `src/rust/`, expose via `lib.rs` pymodule
-3. **New primitives**: May require updates to `src/rust/build.rs` for build-time detection
-4. **Test vectors**: Add to `vectors/cryptography_vectors/` directory
-
-## Configuration
-
-- **Ruff**: `pyproject.toml` [tool.ruff] - line-length 79, specific ignore rules
-- **Mypy**: `pyproject.toml` [tool.mypy] - strict mode enabled
-- **Coverage**: `pyproject.toml` [tool.coverage.run]
-- **Pytest**: `pyproject.toml` [tool.pytest.ini_options]
+1. **Python-only additions**: Add to the appropriate module in `src/cryptography/`
+2. **Rust implementations**: Add to the relevant module in `src/rust/src/backend/` and export from `lib.rs`
+3. **New OpenSSL functions**: Add to CFFI bindings in `src/_cffi_src/openssl/` with conditional compilation
+4. **New algorithms**: Typically require implementations in both Python (algorithm params) and Rust (backend operations)
