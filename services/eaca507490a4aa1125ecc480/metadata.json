@@ -9,8 +9,12 @@
   "language": "python",
   "star": 773,
   "repo_flag": "Auto-CVE",
-  "uploaded_at": "2026-02-11T22:57:20.658688",
+  "uploaded_at": "2026-02-11T23:05:46.749902",
   "generated_files": [
-    ".env.example"
+    "/home/ubuntu/deploy-projects/eaca507490a4aa1125ecc480/Dockerfile",
+    "/home/ubuntu/deploy-projects/eaca507490a4aa1125ecc480/docker-compose.yaml",
+    "/home/ubuntu/deploy-projects/eaca507490a4aa1125ecc480/docker-compose.yaml",
+    "/home/ubuntu/deploy-projects/eaca507490a4aa1125ecc480/Dockerfile",
+    "/home/ubuntu/deploy-projects/eaca507490a4aa1125ecc480/python/tests/integration_tests/fake_server.py"
   ]
 }
