@@ -1,16 +1,24 @@
 services:
-  langsmith-demo:
+  langsmith-server:
     build:
-      context: ./python
+      context: .
       dockerfile: Dockerfile
-    container_name: langsmith-demo
-    ports:
-      - "40192:8080"
+    container_name: langsmith-server
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
     environment:
-      - LANGSMITH_TRACING=${LANGSMITH_TRACING:-true}
+      - LANGSMITH_TRACING=true
       - LANGSMITH_API_KEY=${LANGSMITH_API_KEY:-}
-      - LANGSMITH_ENDPOINT=${LANGSMITH_ENDPOINT:-https://api.smith.langchain.com}
-      - LANGSMITH_PROJECT=${LANGSMITH_PROJECT:-default}
+      - LANGSMITH_ENDPOINT=https://api.smith.langchain.com
+      - LANGSMITH_PROJECT=default
+      - OTEL_ENABLED=false
+    healthcheck:
+      test: ["CMD", "curl", "-X", "POST", "--fail", "http://127.0.0.1:54773/fake-route"]
+      interval: 30s
+      timeout: 10s
+      start_period: 5s
+      retries: 3
     deploy:
       resources:
         limits:
@@ -19,9 +27,3 @@ services:
         reservations:
           cpus: '1.0'
           memory: 1G
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 5s

@@ -4,11 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is the LangSmith SDK repository containing both Python and JavaScript/TypeScript clients for the [LangSmith observability platform](https://smith.langchain.com/). The SDK enables tracing, monitoring, and evaluation of LLM applications.
+This is the LangSmith SDK monorepo containing Python and JavaScript/TypeScript client libraries for the LangSmith observability and evaluation platform. LangSmith helps debug, evaluate, and monitor LLM applications and agents.
 
-## Development Commands
+## Build & Test Commands
 
-### Python SDK (python/ directory)
+### Python SDK (`python/`)
 
 ```bash
 cd python
@@ -16,22 +16,36 @@ cd python
 # Install dependencies (uses uv)
 uv sync
 
-# Run tests
-pytest                                    # All tests
-pytest -m slow                            # Slow tests only
-pytest tests/unit_tests/test_client.py    # Single test file
+# Run unit tests (sets PYTHONDEVMODE, disables network access by default)
+make tests
 
-# Linting and formatting
-make format                               # Format all code
-make lint                                 # Lint all code
-uv run ruff check --fix .                  # Auto-fix linting
-uv run mypy langsmith                     # Type checking
+# Run specific test file
+TEST=tests/unit_tests/test_client.py make tests
 
-# Build and publish
-pip install -e .                          # Editable install
+# Run all pytest options directly
+uv run python -m pytest tests/unit_tests -x -v
+
+# Integration tests (requires API keys)
+make integration_tests
+make integration_tests_fast  # Uses pytest-xdist for parallel execution
+
+# Eval tests
+make evals
+
+# Doctests
+make doctest
+
+# Format code
+make format
+
+# Lint and type check
+make lint
+
+# Build package
+make build
 ```
 
-### JavaScript SDK (js/ directory)
+### JavaScript SDK (`js/`)
 
 ```bash
 cd js
@@ -39,119 +53,155 @@ cd js
 # Install dependencies
 yarn install
 
-# Build
-yarn build                                # Builds ESM and CJS outputs
-yarn build:typedoc                        # Build Typedoc API reference
+# Build the package (generates ESM, CJS, and type definitions)
+yarn build
 
-# Testing
-yarn test                                 # Jest unit tests
-yarn test:single path/to/test.ts          # Run single test file
-yarn test:integration                     # Integration tests
-yarn test:vitest                          # Vitest evaluation tests
-yarn test:eval:vitest                     # Eval-specific vitest tests
+# Run unit tests (Jest)
+yarn test
 
-# Linting and formatting
-yarn lint                                 # ESLint
-yarn lint:fix                             # Auto-fix linting
-yarn format                               # Prettier format
-yarn format:check                         # Check formatting
-yarn check:types                          # TypeScript type check
+# Run integration tests
+yarn test:integration
+
+# Run a single test file
+yarn test:single --testPathPattern=traceable.test.ts
+
+# Watch mode for a single test
+yarn watch:single --testPathPattern=traceable.test.ts
+
+# Type check
+yarn check:types
+
+# Format code
+yarn format
+
+# Lint
+yarn lint
+```
+
+### Root Level
+
+```bash
+# Format both Python and JS
+make format
+
+# Lint both Python and JS
+make lint
 ```
 
 ## Architecture
 
-### Python SDK (langsmith/)
+### Python SDK Structure (`python/langsmith/`)
 
-- **Client (`client.py`)**: Main API client for CRUD operations on runs, datasets, projects. Uses background threads to asynchronously post traces to the LangSmith API.
-- **RunTree (`run_trees.py`)**: Core tracing primitive. Represents a trace span with parent/child relationships. Methods: `post()`, `end()`, `patch()`.
-- **Tracing Decorator (`run_helpers.py`)**: Contains the `@traceable` decorator that wraps functions to automatically create RunTree spans. Manages tracing context via context variables.
-- **Schemas (`schemas.py`)**: Pydantic models for API request/response types.
-- **Evaluation (`evaluation/`)**: Evaluation framework with `StringEvaluator`, `LLMEnumerator`, and batch evaluation runners.
-- **Wrappers (`wrappers/`)**: LLM SDK wrappers for OpenAI, Anthropic, and Gemini to auto-trace API calls.
-- **Internal (`_internal/`)**: Private implementation details including background thread handling, serialization, and OpenTelemetry support.
-- **Sandbox (`sandbox/`)**: Sandboxed execution environment for running code in isolated containers.
-- **Integrations (`integrations/`)**: Third-party integrations (OpenAI Agents SDK, Claude Agent SDK, Google ADK, OpenTelemetry).
+**Core Modules:**
 
-### JavaScript SDK (js/src/)
+- **client.py**: Main `Client` class for API interactions (datasets, examples, runs, projects). Uses `requests` with automatic retry and batching.
+- **async_client.py**: Async version using `httpx`
+- **run_trees.py**: `RunTree` class for creating and managing trace runs hierarchically. Implements the post/end/patch lifecycle pattern.
+- **run_helpers.py**: Core tracing logic including `@traceable` decorator, context management, and helper functions (`trace`, `tracing_context`)
+- **schemas.py**: Pydantic v2 models for API requests/responses
+- **evaluation/**: Evaluation framework:
+  - `_runner.py`: Synchronous evaluation orchestrator
+  - `_arunner.py`: Async evaluation orchestrator
+  - `evaluator.py`: `RunEvaluator` abstract base class and `EvaluationResult`
+  - `llm_evaluator.py`: LLM-based evaluators using the `evaluate()` function
+- **wrappers/**: Third-party SDK auto-instrumentation:
+  - `_openai.py`: OpenAI SDK wrapper with token usage tracking
+  - `_anthropic.py`: Anthropic SDK wrapper
+  - `_gemini.py`: Google Gemini SDK wrapper
+- **integrations/**: Framework-specific integrations:
+  - `otel/`: OpenTelemetry SDK instrumentation
+  - `claude_agent_sdk/`: Claude Agent SDK tracing
+  - `openai_agents_sdk/`: OpenAI Agents SDK tracing
+  - `google_adk/`: Google Agent Development Kit tracing
+- **_internal/**: Internal utilities (private module):
+  - `_background_thread.py`: Asynchronous buffered uploads with thread pool
+  - `_operations.py`: Retry logic, backoff, and operation utilities
+  - `_serde.py`: orjson-based serialization helpers
+  - `_aiter.py`: Async iteration utilities
+  - `_patch.py`: Monkey patching utilities
+  - `_embedding_distance.py`: Embedding-based evaluation metrics
+- **prompt_cache.py**: Prompt caching functionality with configurable global cache
+- **anonymizer.py**: Data anonymization for PII handling
+- **pytest_plugin.py**: Pytest plugin for LangSmith datasets as tests
+- **beta/**: Experimental/preview features
 
-- **Client (`client.ts`)**: API client with batched trace uploading and retry logic.
-- **RunTree (`run_trees.ts`)**: Core trace span class mirroring Python implementation.
-- **Traceable (`traceable.ts`)**: Function wrapper for automatic tracing with configurable options.
-- **Evaluation (`evaluation/`)**: Evaluation framework with evaluators and batch runners.
-- **Wrappers (`wrappers/`)**: LLM wrappers for OpenAI (`wrapOpenAI`), Anthropic (`wrapSDK`), and Gemini.
-- **Testing Integration (`jest/`, `vitest/`)**: Test reporters and utilities for running evaluations within test frameworks.
-- **Experimental (`experimental/`)**: OpenTelemetry setup, Vercel AI SDK integration, and sandbox features.
+### JavaScript SDK Structure (`js/src/`)
+
+- **client.ts**: Main `Client` class using `fetch` with retry logic
+- **run_trees.ts**: `RunTree` class mirroring Python implementation
+- **traceable.ts**: Core `traceable()` function for decorating traced functions
+- **schemas.ts**: TypeScript interfaces for API data
+- **langchain.ts**: LangChain integration utilities
+- **evaluation/**: Evaluation utilities
+- **wrappers/**: Third-party SDK wrappers (OpenAI, Anthropic, Gemini)
+- **jest/**: Jest reporter for LangSmith evaluation integration
+- **vitest/**: Vitest reporter for LangSmith evaluation integration
+- **utils/**: Utility functions (prompt cache, anonymization)
+- **singletons/**: Singleton instances (fetch, traceable)
+- **experimental/**: Experimental features:
+  - `otel/`: OpenTelemetry setup and exporters
+  - `vercel/`: Vercel AI SDK integration
+  - `anthropic/`: Claude SDK integration
+  - `sandbox/`: Sandboxed execution tracing
 
 ### Shared Concepts
 
-Both SDKs implement:
-- **Run Trees**: Hierarchical trace spans with typed run_type (llm, chain, tool)
-- **Batched Uploads**: Traces are collected and sent asynchronously in batches
-- **Context Variables**: Tracing state propagates through function calls
-- **Datasets**: Collections of examples for evaluation
-- **Feedback**: Metrics/scores attached to runs
+Both SDKs implement the same core patterns:
+
+1. **Tracing Lifecycle** (post → end → patch):
+   - `post()`: Register run initially with inputs
+   - `end()`: Finalize run with outputs or error
+   - `patch()`: Upload to LangSmith API
+
+2. **Hierarchical Runs**:
+   - Parent `RunTree` creates child runs via `create_child()`
+   - Automatically propagates context and trace IDs
+
+3. **@traceable decorator / traceable() function**:
+   - Wraps functions to auto-capture inputs, outputs, errors, timing
+   - Manages RunTree creation and lifecycle
+   - Supports metadata, tags, and callbacks
+
+4. **Client API**:
+   - High-level operations on projects, datasets, examples, runs
+   - List, create, update, delete operations
+
+5. **Wrappers**:
+   - Wrap third-party LLM SDKs (OpenAI, Anthropic, Gemini)
+   - Auto-trace with token usage tracking
 
 ## Key Configuration
 
 ### Environment Variables
 
+```bash
+LANGSMITH_TRACING=true        # Enable tracing
+LANGSMITH_API_KEY=ls_...      # API key
+LANGSMITH_ENDPOINT=https://api.smith.langchain.com  # API URL
+LANGSMITH_PROJECT=MyProject   # Project name (defaults to "default")
+LANGSMITH_WORKSPACE_ID=...    # Required for org-scoped keys
 ```
-LANGSMITH_API_KEY        # API key (required)
-LANGSMITH_TRACING        # Enable tracing (set to "true")
-LANGSMITH_PROJECT        # Project name (default: "default")
-LANGSMITH_ENDPOINT       # API URL (default: https://api.smith.langchain.com)
-LANGSMITH_WORKSPACE_ID   # Workspace ID for org-scoped keys
+
+### Pre-commit Hooks
+
+The project uses pre-commit hooks for automated formatting and linting. Install with:
+```bash
+pip install pre-commit && pre-commit install
 ```
-
-### Python pyproject.toml Key Settings
-
-- Build: `hatchling` with dynamic versioning from `langsmith/__init__.py`
-- Python: `>=3.10`
-- Linting: `ruff` (Google docstring convention) and `mypy` with pydantic plugin
-- Testing: `pytest` with `pytest-asyncio`, `vcrpy` for cassette tests, `pytest-xdist` for parallel runs
-
-### JavaScript package.json Key Settings
-
-- TypeScript with ESM and CJS builds
-- Jest for unit tests (with `experimental-vm-modules`)
-- Vitest for evaluation tests
-- Prettier + ESLint for formatting/linting
-- Entry points defined via `exports` field for conditional module resolution
-
-## Testing Patterns
-
-### Python
-
-- Tests use VCRpy cassettes in `tests/cassettes/` to record/replay HTTP responses
-- Integration tests use `@pytest.mark.vcr()` or test against live API with `LANGSMITH_API_KEY`
-- Evaluation tests in `tests/evaluation/`
-- Unit tests in `tests/unit_tests/`
-
-### JavaScript
-
-- Jest for unit tests in `src/tests/`
-- Integration tests tagged with `.int.test.ts` suffix
-- Vitest for evaluation tests with custom config `ls.vitest.config.ts`
-- Mock clients in `src/tests/utils/mock_client.ts`
 
 ## Code Style
 
-### Python
+- **Python**: ruff for formatting (Google docstring convention), mypy for type checking
+- **JavaScript**: prettier for formatting, eslint with TypeScript support
 
-- Use Pydantic v2 for data validation
-- Google-style docstrings (enforced by ruff)
-- Type hints required (`disallow_untyped_defs` in mypy)
-- Prefer `orjson` for JSON serialization in hot paths
+## Testing Patterns
 
-### JavaScript
+### Python Tests
+- **Unit tests**: Use VCR.py to record/replay HTTP interactions (`cassettes/` directory)
+- **Integration tests**: Live API calls, require environment variables
+- **Custom request matcher**: OpenAI calls match on hashed request bodies (model, messages, tools)
 
-- TypeScript strict mode
-- Prettier for formatting (2-space indent)
-- ESLint with TypeScript parser
-- Named exports preferred over default exports
-
-## Pre-commit Hooks
-
-Run `pre-commit install` to set up automatic formatting/linting on commit. Hooks enforce:
-- Python: ruff format, ruff check --fix, mypy type check
-- JavaScript: prettier format, eslint --fix, TypeScript type check
+### JavaScript Tests
+- **Unit tests**: Jest with mock service worker (msw) for HTTP mocking
+- **Integration tests**: Live API calls
+- **Evaluation tests**: Vitest-based with specialized config (`ls.vitest.config.ts`)
