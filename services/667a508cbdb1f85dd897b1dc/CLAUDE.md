@@ -2,57 +2,60 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
-
-**qs** is a querystring parsing and stringifying library with support for nesting, arrays, and security features like depth limits. It parses query strings into objects and stringifies objects into URL query strings.
-
-## Build Commands
+## Commands
 
 ```bash
-npm test              # Run full test suite with linting and coverage
-npm run tests-only    # Run tests without linting
-npm run lint          # Run ESLint on codebase
-npm run dist          # Build browser bundle (outputs to dist/qs.js)
-npm run readme        # Validate README.md with evalmd
-```
+# Run full test suite (includes linting and README validation)
+npm test
 
-To run a single test file or test case:
-```bash
-npx tape test/parse.js
-npx tape test/parse.js -f "test name pattern"  # Run specific test
+# Run tests only, without linting
+npm run tests-only
+
+# Run a single test file
+npx tape 'test/parse.js'
+
+# Run linting
+npm run lint
+
+# Build browserify bundle for dist/
+npm run dist
+
+# Validate README.md (checks code examples)
+npm run readme
 ```
 
 ## Architecture
 
-The library uses CommonJS (`'use strict'`) and has a simple modular structure:
+**qs** is a querystring parsing and stringifying library with support for nested objects, arrays, and security-focused depth limits.
 
-- **lib/index.js** - Main entry point that exports `parse`, `stringify`, and `formats`
-- **lib/parse.js** - Query string parsing with support for nested objects, arrays, and various options. Key functions:
-  - `parseValues()` - Splits query string and handles delimiters
-  - `splitKeyIntoSegments()` - Parses bracket notation into key segments
-  - `parseObject()` - Recursively builds nested objects from parsed segments
-  - `parseKeys()` - Main parsing orchestrator
-- **lib/stringify.js** - Object to query string conversion with:
-  - Cyclic reference detection using `side-channel` to prevent infinite loops
-  - `arrayPrefixGenerators` for different array formats (`indices`, `brackets`, `repeat`, `comma`)
-  - Recursive stringification with depth tracking
-- **lib/utils.js** - Shared utilities:
-  - `merge()` - Deep merging with overflow tracking for arrays exceeding `arrayLimit`
-  - `encode()`/`decode()` - RFC 3986/RFC 1738 URL encoding
-  - `compact()` - Removes `undefined` values from nested structures
-  - `isOverflow()`/`markOverflow()` - Track arrays that exceeded `arrayLimit` (converted to objects)
-- **lib/formats.js** - Encoding format constants (RFC3986, RFC1738) and formatters
+### Source Structure
 
-## Key Security Features
+- **lib/index.js** - Main entry point; exports `{ formats, parse, stringify }`
+- **lib/parse.js** - Parses querystrings into nested objects. Handles bracket notation `foo[bar]=baz`, dot notation, array syntax, and charset detection. Uses `side-channel` pattern to track array overflow objects (when indices exceed `arrayLimit`).
+- **lib/stringify.js** - Converts objects back to querystrings. Recursively traverses objects with cyclic reference detection via side-channel. Supports multiple array formats (`indices`, `brackets`, `repeat`, `comma`).
+- **lib/utils.js** - Shared utilities: `encode`/`decode` for URI encoding, `merge` for deep object merging, `compact` for removing undefined values, `combine` for array concatenation with overflow handling.
+- **lib/formats.js** - Defines RFC3986 (default, uses `%20` for space) and RFC1738 (uses `+` for space) format constants with formatters.
 
-- **Depth limiting** (default 5): Prevents deep object DoS attacks via `strictDepth` option
-- **Array limiting** (default 20): High indices become object keys instead of array elements
-- **Parameter limiting** (default 1000): Prevents large query string DoS attacks
-- **Prototype pollution protection**: Ignores `__proto__` and prototype properties by default
+### Key Design Patterns
 
-## Code Style
+1. **Side-channel tracking**: Uses `side-channel` package to track objects that overflow array limits (indices >= `arrayLimit`) without modifying the objects themselves. Functions: `markOverflow`, `isOverflow`, `getMaxIndex`, `setMaxIndex`.
 
-- 4-space indentation
-- ESLint config extends `@ljharb/eslint-config` with some overrides
-- No `break` statements (use `return` or structured control flow instead)
-- Custom `has` variable for `Object.prototype.hasOwnProperty` to avoid reassignment
+2. **Options normalization**: Both `parse` and `stringify` have `normalize*Options` functions that validate and merge user options with defaults, throwing `TypeError` for invalid inputs.
+
+3. **Depth limiting**: Parse limits nesting depth (default 5) via `splitKeyIntoSegments` to mitigate DoS attacks.
+
+4. **Plain objects**: When `plainObjects: true`, uses `{ __proto__: null }` to avoid prototype pollution.
+
+### Test Organization
+
+Tests use `tape` framework with nested `t.test()` calls. Key test files:
+- **test/parse.js** - Extensive parsing tests with many option combinations
+- **test/stringify.js** - Stringification tests
+- **test/utils.js** - Utility function tests
+- **test/empty-keys-cases.js** - Edge cases for empty/missing keys
+
+### Important Options
+
+**Parse options**: `depth`, `arrayLimit`, `parameterLimit`, `allowPrototypes`, `plainObjects`, `charset`, `charsetSentinel`, `strictDepth`, `throwOnLimitExceeded`
+
+**Stringify options**: `arrayFormat`, `encode`, `encodeValuesOnly`, `skipNulls`, `strictNullHandling`, `allowDots`, `serializeDate`, `sort`, `filter`
