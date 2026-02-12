@@ -1,0 +1,94 @@
+# Vikunja Configuration File
+# See https://vikunja.io/docs/config/ for more details
+
+# Database Configuration
+database:
+  type: "mysql"  # Can be mysql, postgres, or sqlite
+  host: "localhost"
+  user: "vikunja"
+  password: "password"
+  database: "vikunja"
+  path: ""  # Only used for sqlite
+  maxopenconnections: 100
+  maxidleconnections: 50
+  maxconnectionlifetime: 10000
+  sslmode: "disable"
+  tls: "false"
+  schema: "public"
+
+# Service Configuration
+service:
+  interface: ":3456"
+  publicurl: "http://34.127.19.15:42765/"
+  jwtsecret: "test-jwt-secret-key-for-security-testing"
+  enableregistration: true
+  enablelinksharing: true
+  enabletaskattachments: true
+  enabletaskcomments: true
+  enabletotp: true
+  maxitemsperpage: 50
+  timezone: "GMT"
+  bcryptrounds: 10
+  rootpath: "."
+
+# Authentication Configuration
+auth:
+  local:
+    enabled: true
+  ldap:
+    enabled: false
+
+# Mailer Configuration (disabled by default)
+mailer:
+  enabled: false
+  host: ""
+  port: 587
+  username: ""
+  password: ""
+  fromemail: "mail@vikunja"
+
+# Redis Configuration (disabled by default)
+redis:
+  enabled: false
+  host: "localhost:6379"
+  password: ""
+  db: 0
+
+# Log Configuration
+log:
+  enabled: true
+  standard: "stdout"
+  level: "INFO"
+  format: "text"
+  path: "logs"
+  database: "off"
+  database_level: "WARNING"
+  http: "stdout"
+  events: "off"
+  mail: "off"
+
+# File Storage Configuration
+files:
+  basepath: "files"
+  maxsize: "20MB"
+  type: "local"
+
+# Rate Limit Configuration
+ratelimit:
+  enabled: false
+  kind: "user"
+  limit: 100
+  period: 60
+  store: "memory"
+
+# CORS Configuration
+cors:
+  enable: true
+  origins:
+    - "http://127.0.0.1:*"
+    - "http://localhost:*"
+    - "http://34.127.19.15:*"
+
+# Metrics Configuration (disabled by default)
+metrics:
+  enabled: false

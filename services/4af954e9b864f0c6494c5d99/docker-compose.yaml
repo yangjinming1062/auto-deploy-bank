@@ -3,59 +3,81 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - RELEASE_VERSION=dev
     container_name: vikunja
     ports:
-      - "43195:3456"
+      - "42765:3456"
     environment:
+      - VIKUNJA_SERVICE_JWTSECRET=test-jwt-secret-key-for-security-testing
+      - VIKUNJA_SERVICE_INTERFACE=:3456
+      - VIKUNJA_SERVICE_PUBLICURL=http://34.127.19.15:42765/
+      - VIKUNJA_DATABASE_TYPE=mysql
+      - VIKUNJA_DATABASE_HOST=mysql
+      - VIKUNJA_DATABASE_USER=vikunja
+      - VIKUNJA_DATABASE_PASSWORD=password
+      - VIKUNJA_DATABASE_DATABASE=vikunja
+      - VIKUNJA_MAILER_ENABLED=false
+      - VIKUNJA_SERVICE_ENABLEREGISTRATION=true
+      - VIKUNJA_LOG_LEVEL=INFO
+      - VIKUNJA_REDIS_ENABLED=false
+      - VIKUNJA_RATE_LIMIT_ENABLED=false
       - VIKUNJA_SERVICE_ROOTPATH=/app/vikunja/
-      - VIKUNJA_DATABASE_PATH=/app/vikunja/db/vikunja.db
-      - VIKUNJA_FILES_BASEPATH=/app/vikunja/files
-      - VIKUNJA_DATABASE_TYPE=sqlite
     volumes:
-      - vikunja_data:/app/vikunja/
-      - ./config.json:/app/vikunja/config.json:ro
-    restart: unless-stopped
+      - ./config.yaml:/app/vikunja/config.yaml:ro
+      - ./files:/app/vikunja/files
+      - ./cache:/app/vikunja/.cache
+      - ./target.jar:/app/target.jar
+    depends_on:
+      mysql:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3456/api/v1/info"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3456/api/v1/health"]
       interval: 30s
       timeout: 10s
-      retries: 3
-      start_period: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - vikunja-network
     deploy:
       resources:
         limits:
-          cpus: "2.0"
+          cpus: '2.0'
           memory: 4G
         reservations:
-          cpus: "1.0"
+          cpus: '1.0'
           memory: 1G
-    depends_on:
-      - db
 
-  db:
-    image: mysql:8
-    container_name: vikunja-db
+  mysql:
+    image: mysql:8.0
+    container_name: vikunja-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: vikunja
-      MYSQL_DATABASE: vikunja
-      MYSQL_USER: vikunja
-      MYSQL_PASSWORD: vikunja
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=vikunja
+      - MYSQL_USER=vikunja
+      - MYSQL_PASSWORD=password
     volumes:
-      - mysql_data:/var/lib/mysql
+      - mysql-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pvikunja"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
+    networks:
+      - vikunja-network
     deploy:
       resources:
         limits:
-          cpus: "1.0"
+          cpus: '1.0'
           memory: 2G
         reservations:
-          cpus: "0.5"
+          cpus: '0.5'
           memory: 512M
 
+networks:
+  vikunja-network:
+    driver: bridge
+
 volumes:
-  vikunja_data:
-  mysql_data:
+  mysql-data:
