@@ -1,0 +1,85 @@
+services:
+  app:
+    build: .
+    ports:
+      - "41263:81"
+    environment:
+      - NODE_ENV=production
+      - NODE_OPTIONS=--openssl-legacy-provider
+      - PORT=81
+      - MONGODB_HOST=mongodb
+      - MONGODB_PORT=27017
+      - MONGODB_DB=doracms
+      - MONGODB_URL=mongodb://mongodb:27017/doracms
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - SESSION_SECRET=doracms_secret
+      - ENCRYPT_KEY=dora
+      - AUTH_COOKIE_NAME=doracms
+      - SITETITLE=DoraCMS
+      - SITEDOMAIN=http://localhost:41263
+      - SITEICP=
+      - SITEVERSION=v1.1.1
+      - SYSTEMMAIL=admin@example.com
+      - UPLOAD_PATH=./public/upload
+      - DEBUG=false
+      - REDIS_PASSWORD=
+      - SITE_EMAIL=
+      - SITE_EMAIL_PASSWORD=
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - doracms-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:81/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  mongodb:
+    image: mongo:3.6
+    networks:
+      - doracms-network
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=doracms
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    image: redis:3.2-alpine
+    networks:
+      - doracms-network
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  doracms-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+  redis_data:
