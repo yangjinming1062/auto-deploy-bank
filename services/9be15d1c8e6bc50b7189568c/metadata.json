@@ -1,0 +1,17 @@
+{
+  "service_id": "9be15d1c8e6bc50b7189568c",
+  "repo_name": "python-pillow/Pillow",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main@2026-02-12",
+  "status": "deploying",
+  "package_size": "45.63MB",
+  "language": "python",
+  "star": 13377,
+  "repo_flag": "Auto-CVE",
+  "uploaded_at": "2026-02-12T13:24:17.789119",
+  "generated_files": [
+    "Dockerfile",
+    "docker-compose.yaml"
+  ]
+}
