@@ -1,10 +1,9 @@
+version: '3.8'
+
 services:
   redis:
     image: redis:4.0
     restart: always
-    container_name: skyline-redis
-    hostname: skyline-redis
-    command: redis-server --appendonly yes
     expose:
       - "6379"
     volumes:
@@ -20,14 +19,11 @@ services:
   mysql:
     image: mysql:5.7
     restart: always
-    container_name: skyline-mysql
-    hostname: skyline-mysql
     expose:
       - "3306"
     environment:
       MYSQL_ROOT_PASSWORD: ''
       MYSQL_ALLOW_EMPTY_PASSWORD: 'true'
-      MYSQL_DATABASE: skyline
     volumes:
       - mysql_data:/var/lib/mysql
     networks:
@@ -41,8 +37,6 @@ services:
   memcached:
     image: memcached:latest
     restart: always
-    container_name: skyline-memcached
-    hostname: skyline-memcached
     expose:
       - "11211"
     networks:
@@ -56,71 +50,49 @@ services:
   graphite-statsd:
     image: graphiteapp/graphite-statsd:latest
     restart: always
-    container_name: skyline-graphite-statsd
-    hostname: skyline-graphite-statsd
     expose:
       - "80"
-      - "2003"
-      - "2024"
-      - "8125"
     environment:
       RELAY: 1
     volumes:
       - graphite_data:/opt/graphite/storage
-      - graphite_logs:/var/log
+      - graphite_logs:/var/log/graphite
     networks:
       - skylinenetwork
     depends_on:
       - memcached
     healthcheck:
-      test: ["CMD", "netstat", "-tuln", "|", "grep", ":80"]
-      interval: 30s
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:80/')"]
+      interval: 10s
       timeout: 10s
-      retries: 5
+      retries: 10
+      start_period: 30s
 
   webapp:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     restart: always
-    container_name: skyline-webapp
-    hostname: skyline-webapp
-    expose:
-      - "1500"
     ports:
-      - "41723:1500"
+      - "45813:1500"
     environment:
-      GEVENT_MONKEYLIB_PLUGINS: ""
-      GEVENT_NO_PLUGINS: "1"
-      REDIS_SOCKET_PATH: /tmp/redis.sock
-      SECRET_KEY: 'your-long_secret-key-to-encrypt_the_redis_password_in_url_parameters'
-      LOG_PATH: /var/log/skyline
-      PID_PATH: /var/run/skyline
-      SKYLINE_DIR: /opt/skyline
-      SKYLINE_TMP_DIR: /tmp/skyline
-      FULL_NAMESPACE: 'metrics.'
-      GRAPHITE_HOST: graphite-statsd
-      GRAPHITE_PROTOCOL: http
-      GRAPHITE_PORT: '80'
-      CARBON_HOST: graphite-statsd
-      CARBON_PORT: 2003
-      SERVER_METRICS_NAME: skyline-webapp
-      PANORAMA_DATABASE: skyline
-      PANORAMA_DBHOST: mysql
+      WEBAPP_AUTH_ENABLED: 'true'
+      WEBAPP_AUTH_USER: 'admin'
+      WEBAPP_AUTH_USER_PASSWORD: 'admin123'
+      PANORAMA_DBHOST: 'mysql'
       PANORAMA_DBPORT: '3306'
-      PANORAMA_DBUSER: root
+      PANORAMA_DBUSER: 'root'
       PANORAMA_DBUSERPASS: ''
-      WEBAPP_AUTH_ENABLED: false
-      WEBAPP_IP: 0.0.0.0
-      WEBAPP_IP_RESTRICTED: false
-      FULL_DURATION: 86400
-      MINI_DURATION: 3600
-      # Internal service addresses
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      MEMCACHED_SERVER_IP: memcached
-      MEMCACHED_SERVER_PORT: 11211
-    volumes:
-      - webapp_logs:/var/log/skyline
-      - webapp_tmp:/tmp/skyline
+      REDIS_SOCKET_PATH: '/tmp/redis.sock'
+      REDIS_PASSWORD: ''
+      MEMCACHE_ENABLED: 'true'
+      MEMCACHED_SERVER_IP: 'memcached'
+      MEMCACHED_SERVER_PORT: '11211'
+      GRAPHITE_HOST: 'graphite-statsd'
+      GRAPHITE_PORT: '80'
+      GRAPHITE_PROTOCOL: 'http'
+      WEBAPP_IP: '0.0.0.0'
+      WEBAPP_PORT: '1500'
     depends_on:
       redis:
         condition: service_healthy
@@ -141,20 +113,18 @@ services:
           cpus: '1.0'
           memory: 1G
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:1500/"]
+      test: ["CMD-SHELL", "curl -sf http://localhost:1500/ || exit 1"]
       interval: 30s
       timeout: 10s
-      start_period: 30s
       retries: 3
+      start_period: 10s
+
+networks:
+  skylinenetwork:
+    driver: bridge
 
 volumes:
   redis_data:
   mysql_data:
   graphite_data:
   graphite_logs:
-  webapp_logs:
-  webapp_tmp:
-
-networks:
-  skylinenetwork:
-    driver: bridge

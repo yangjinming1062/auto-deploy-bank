@@ -62,7 +62,7 @@ import requests
 
 from flask import (
     Flask, request, render_template, redirect, Response, abort, flash,
-    send_file, jsonify, session, make_response)
+    send_file, jsonify)
 from daemon import runner
 
 # @added 20220112 - Bug #4374: webapp - handle url encoded chars
@@ -72,7 +72,8 @@ from daemon import runner
 
 # flask things for rebrow
 # @modified 20180918 - Feature #2602: Graphs in search_features_profiles
-from flask import session, g, url_for, flash, Markup
+# from flask import session, g, url_for, flash, Markup, json
+from flask import url_for, Markup
 
 # @added 20170122 - Feature #1872: Ionosphere - features profile page by id only
 # Determine the features profile dir path for a fp_id
@@ -576,9 +577,8 @@ app.secret_key = secret_key
 app.config['PROPAGATE_EXCEPTIONS'] = True
 
 app.config.update(
-    SESSION_COOKIE_NAME='skyline_session',
-    SESSION_COOKIE_SECURE=False,
-    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_NAME='skyline',
+    SESSION_COOKIE_SECURE=True,
     SECRET_KEY=secret_key
 )
 
@@ -683,13 +683,16 @@ def limit_remote_addr():
     This function is called to check if the requesting IP address is in the
     settings.WEBAPP_ALLOWED_IPS array, if not 403.
     """
+    # Check environment variable for IP restriction
+    ip_restricted = os.environ.get('WEBAPP_IP_RESTRICTED', 'True').lower() == 'true'
+    if not ip_restricted:
+        return
+
     ip_allowed = False
-    for web_allowed_ip in settings.WEBAPP_ALLOWED_IPS:
+    allowed_ips = os.environ.get('WEBAPP_ALLOWED_IPS', '127.0.0.1').split(',')
+    for web_allowed_ip in allowed_ips:
         if request.remote_addr == web_allowed_ip:
             ip_allowed = True
-
-    if not settings.WEBAPP_IP_RESTRICTED:
-        ip_allowed = True
 
     if not ip_allowed:
         abort(403)  # Forbidden
@@ -709,25 +712,11 @@ def check_auth(username, password):
     # Log full request
     logger.info('request :: %s' % (request.url))
 
-    # Check environment variable first, then fall back to settings
-    auth_enabled = os.environ.get('WEBAPP_AUTH_ENABLED', str(settings.WEBAPP_AUTH_ENABLED)).lower() in ('true', '1', 'yes')
-
-    if auth_enabled:
-        # Check single user first for backwards compatibility
-        if username == settings.WEBAPP_AUTH_USER and password == settings.WEBAPP_AUTH_USER_PASSWORD:
-            return True
-        # Check multiple users from environment variable WEBAPP_AUTH_USERS (comma-separated: user1:pass1,user2:pass2)
-        webapp_auth_users = os.environ.get('WEBAPP_AUTH_USERS', '')
-        if webapp_auth_users:
-            for user_entry in webapp_auth_users.split(','):
-                user_entry = user_entry.strip()
-                if ':' in user_entry:
-                    user, pwd = user_entry.split(':', 1)
-                    if username == user and password == pwd:
-                        return True
-        return False
-    else:
+    # Check environment variable for auth setting
+    auth_enabled = os.environ.get('WEBAPP_AUTH_ENABLED', 'True').lower() == 'true'
+    if not auth_enabled:
         return True
+    return username == settings.WEBAPP_AUTH_USER and password == settings.WEBAPP_AUTH_USER_PASSWORD
 
 
 def authenticate():
@@ -740,92 +729,14 @@ def authenticate():
 def requires_auth(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        # Check environment variable first, then fall back to settings
-        auth_enabled = os.environ.get('WEBAPP_AUTH_ENABLED', str(settings.WEBAPP_AUTH_ENABLED)).lower() in ('true', '1', 'yes')
+        # Check environment variable for auth setting
+        auth_enabled = os.environ.get('WEBAPP_AUTH_ENABLED', 'True').lower() == 'true'
         if auth_enabled:
-            # Check for session-based auth first
-            if session.get('authenticated') is True:
-                return f(*args, **kwargs)
-            # Check if request wants HTML or is a browser request - redirect to web login instead of 401
-            accept = request.headers.get('Accept', '')
-            user_agent = request.headers.get('User-Agent', '')
-            is_browser = 'Mozilla' in user_agent or 'Chrome' in user_agent or 'Firefox' in user_agent or 'Safari' in user_agent
-            if 'text/html' in accept or is_browser or request.method == 'GET':
-                return redirect(url_for('login', next=request.url))
-            # Fall back to Basic Auth for API calls
             auth = request.authorization
             if not auth or not check_auth(auth.username, auth.password):
                 return authenticate()
         return f(*args, **kwargs)
     return decorated
-
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    """
-    Web form-based login page
-    """
-    error = None
-    if request.method == 'POST':
-        username = request.form.get('username', '').strip()
-        password = request.form.get('password', '')
-
-        if check_auth(username, password):
-            session['authenticated'] = True
-            session['username'] = username
-            resp = make_response(redirect(request.args.get('next', '/')))
-            resp.set_cookie('skyline_auth', 'true', path='/', httponly=True)
-            return resp
-        else:
-            error = 'Invalid credentials'
-
-    return '''<!DOCTYPE html>
-<html>
-<head>
-    <title>Login - Skyline</title>
-    <link rel="stylesheet" href="/static/bootstrap-3.3.6-dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/static/css/skyline.styles.css">
-    <style>
-        body { background-color: #f5f5f5; padding-top: 80px; }
-        .login-container { max-width: 400px; margin: 0 auto; }
-    </style>
-</head>
-<body>
-    <div class="container login-container">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title"><span class="sky">Sky</span><span class="re">line</span> Login</h3>
-            </div>
-            <div class="panel-body">
-                ''' + ('<div class="alert alert-danger">' + error + '</div>' if error else '') + '''
-                <form method="post">
-                    <div class="form-group">
-                        <label for="username">Username</label>
-                        <input type="text" class="form-control" id="username" name="username" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="password">Password</label>
-                        <input type="password" class="form-control" id="password" name="password" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-block">Login</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</body>
-</html>
-'''
-
-
-@app.route('/logout')
-def logout():
-    """
-    Logout and clear session
-    """
-    session.clear()
-    resp = make_response(redirect('/login'))
-    resp.set_cookie('skyline_auth', '', path='/', expires=0)
-    return resp
 
 
 # @added 20180721 - Feature #2464: luminosity_remote_data
