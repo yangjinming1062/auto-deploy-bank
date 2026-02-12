@@ -1,0 +1,19 @@
+{
+  "service_id": "4af954e9b864f0c6494c5d99",
+  "repo_name": "go-vikunja/vikunja",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main@2026-02-12",
+  "status": "deploying",
+  "package_size": "9.11MB",
+  "language": "java",
+  "star": 3313,
+  "repo_flag": "Auto-CVE",
+  "uploaded_at": "2026-02-12T20:12:48.757947",
+  "generated_files": [
+    "config.json",
+    "create_test_users.sh",
+    "extract-jar.sh",
+    "/home/ubuntu/deploy-projects/4af954e9b864f0c6494c5d99/config.json"
+  ]
+}

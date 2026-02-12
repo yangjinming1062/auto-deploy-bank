@@ -1,0 +1,61 @@
+services:
+  vikunja:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vikunja
+    ports:
+      - "43195:3456"
+    environment:
+      - VIKUNJA_SERVICE_ROOTPATH=/app/vikunja/
+      - VIKUNJA_DATABASE_PATH=/app/vikunja/db/vikunja.db
+      - VIKUNJA_FILES_BASEPATH=/app/vikunja/files
+      - VIKUNJA_DATABASE_TYPE=sqlite
+    volumes:
+      - vikunja_data:/app/vikunja/
+      - ./config.json:/app/vikunja/config.json:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3456/api/v1/info"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8
+    container_name: vikunja-db
+    environment:
+      MYSQL_ROOT_PASSWORD: vikunja
+      MYSQL_DATABASE: vikunja
+      MYSQL_USER: vikunja
+      MYSQL_PASSWORD: vikunja
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pvikunja"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+
+volumes:
+  vikunja_data:
+  mysql_data:
