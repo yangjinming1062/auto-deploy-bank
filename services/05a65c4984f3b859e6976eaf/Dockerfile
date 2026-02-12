@@ -1,26 +1,26 @@
-# Multi-stage Dockerfile for Quarkus application
-# Stage 1: Build stage with Maven
-FROM maven:3.9-eclipse-temurin-17 AS builder
+# Runtime image for Quarkus application
+FROM eclipse-temurin:17-jre-alpine
 
 WORKDIR /app
 
-# Copy pom.xml first for dependency caching
-COPY pom.xml .
-RUN mvn dependency:go-offline -B
+# Create non-root user for security
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-# Copy source code
-COPY src ./src
+# Copy the pre-built JAR
+COPY target.jar app.jar
 
-# Build the application (skip tests for production build)
-RUN mvn clean package -DskipTests -B
+# Change ownership to non-root user
+RUN chown -R appuser:appgroup /app
 
-# Stage 2: Runtime stage
-FROM eclipse-temurin:17-jre-alpine AS runtime
-
-WORKDIR /app
+# Switch to non-root user
+USER appuser
 
 # Expose the HTTP port
 EXPOSE 8080
 
-# Set the startup command - JAR comes from volume mount at /app/target.jar
-CMD ["java", "-jar", "target.jar"]
+# Set environment variables
+ENV QUARKUS_HTTP_PORT=8080
+ENV QUARKUS_HTTP_HOST=0.0.0.0
+
+# Run the application
+CMD ["java", "-jar", "app.jar"]

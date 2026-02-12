@@ -5,27 +5,24 @@ services:
       dockerfile: Dockerfile
     container_name: quarkus-app
     ports:
-      - "44864:8080"
+      - "41308:8080"
     environment:
       - QUARKUS_HTTP_PORT=8080
       - QUARKUS_HTTP_HOST=0.0.0.0
-      - QUARKUS_SECURITY_USERS_FILE_ENABLED=true
-      - QUARKUS_SECURITY_USERS_FILE_USERS=test-users.properties
-      - QUARKUS_SECURITY_USERS_FILE_ROLES=test-roles.properties
-      - QUARKUS_LOG_LEVEL=INFO
     volumes:
-      - ./target.jar:/app/target.jar:ro
+      - ./target.jar:/app/app.jar:ro
     deploy:
       resources:
         limits:
-          cpus: "2.0"
+          cpus: '2.0'
           memory: 4G
         reservations:
-          cpus: "1.0"
+          cpus: '1.0'
           memory: 1G
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/q/health"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 10s
+    restart: unless-stopped
