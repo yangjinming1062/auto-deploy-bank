@@ -1,0 +1,18 @@
+{
+  "service_id": "667a508cbdb1f85dd897b1dc",
+  "repo_name": "ljharb/qs",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main@2026-02-12",
+  "status": "deploying",
+  "package_size": "10.71MB",
+  "language": "nodejs",
+  "star": 8901,
+  "repo_flag": "Auto-CVE",
+  "uploaded_at": "2026-02-12T15:24:33.796075",
+  "generated_files": [
+    "server.js",
+    "Dockerfile",
+    "docker-compose.yaml"
+  ]
+}
