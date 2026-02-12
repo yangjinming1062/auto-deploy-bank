@@ -1,40 +1,41 @@
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies and curl for healthcheck
 RUN apt-get update && apt-get install -y \
     curl \
     wget \
-    g++ \
     ffmpeg \
     libsm6 \
     libxext6 \
     libxrender1 \
-    libvulkan1 \
+    g++ \
     && rm -rf /var/lib/apt/lists/*
-
-# Set environment variables
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONPATH=/app \
-    DEBIAN_FRONTEND=noninteractive
 
 # Copy requirements and install Python dependencies
 COPY requirements.txt /app/requirements.txt
-
-RUN pip install --no-cache-dir -r /app/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY . /app/
+COPY . /app
 
-# Prepare models directory and temp
-RUN mkdir -p /app/models /tmp && chmod 1777 /tmp
+# Create result directory
+RUN mkdir -p /app/result && chmod 1777 /app/result
 
+# Create tmp directory with proper permissions
+RUN rm -rf /tmp && mkdir /tmp && chmod 1777 /tmp
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
+
+# Expose the web server port
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:8000/ || exit 1
 
-# Start the FastAPI web server with internal manga_translator instance
-CMD ["uvicorn", "server.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run the web server using server/main.py
+CMD ["python", "server/main.py", "--host", "0.0.0.0", "--port", "8000", "--start-instance"]

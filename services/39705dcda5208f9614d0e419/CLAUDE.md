@@ -4,122 +4,154 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Manga Image Translator - A tool for translating text in images (primarily manga/comics). Supports 20+ languages with both online API translators and offline translation models. Handles the full pipeline: text detection → OCR → translation → inpainting → rendering.
+Manga Image Translator - A Python-based tool for translating text in manga/comic images with support for multiple languages, OCR, and rendering. The project supports both local CLI usage and web server modes via FastAPI.
 
-## Commands
+## Development Commands
 
-### Python Backend
-
+### Setup
 ```bash
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# or
+.\venv\Scripts\activate   # Windows
+
 # Install dependencies
 pip install -r requirements.txt
-
-# Run local batch translation
-python -m manga_translator local -v -i <path> -o <dest>
-
-# Run web server (UI at http://127.0.0.1:8000, API at http://127.0.0.1:8001)
-cd server && python main.py --use-gpu
-
-# Run WebSocket server
-python -m manga_translator ws --host 0.0.0.0 --port 5003
-
-# Run API server
-python -m manga_translator shared --host 0.0.0.0 --port 5003
-
-# Print config schema
-python -m manga_translator config-help
 ```
 
-### Frontend (React + TypeScript)
-
-```bash
-cd front
-npm install
-npm run dev        # Development with HMR (http://localhost:5173)
-npm run build      # Production build
-npm run start      # Run production build
-npm run typecheck  # TypeScript checks
-```
-
-### Testing
-
+### Running Tests
 ```bash
 # Run all tests
-pytest
+pytest test
+
+# Run with specific translator
+pytest --translator=chatgpt --target-lang=ENG
 
 # Run specific test file
 pytest test/test_translation.py
 
 # Run with verbose output
-pytest -v
+pytest -v test/
+```
+
+### Running the Application
+```bash
+# Local batch translation
+python -m manga_translator local -v -i <path_to_image_or_folder>
+
+# Web server mode (port 8000)
+cd server && python main.py --use-gpu
+
+# WebSocket mode
+python -m manga_translator ws --host=127.0.0.1 --port=5003
+
+# API mode (port 5003)
+python -m manga_translator shared --host=127.0.0.1 --port=5003
+
+# Show config help
+python -m manga_translator config-help
+```
+
+### Docker
+```bash
+# Build image
+make build-image
+
+# Run web server with GPU
+make run-web-server
+
+# Or manually run container
+docker run --gpus all -p 5003:5003 --ipc=host --rm manga-image-translator \
+  server/main.py --verbose --start-instance --host=0.0.0.0 --port=5003 --use-gpu
+```
+
+### Frontend (React)
+```bash
+cd front
+npm install
+npm run dev      # Development with HMR
+npm run build    # Production build
 ```
 
 ## Architecture
 
-### Backend Pipeline (manga_translator/manga_translator.py)
+### Core Pipeline Flow
 
-The `MangaTranslator` class orchestrates this processing pipeline:
+The translation process follows this pipeline in `manga_translator/manga_translator.py`:
 
-1. **Upscaling** (`upscaling/`) - Optional image upscaling before detection
-2. **Detection** (`detection/`) - Text region detection using models (ctd, dbconvnext, craft, paddle)
-3. **OCR** (`ocr/`) - Text extraction from detected regions (48px, 32px, mocr)
-4. **Textline Merge** (`textline_merge/`) - Merge adjacent textlines
-5. **Mask Refinement** (`mask_refinement/`) - Refine text masks
-6. **Translation** (`translators/`) - Translate text via online APIs or offline models
-7. **Inpainting** (`inpainting/`) - Remove original text from image (lama_large, sd, original)
-8. **Rendering** (`rendering/`) - Render translated text onto image (default, manga2eng)
-9. **Colorization** (`colorization/`) - Optional color restoration (mc2)
+1. **Detection** (`manga_translator/detection/`) - Finds text regions in images
+   - Detectors: `default`, `dbconvnext`, `ctd`, `craft`, `paddle`, `none`
 
-### Mode Handlers (manga_translator/mode/)
+2. **OCR** (`manga_translator/ocr/`) - Extracts text from detected regions
+   - Models: `32px`, `48px`, `48px_ctc`, `mocr`
 
-- `local.py` - Batch file/folder translation
-- `ws.py` - WebSocket real-time translation service
-- `share.py` - Shared API server mode
-- `web.py` - Old Flask-based web UI (legacy)
+3. **Translation** (`manga_translator/translators/`) - Translates extracted text
+   - Online: `chatgpt`, `deepseek`, `deepl`, `youdao`, `baidu`, `sakura`, etc.
+   - Offline: `sugoi`, `nllb`, `nllb_big`, `m2m100`, `qwen2`, etc.
 
-### Server (server/)
+4. **Inpainting** (`manga_translator/inpainting/`) - Removes original text
+   - Models: `lama_large`, `lama_mpe`, `sd`, `original`, `none`
 
-FastAPI-based web server providing:
-- Web UI (index.html) - Legacy interface
-- API endpoints (`/translate`, `/translateStream`)
-- WebSocket endpoint for real-time updates
-- Instance management (instance.py)
+5. **Rendering** (`manga_translator/rendering/`) - Overlays translated text
+   - Renderers: `default`, `manga2eng`, `none`
 
-### Key Configuration Classes
+6. **Optional: Colorization** (`manga_translator/colorization/`) - Adds color back
+   - Model: `mc2`
 
-- **Config** (config.py) - Main configuration schema
-- **Detector** - Text detection models and options
-- **OCR** - Optical character recognition models
-- **Translator** - Translation services (online APIs + offline models)
-- **Inpainter** - Image inpainting models
-- **Renderer** - Text rendering engines
-- **Upscaler** - Image upscaling models
+### Key Entry Points
+
+| File | Purpose |
+|------|---------|
+| `manga_translator/__main__.py` | CLI entry point with mode dispatching |
+| `manga_translator/manga_translator.py` | Main `MangaTranslator` class with full pipeline |
+| `manga_translator/args.py` | Argument parsing for all modes |
+| `server/main.py` | FastAPI web server endpoints |
+
+### Mode Structure
+
+- **local** (`manga_translator/mode/local.py`): Batch image translation
+- **ws** (`manga_translator/mode/ws.py`): WebSocket real-time translation
+- **shared** (`manga_translator/mode/share.py`): API server with task queue
+
+### Configuration
+
+Configuration uses a nested schema in `manga_translator/config.py`:
+- `translator`: Translation service and target language
+- `detector`: Text detection model and parameters
+- `ocr`: Optical character recognition model
+- `inpainter`: Text removal model
+- `render`: Text rendering/overlay options
+- `upscale`: Image upscaling (improves detection on small text)
+
+### Important Modules
+
+| Module | Description |
+|--------|-------------|
+| `manga_translator/utils/` | Shared utilities (logging, image I/O, model loading) |
+| `manga_translator/translators/common.py` | Base `CommonTranslator` class for all translators |
+| `manga_translator/textline_merge.py` | Merges split text lines for better translation |
+| `manga_translator/mask_refinement/` | Refines text masks before inpainting |
+
+### Model Management
+
+Models are automatically downloaded to `./models` at runtime. To download manually:
+```bash
+python docker_prepare.py --models=detector.default,ocr.48px,inpaint.lama_large
+```
+
+### Translation Chain Support
+
+Multiple translators can be chained:
+```bash
+--translator-chain "google:JPN;sugoi:ENG"  # Japanese→English via Google→Sugoi
+```
 
 ## Environment Variables
 
-Create `.env` file for API keys:
-```
-OPENAI_API_KEY=sk-xxx
-DEEPL_AUTH_KEY=xxx
-SAKURA_API_BASE=http://127.0.0.1:8080/v1
-```
+API-based translators require keys in `.env`:
+- `OPENAI_API_KEY`, `DEEPL_AUTH_KEY`, `YOUDAO_APP_KEY`, etc.
+- `OPENAI_GLOSSARY_PATH` for custom glossaries
+- `SAKURA_API_BASE` for local Sakura server
 
-See README.md for full environment variable reference.
-
-## Model Management
-
-- Models auto-download to `./models` at runtime
-- Override with `--model-dir` or `MODEL_DIR` env var
-- GPU support via `--use-gpu` (auto-switches between CUDA/MPS)
-
-## Language Support
-
-20+ languages with ISO 639-1 codes (CHS, CHT, JPN, ENG, KOR, etc.). Target language specified via config: `translator.target_lang`.
-
-## Critical Implementation Notes
-
-- Python 3.10-3.11 required (check pyproject.toml)
-- GPU memory optimization enabled by default; disable with `--disable-memory-optimization`
-- Concurrent batch mode available via `--batch-concurrent` to prevent truncation
-- Pre/post-translation dictionaries use regex patterns (see README for format)
-- Glossary support for OpenAI translator via `OPENAI_GLOSSARY_PATH`
+See `README.md` for full environment variable documentation.
