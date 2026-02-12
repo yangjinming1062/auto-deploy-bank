@@ -9,9 +9,16 @@
   "language": "java",
   "star": 577,
   "repo_flag": "JAVA",
-  "uploaded_at": "2026-02-11T09:21:41.894943",
+  "uploaded_at": "2026-02-13T06:55:01.819388",
   "generated_files": [
     "docker-compose.yaml",
-    "nginx.conf"
+    "build.gradle",
+    "settings.gradle",
+    "gradle.properties",
+    "defaultEnvironment.gradle",
+    "gradle/wrapper/gradle-wrapper.properties",
+    "/home/ubuntu/deploy-projects/91e550cab81b02910cac5609/docker-compose.yaml",
+    "/home/ubuntu/deploy-projects/91e550cab81b02910cac5609/nginx.conf",
+    "/home/ubuntu/deploy-projects/91e550cab81b02910cac5609/flashback-admin/src/main/java/com/linkedin/flashback/HealthResource.java"
   ]
 }

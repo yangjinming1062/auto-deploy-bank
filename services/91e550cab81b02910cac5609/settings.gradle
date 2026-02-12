@@ -1,0 +1,7 @@
+include 'flashback-core-impl',
+        'flashback-netty',
+        'flashback-smartproxy',
+        'flashback-test-util',
+        'mitm',
+        'flashback-admin',
+        'flashback-all'

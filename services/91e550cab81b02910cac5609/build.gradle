@@ -1,0 +1,169 @@
+if (project.hasProperty('overrideBuildEnvironment')) {
+  // Otherwise, assume overrideBuildEnvironment defines a path to a file, and apply it.
+  apply from: project.overrideBuildEnvironment
+}
+buildscript {
+  repositories {
+    mavenCentral()
+    mavenLocal()
+    gradlePluginPortal()
+  }
+  dependencies {
+    classpath 'gradle.plugin.com.github.johnrengelman:shadow:7.1.2'
+  }
+}
+
+ext {
+  libs = [:]
+}
+libs += [
+    apache: "org.apache.commons:commons-lang3:3.4",
+    apacheCommonsIo: "commons-io:commons-io:2.4",
+    bcpkix: "org.bouncycastle:bcpkix-jdk15on:1.51",
+    bcprov: "org.bouncycastle:bcprov-jdk15on:1.51",
+    commonsCli: "commons-cli:commons-cli:1.2",
+    easymock: "org.easymock:easymock:3.3",
+    googleGuava: "com.google.guava:guava:18.0",
+    httpclient: "org.apache.httpcomponents:httpclient:4.3.1",
+    jacksonCodec: "com.fasterxml.jackson.core:jackson-core:2.5.3",
+    log4j: "log4j:log4j:1.2.17",
+    netty: "io.netty:netty-all:4.0.27.Final",
+    testng: "org.testng:testng:6.8.8",
+    restliServer: "com.linkedin.pegasus:restli-server:6.0.12",
+    restliNettyStandalone: "com.linkedin.pegasus:restli-netty-standalone:6.0.12"
+]
+apply plugin: 'idea'
+subprojects {
+  version='0.0.10'
+  group='com.linkedin.flashback'
+
+  apply plugin: 'maven-publish'
+  apply plugin: 'java-library'
+
+  dependencies {
+    api libs.apache
+    api libs.apacheCommonsIo
+    api libs.bcpkix
+    api libs.bcprov
+    api libs.commonsCli
+    api libs.easymock
+    api libs.googleGuava
+    api libs.httpclient
+    api libs.jacksonCodec
+    api libs.log4j
+    api libs.netty
+    testImplementation libs.testng
+  }
+  repositories {
+    mavenCentral()
+  }
+  test {
+    useTestNG()
+  }
+  tasks.withType(Jar) {
+    from "$rootDir/LICENSE"
+    from "$rootDir/NOTICE"
+  }
+  task sourcesJar(type: Jar) {
+    archiveClassifier = 'sources'
+    from sourceSets.main.allSource
+  }
+  task javadocJar(type: Jar, dependsOn: javadoc) {
+    archiveClassifier = 'javadoc'
+    from javadoc.destinationDir
+  }
+
+  def pomConfig = {
+    licenses {
+      license {
+        name "2-CLAUSE BSD"
+        url "https://github.com/linkedin/flashback/blob/master/LICENSE"
+        distribution "repo"
+      }
+    }
+    scm {
+      url "https://github.com/linkedin/flashback.git"
+    }
+  }
+
+  publishing {
+    publications {
+      MyPublication(MavenPublication) {
+        from components.java
+        artifact javadocJar
+        artifact sourcesJar
+
+        pom.withXml {
+          def root = asNode()
+          root.appendNode('description', 'Mock the internet')
+          root.appendNode('name', 'flashback')
+          root.children().last() + pomConfig
+        }
+      }
+    }
+  }
+}
+
+project(':flashback-test-util') {
+  println "Building project 'test-util'"
+  dependencies {
+    api project(':flashback-core-impl')
+    api project(':flashback-smartproxy')
+    api project(':flashback-netty')
+    testImplementation libs.testng
+  }
+}
+project(':flashback-smartproxy') {
+  println "Building project 'smartproxy'"
+  dependencies {
+    api project(':flashback-core-impl')
+    api project(':flashback-netty')
+    api project(':mitm')
+  }
+}
+project(':flashback-netty') {
+  println "Building project 'netty'"
+  dependencies {
+    api project(':flashback-core-impl')
+  }
+}
+project(':flashback-admin') {
+  apply plugin: 'com.github.johnrengelman.shadow'
+
+  dependencies {
+    api libs.restliServer
+    api libs.restliNettyStandalone
+    api project(':flashback-smartproxy')
+  }
+
+  shadowJar {
+    archiveBaseName.set('flashback-admin')
+    archiveClassifier.set('')
+    mergeServiceFiles()
+    manifest {
+      attributes 'Main-Class': 'com.linkedin.restli.server.NettyStandaloneLauncher'
+    }
+  }
+
+  task startAdminServer(type: JavaExec) {
+    mainClass = 'com.linkedin.restli.server.NettyStandaloneLauncher'
+    if (project.hasProperty('Args')) {
+      args(Args.split())
+    }
+    args += ['-packages', 'com.linkedin.flashback']
+    classpath = sourceSets.main.runtimeClasspath
+    standardInput = System.in
+  }
+}
+project(':flashback-all') {
+  dependencies {
+    // this is a meta project that depends on all of the "entry-point" subprojects to make it easier to pull in the
+    // entire dependency tree.
+    api project(':flashback-core-impl')
+    api project(':mitm')
+    api project(':flashback-test-util')
+    api project(':flashback-smartproxy')
+    api project(':flashback-netty')
+    api project(':flashback-admin')
+  }
+}
