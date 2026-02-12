@@ -1,5 +1,5 @@
-# Stage 1: Build with Maven
-FROM maven:3.9-eclipse-temurin-21 as builder
+# Stage 1: Builder
+FROM maven:3.9-eclipse-temurin-21 AS builder
 
 WORKDIR /app
 
@@ -10,31 +10,28 @@ RUN mvn dependency:go-offline -B
 # Copy source code
 COPY src ./src
 
-# Build fatjar with dependencies (skip tests for faster build)
-RUN mvn clean package -DskipTests -B -Dgpg.skip=true
+# Build the project (skip tests, build fatjar)
+RUN mvn clean package -DskipTests -B
 
-# Stage 2: Runtime image
+# Stage 2: Runtime
 FROM eclipse-temurin:21-jre-alpine
 
-WORKDIR /home/ubuntu/deploy-projects/a93556c2b37df50b72f4db50
+WORKDIR /app
 
-# Create cache directory for Pyserini indexes (from context)
-ENV ANSERINI_INDEX_CACHE=/home/ubuntu/deploy-projects/a93556c2b37df50b72f4db50/.cache/pyserini/indexes
+# Install Python3 and wget for HTTP server and healthcheck
+RUN apk add --no-cache python3 wget
 
-# Copy the fatjar from builder stage
-# The shade plugin creates: anserini-1.5.1-SNAPSHOT-fatjar.jar
-# Copy to both /home/ubuntu/deploy-projects/a93556c2b37df50b72f4db50.jar (for volume mount) and app.jar (for running)
-COPY --from=builder /app/target/anserini-*-fatjar.jar /home/ubuntu/deploy-projects/a93556c2b37df50b72f4db50.jar
-COPY --from=builder /app/target/anserini-*-fatjar.jar app.jar
+# Copy the fatjar from builder as target.jar for security scanning
+# The shade plugin creates *-fatjar.jar which we rename to target.jar
+COPY --from=builder /app/target/*-fatjar.jar target.jar
 
-# Create directories for cache
-RUN mkdir -p ${ANSERINI_INDEX_CACHE}
+# Copy startup script and server
+COPY start.sh /app/start.sh
+COPY server.py /app/server.py
+RUN chmod +x /app/start.sh /app/server.py
 
-# Create wrapper script to keep container running
-RUN echo '#!/bin/sh' > /entrypoint.sh && \
-    echo 'echo "Anserini CLI ready - use: docker exec <container> java -cp app.jar <class> <args>"' >> /entrypoint.sh && \
-    echo 'while true; do sleep 3600; done' >> /entrypoint.sh && \
-    chmod +x /entrypoint.sh
+# Set environment variable for index cache
+ENV ANSERINI_INDEX_CACHE=/root/.cache/pyserini/indexes
 
-# Default command - keep container alive with infinite loop
-CMD ["/entrypoint.sh"]
+# Run startup script which handles both daemon mode and command execution
+CMD ["/app/start.sh"]

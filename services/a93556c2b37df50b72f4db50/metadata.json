@@ -9,10 +9,10 @@
   "language": "java",
   "star": 1096,
   "repo_flag": "JAVA",
-  "uploaded_at": "2026-02-10T16:53:19.344186",
+  "uploaded_at": "2026-02-13T03:00:36.726780",
   "generated_files": [
-    "Dockerfile",
     "docker-compose.yaml",
-    "docker-compose.yaml"
+    "pom.xml",
+    "src/main/resources/simplelogger.properties"
   ]
 }
