@@ -1,0 +1,17 @@
+{
+  "service_id": "0da05894b979ea727296151e",
+  "repo_name": "alphasecio/langchain-examples",
+  "platform": null,
+  "ref": null,
+  "version": "",
+  "status": "deploying",
+  "package_size": "1.71MB",
+  "language": "python",
+  "star": 538,
+  "repo_flag": "PYTHON",
+  "uploaded_at": "2026-02-13T00:49:38.202989",
+  "generated_files": [
+    "Dockerfile",
+    "docker-compose.yaml"
+  ]
+}
