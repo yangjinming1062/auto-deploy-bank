@@ -2,7 +2,7 @@ services:
   diskcache:
     build: .
     ports:
-      - "41751:8000"
+      - "41724:8000"
     deploy:
       resources:
         limits:
