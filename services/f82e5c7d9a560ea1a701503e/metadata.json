@@ -1,0 +1,16 @@
+{
+  "service_id": "f82e5c7d9a560ea1a701503e",
+  "repo_name": "grantjenks/python-diskcache",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:master@2026-02-12",
+  "status": "deploying",
+  "package_size": "670KB",
+  "language": "python",
+  "star": 2823,
+  "repo_flag": "Auto-CVE",
+  "uploaded_at": "2026-02-12T16:51:37.580384",
+  "generated_files": [
+    "server.py"
+  ]
+}
