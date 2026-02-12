@@ -4,51 +4,107 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Aether is a geometric-aware unified world modeling system that unifies three capabilities: 4D dynamic reconstruction, action-conditioned video prediction, and goal-conditioned visual planning. Built on CogVideoX, it accepts video/image inputs with optional camera raymap actions or goal images.
+Aether is a geometric-aware unified world model that unifies 4D dynamic reconstruction, action-conditioned video prediction, and goal-conditioned planning. It is built on CogVideoX diffusion models and outputs RGB video, disparity (depth), and raymaps for camera pose estimation.
 
-## Commands
+## Common Commands
+
+### Running the Model
+
+**CLI Demo:**
+```bash
+python scripts/demo.py --task <reconstruction|prediction|planning> --video <path> --image <path> --goal <path>
+```
+
+**Gradio Web Interface:**
+```bash
+python scripts/entrypoint.py
+```
+
+### Evaluation
 
 ```bash
-# Install dependencies
-pip install -r requirements.txt
+# Video depth evaluation (requires sintel, kitti, bonn datasets in data/)
+bash evaluation/video_depth/run_aether.sh
 
-# 4D reconstruction from video
-python scripts/demo.py --task reconstruction --video ./assets/example_videos/moviegen.mp4
-
-# Action-conditioned video prediction
-python scripts/demo.py --task prediction --image ./assets/example_obs/car.png --raymap_action assets/example_raymaps/raymap_forward_right.npy
-
-# Goal-conditioned visual planning
-python scripts/demo.py --task planning --image ./assets/example_obs_goal/01_obs.png --goal ./assets/example_obs_goal/01_goal.png
-
-# Interactive Gradio demo
-python scripts/demo_gradio.py
-
-# Run evaluation
-bash evaluation/video_depth/run_aether.sh   # Video depth evaluation
-bash evaluation/rel_pose/run_aether.sh      # Relative camera pose evaluation
-
-# Linting and formatting
-pre-commit run --all-files  # Runs ruff (format + lint) and other hooks
+# Relative camera pose evaluation (requires tum, sintel, scannetv2 in data/)
+pip install evo
+bash evaluation/rel_pose/run_aether.sh
 ```
 
 ## Architecture
 
-- **Pipeline Core**: `aether/pipelines/aetherv1_pipeline_cogvideox.py` implements `AetherV1PipelineCogVideoX`, extending `CogVideoXImageToVideoPipeline`. Handles three tasks via the `__call__` method with configurable inference steps and guidance scales.
-- **Utility Modules**: `aether/utils/` contains preprocessing (`preprocess_utils.py`: center cropping), postprocessing (`postprocess_utils.py`: depth/pose transforms, camera raymap conversions), and visualization (`visualize_utils.py`: predictions to GLB/trimesh scenes).
-- **Model Components**: Uses `diffusers` library components - `CogVideoXTransformer3DModel`, `AutoencoderKLCogVideoX`, `CogVideoXDPMScheduler`, T5 encoder for text/prompt processing.
-- **Evaluation**: `evaluation/` contains sliding-window inference scripts that handle 480x720 input dimensions, blending outputs across spatial and temporal windows.
+### Core Pipeline (`aether/pipelines/aetherv1_pipeline_cogvideox.py`)
 
-## Input Conventions
+The main `AetherV1PipelineCogVideoX` class inherits from `CogVideoXImageToVideoPipeline` and handles three tasks:
 
-- **Reconstruction**: Video file (processed with center-crop to 480x720 if needed)
-- **Prediction**: Single image + raymap action numpy array (N, 6, H/8, W/8) representing camera trajectory
-- **Planning**: Observation image + goal image pair
+| Task | Input | Output | Default Steps | Guidance |
+|------|-------|--------|---------------|----------|
+| reconstruction | Video (N frames) | RGB, disparity, raymap | 4 | 1.0 |
+| prediction | Image + optional raymap action | Future RGB, disparity, raymap | 50 | 3.0 |
+| planning | Image + goal image | Path from obs to goal | 50 | 3.0 |
 
-Camera poses must be in the coordinate system of the first frame. Use `camera_pose_to_raymap()` in `aether/utils/postprocess_utils.py` to convert camera trajectories to raymap actions.
+**Key methods:**
+- `prepare_latents()`: Creates latent representations for image/video conditioning, concatenates camera_conditions from raymap
+- `_preprocess_image()`: Centers crop images to target resolution (height/width must be divisible by 8)
+- `check_inputs()`: Validates task-specific input requirements
 
-## Key Configuration
+### Data Flow
 
-- Linting: Ruff configured in `pyproject.toml` with 88-char line length
-- Pre-commit: `ruff` (fix + format) and basic checks in `.pre-commit-config.yaml`
-- Model weights: Download from Hugging Face (`AetherWorldModel/AetherV1`)
+```
+Input (Image/Video/Goal)
+    ↓
+Preprocess (crop_center, normalize, tokenize)
+    ↓
+Prepare Latents (encode with VAE, concatenate raymap as camera_conditions)
+    ↓
+Denoising Loop (transformer predicts noise in concatenated latents)
+    ↓
+Decode RGB/disparity/raymap from separated latent channels
+    ↓
+Postprocess (raymap_to_poses → project to pointcloud → save GLB)
+```
+
+### Key Output Structures
+
+**`AetherV1PipelineOutput`:**
+- `rgb`: np.ndarray (T, H, W, 3) - generated RGB frames in [0,1]
+- `disparity`: np.ndarray (T, H, W) - inverse depth, lower values = further
+- `raymap`: np.ndarray (T, 6, H/8, W/8) - encoded camera ray origins (3) + directions (3)
+
+**Postprocessing (`postprocess_utils.py`):**
+- `raymap_to_poses()`: Extracts camera extrinsics (4x4 matrices) from raymap
+- `postprocess_pointmap()`: Projects disparity to 3D pointcloud using camera rays
+- `smooth_poses()` / `smooth_trajectory()`: Kalman filter or Gaussian smoothing for camera trajectory
+
+**Visualization (`visualize_utils.py`):**
+- `predictions_to_glb()`: Converts pointclouds + camera poses to trimesh Scene (GLB export)
+- Applies depth edge filtering (rtol parameter) to remove unreliable points
+
+### Sliding Window Processing
+
+For long videos in reconstruction mode, the pipeline uses overlapping windows:
+- `num_frames`: Window size (must be 17, 25, 33, or 41)
+- `sliding_window_stride`: Step between windows (default 24)
+- `blend_and_merge_window_results()`: Aligns and blends overlapping windows using disparity scale + pose interpolation
+
+### Raymap Actions (Prediction Task)
+
+Raymaps encode camera motion as 6-channel features (ray origins + directions). Pre-computed actions available in `assets/example_raymaps/`:
+- `backward`, `forward_right`, `left_forward`, `right`
+
+## Model Configuration
+
+- **Base CogVideoX model**: `THUDM/CogVideoX-5b-I2V`
+- **Aether transformer**: `AetherWorldModel/AetherV1` (subfolder: `transformer`)
+- **Precision**: torch.bfloat16
+- **VAE**: AutoencoderKLCogVideoX with 8x spatial downsampling
+- **Default resolution**: 480x720 (height x width)
+
+## Important Conventions
+
+- Height/width must be divisible by 8 (VAE downsampling factor)
+- num_frames must be in [17, 25, 33, 41]
+- fps must be in [8, 10, 12, 15, 24]
+- Raymap shape: (T, 6, H/8, W/8) when provided
+- Camera poses use OPENCV convention (X right, Y down, Z forward)
+- Pointcloud axes are flipped (Y and X) when saving to GLB for correct visualization

@@ -1,29 +1,32 @@
 services:
-  aether:
+  gradio-app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: aether-gradio
+    container_name: gradio-aether-app
     ports:
-      - "57781:7860"
+      - "41470:7860"
     environment:
+      - PYTHONUNBUFFERED=1
+      - GRADIO_SERVER_NAME=0.0.0.0
+      - GRADIO_TEMP_DIR=/home/ubuntu/deploy-projects/03a8525cb7184c50f90bfb31/.gradio_cache
       - TOKENIZERS_PARALLELISM=false
-      - GRADIO_TEMP_DIR=.gradio_cache
+      - HF_TOKEN=${HF_TOKEN:-}
     volumes:
       - ./outputs:/home/ubuntu/deploy-projects/03a8525cb7184c50f90bfb31/outputs
       - ./.gradio_cache:/home/ubuntu/deploy-projects/03a8525cb7184c50f90bfb31/.gradio_cache
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 600s
     deploy:
       resources:
         limits:
           cpus: '2.0'
-          memory: 4G
+          memory: 6G
         reservations:
           cpus: '1.0'
-          memory: 1G
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7860/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+          memory: 2G
     restart: unless-stopped
