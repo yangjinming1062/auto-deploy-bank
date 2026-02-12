@@ -1,0 +1,16 @@
+{
+  "service_id": "39705dcda5208f9614d0e419",
+  "repo_name": "zyddnys/manga-image-translator",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main@2026-02-12",
+  "status": "deploying",
+  "package_size": "53.62MB",
+  "language": "python",
+  "star": 9372,
+  "repo_flag": "Auto-CVE",
+  "uploaded_at": "2026-02-12T10:42:46.052783",
+  "generated_files": [
+    ".env"
+  ]
+}
