@@ -1,0 +1,12 @@
+# Flask web service
+flask>=2.0.0
+
+# For distributed training (optional, from context env vars)
+torch
+transformers
+tokenizers
+
+# Additional ML dependencies from MWPBench
+vllm>=0.3.0
+datasets
+accelerate

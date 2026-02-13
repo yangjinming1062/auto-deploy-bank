@@ -1,0 +1,38 @@
+# MWPBench Docker Compose Configuration
+# Provides Flask web service with healthchecks and resource limits
+
+services:
+  mwpbench:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mwpbench-service
+    ports:
+      - "41754:8080"
+    environment:
+      - PORT=8080
+      - PYTHONUNBUFFERED=1
+      - TOKENIZERS_PARALLELISM=true
+      - LOGLEVEL=INFO
+      # Distributed training environment variables (from context)
+      - RANK=${RANK:-}
+      - LOCAL_RANK=${LOCAL_RANK:-}
+      - WORLD_SIZE=${WORLD_SIZE:-}
+      - MASTER_ADDR=${MASTER_ADDR:-}
+      - MASTER_PORT=${MASTER_PORT:-}
+      - XDG_CACHE_HOME=${XDG_CACHE_HOME:-}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G

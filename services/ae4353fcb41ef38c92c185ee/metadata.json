@@ -1,0 +1,19 @@
+{
+  "service_id": "ae4353fcb41ef38c92c185ee",
+  "repo_name": "microsoft/unilm",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:master",
+  "status": "deploying",
+  "package_size": "75.21MB",
+  "language": "python",
+  "star": 22020,
+  "repo_flag": "Microsoft",
+  "uploaded_at": "2026-02-14T01:40:53.323153",
+  "generated_files": [
+    "app.py",
+    "requirements.txt",
+    "Dockerfile",
+    "docker-compose.yaml"
+  ]
+}
