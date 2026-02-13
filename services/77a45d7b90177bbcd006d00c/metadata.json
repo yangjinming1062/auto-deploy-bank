@@ -1,0 +1,16 @@
+{
+  "service_id": "77a45d7b90177bbcd006d00c",
+  "repo_name": "cloudflare/agents",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main@2026-02-13",
+  "status": "deploying",
+  "package_size": "2.88MB",
+  "language": "nodejs",
+  "star": 3151,
+  "repo_flag": "Auto-CVE",
+  "uploaded_at": "2026-02-13T13:24:22.230047",
+  "generated_files": [
+    "start.sh"
+  ]
+}
