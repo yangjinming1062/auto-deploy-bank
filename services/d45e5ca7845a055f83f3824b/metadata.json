@@ -7,11 +7,8 @@
   "status": "deploying",
   "package_size": "13.74MB",
   "language": "nodejs",
-  "star": 31106,
+  "star": 31112,
   "repo_flag": "Auto-CVE",
-  "uploaded_at": "2026-02-10T06:45:44.624226",
-  "generated_files": [
-    "Dockerfile",
-    "docker-compose.yaml"
-  ]
+  "uploaded_at": "2026-02-13T18:42:36.131453",
+  "generated_files": []
 }

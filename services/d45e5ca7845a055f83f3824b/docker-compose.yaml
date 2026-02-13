@@ -1,12 +1,8 @@
 services:
   jspdf:
     build: .
-    container_name: jspdf-service
     ports:
-      - "41672:8000"
-    environment:
-      - NODE_ENV=production
-      - PORT=8000
+      - "42490:8000"
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:8000"]
       interval: 30s
@@ -21,4 +17,3 @@ services:
         reservations:
           cpus: '1.0'
           memory: 1G
-    restart: unless-stopped

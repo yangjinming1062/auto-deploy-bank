@@ -1,26 +1,23 @@
 FROM node:20-alpine
 
-# Set working directory
-WORKDIR /home/ubuntu/deploy-projects/d45e5ca7845a055f83f3824b
+WORKDIR /app
+
+# Copy package files for dependency installation
+COPY package*.json ./
+
+# Install all dependencies (including dev for build)
+RUN npm ci
+
+# Copy source code and build
+COPY . .
+RUN npm run build
+
+# Expose the development server port
+EXPOSE 8000
 
 # Set environment variables
 ENV NODE_ENV=production
 ENV PORT=8000
 
-# Copy package files first for better caching
-COPY package*.json ./
-
-# Install all dependencies (including dev for build)
-RUN npm install
-
-# Copy source code
-COPY . .
-
-# Build the project
-RUN npm run build
-
-# Expose the port the web server runs on
-EXPOSE 8000
-
-# Start the web server
+# Start the development server (ws serves on port 8000 by default)
 CMD ["npm", "start"]
