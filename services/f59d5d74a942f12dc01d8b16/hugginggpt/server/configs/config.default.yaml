@@ -1,0 +1,41 @@
+openai:
+  api_key: REPLACE_WITH_YOUR_OPENAI_API_KEY_HERE
+huggingface:
+  token: REPLACE_WITH_YOUR_HUGGINGFACE_TOKEN_HERE
+dev: false
+debug: false
+log_file: logs/debug.log
+model: text-davinci-003
+use_completion: true
+inference_mode: huggingface
+local_deployment: full
+device: cuda:0
+num_candidate_models: 5
+max_description_length: 100
+proxy:
+http_listen:
+  host: 0.0.0.0
+  port: 8004
+local_inference_endpoint:
+  host: localhost
+  port: 8005
+logit_bias:
+  parse_task: 0.1
+  choose_model: 5
+tprompt:
+  parse_task: >-
+    #1 Task Planning Stage: The AI assistant can parse user input to several tasks
+  choose_model: >-
+    #2 Model Selection Stage: Given the user request and the parsed tasks
+  response_results: >-
+    #4 Response Generation Stage: With the task execution logs
+demos_or_presteps:
+  parse_task: demos/demo_parse_task.json
+  choose_model: demos/demo_choose_model.json
+  response_results: demos/demo_response_results.json
+prompt:
+  parse_task: The chat log [ {{context}} ] may contain the resources I mentioned.
+  choose_model: >-
+    Please choose the most suitable model from {{metas}} for the task {{task}}
+  response_results: >-
+    Yes. Please first think carefully and directly answer my request

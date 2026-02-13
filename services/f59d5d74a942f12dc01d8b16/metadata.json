@@ -1,0 +1,18 @@
+{
+  "service_id": "f59d5d74a942f12dc01d8b16",
+  "repo_name": "microsoft/JARVIS",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main",
+  "status": "deploying",
+  "package_size": "28.62MB",
+  "language": "python",
+  "star": 24548,
+  "repo_flag": "Microsoft",
+  "uploaded_at": "2026-02-14T02:35:19.842158",
+  "generated_files": [
+    "hugginggpt/server/configs/config.default.yaml",
+    "hugginggpt/server/.env.template",
+    "/home/ubuntu/deploy-projects/f59d5d74a942f12dc01d8b16/hugginggpt/server/awesome_chat.py"
+  ]
+}
