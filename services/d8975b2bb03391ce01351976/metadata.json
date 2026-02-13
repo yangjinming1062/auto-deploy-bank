@@ -1,0 +1,20 @@
+{
+  "service_id": "d8975b2bb03391ce01351976",
+  "repo_name": "microsoft/qlib",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main",
+  "status": "deploying",
+  "package_size": "4.98MB",
+  "language": "python",
+  "star": 37335,
+  "repo_flag": "Microsoft",
+  "uploaded_at": "2026-02-13T18:49:24.545426",
+  "generated_files": [
+    "requirements.txt",
+    "Dockerfile",
+    "docker-compose.yaml",
+    "/home/ubuntu/deploy-projects/d8975b2bb03391ce01351976/web_server.py",
+    "/home/ubuntu/deploy-projects/d8975b2bb03391ce01351976/Dockerfile"
+  ]
+}

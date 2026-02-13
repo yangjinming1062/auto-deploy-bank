@@ -1,0 +1,62 @@
+services:
+  qlib:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: qlib-service
+    ports:
+      - "42550:42550"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - QLIB_PROVIDER_URI=/home/ubuntu/deploy-projects/d8975b2bb03391ce01351976/.qlib/qlib_data/cn_data
+      - QLIB_MLFLOW_URI=/home/ubuntu/deploy-projects/d8975b2bb03391ce01351976/mlruns
+      - QLIB_MLFLOW_DEFAULT_EXP_NAME=Experiment
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_TASK_DB=1
+      - CUDA_VISIBLE_DEVICES=
+    volumes:
+      - qlib_data:/home/ubuntu/deploy-projects/d8975b2bb03391ce01351976/.qlib/qlib_data
+      - mlruns_data:/home/ubuntu/deploy-projects/d8975b2bb03391ce01351976/mlruns
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
+
+  redis:
+    image: redis:7-alpine
+    container_name: qlib-redis
+    command: redis-server --appendonly no
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    volumes:
+      - redis_data:/data
+
+volumes:
+  qlib_data:
+    driver: local
+  mlruns_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  default:
+    name: qlib_network
