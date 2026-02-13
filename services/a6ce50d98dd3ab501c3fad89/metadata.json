@@ -1,0 +1,17 @@
+{
+  "service_id": "a6ce50d98dd3ab501c3fad89",
+  "repo_name": "microsoft/AI-For-Beginners",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main",
+  "status": "deploying",
+  "package_size": "1.39GB",
+  "language": "python",
+  "star": 45323,
+  "repo_flag": "Microsoft",
+  "uploaded_at": "2026-02-13T17:10:29.224871",
+  "generated_files": [
+    "Dockerfile",
+    "docker-compose.yaml"
+  ]
+}
