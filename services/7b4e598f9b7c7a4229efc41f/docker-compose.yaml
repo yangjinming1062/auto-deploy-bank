@@ -3,11 +3,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: verdaccio-registry
+    container_name: verdaccio
     ports:
       - "43288:4873"
-    environment:
-      - NODE_ENV=development
+    volumes:
+      - verdaccio-storage:/verdaccio/storage
+      - verdaccio-cache:/verdaccio/cache
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:4873/-/ping"]
       interval: 30s
@@ -22,5 +23,7 @@ services:
         reservations:
           cpus: '1.0'
           memory: 1G
-    volumes:
-      - ./.verdaccio-cache:/home/ubuntu/deploy-projects/7b4e598f9b7c7a4229efc41f/.verdaccio-cache
+
+volumes:
+  verdaccio-storage:
+  verdaccio-cache:

@@ -1,18 +1,22 @@
-FROM node:22-alpine
+FROM node:20-alpine
 
-# Install pnpm globally
-RUN npm install -g pnpm@9
+# Install wget for healthcheck
+RUN apk add --no-cache wget
 
-WORKDIR /home/ubuntu/deploy-projects/7b4e598f9b7c7a4229efc41f
+# Install verdaccio and verdaccio-audit
+RUN npm install -g verdaccio verdaccio-audit
 
-# Copy entire project first (required for workspace dependencies)
-COPY . .
+# Create necessary directories
+RUN mkdir -p /verdaccio/storage /verdaccio/cache
 
-# Install dependencies (includes all workspace packages)
-RUN pnpm install
+# Copy configuration
+COPY verdaccio.yaml /verdaccio/config.yaml
 
-# Expose verdaccio port (default)
+# Expose Verdaccio default port
 EXPOSE 4873
 
-# Run verdaccio (local npm registry)
-CMD ["npx", "verdaccio", "--config", "verdaccio.yaml"]
+# Set working directory
+WORKDIR /verdaccio
+
+# Run verdaccio
+CMD ["verdaccio", "--config", "/verdaccio/config.yaml", "--listen", "http://0.0.0.0:4873"]
