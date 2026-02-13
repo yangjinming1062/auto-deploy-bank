@@ -5,12 +5,15 @@
   "ref": null,
   "version": "branch:main",
   "status": "deploying",
-  "package_size": "12.17MB",
+  "package_size": "12.18MB",
   "language": "nodejs",
-  "star": 65947,
+  "star": 65948,
   "repo_flag": "Auto-CVE",
-  "uploaded_at": "2026-02-10T00:09:34.177005",
+  "uploaded_at": "2026-02-13T12:55:20.375984",
   "generated_files": [
-    "server.js"
+    "Dockerfile",
+    "docker-compose.yaml",
+    "server.js",
+    "docker-compose.yaml"
   ]
 }

@@ -1,16 +1,13 @@
-version: '3.8'
-
 services:
-  webpack-demo:
+  webpack:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: webpack-demo
+    container_name: webpack-app
+    stdin_open: true
+    tty: true
     ports:
-      - "43903:3000"
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
+      - "8080:8080"
     deploy:
       resources:
         limits:
@@ -19,9 +16,4 @@ services:
         reservations:
           cpus: '1.0'
           memory: 1G
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
+    command: ["node", "server.js"]
