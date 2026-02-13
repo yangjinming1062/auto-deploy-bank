@@ -1,0 +1,17 @@
+{
+  "service_id": "ecad5f9790f8899022241df4",
+  "repo_name": "microsoft/markitdown",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main",
+  "status": "deploying",
+  "package_size": "2.95MB",
+  "language": "python",
+  "star": 86983,
+  "repo_flag": "Microsoft",
+  "uploaded_at": "2026-02-13T17:45:44.468180",
+  "generated_files": [
+    "/home/ubuntu/deploy-projects/ecad5f9790f8899022241df4/docker-compose.yaml",
+    "/home/ubuntu/deploy-projects/ecad5f9790f8899022241df4/app.py"
+  ]
+}
