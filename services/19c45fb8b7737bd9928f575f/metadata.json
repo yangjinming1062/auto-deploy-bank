@@ -1,0 +1,16 @@
+{
+  "service_id": "19c45fb8b7737bd9928f575f",
+  "repo_name": "microsoft/graphrag",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main",
+  "status": "deploying",
+  "package_size": "10.48MB",
+  "language": "python",
+  "star": 30914,
+  "repo_flag": "Microsoft",
+  "uploaded_at": "2026-02-13T22:58:47.312494",
+  "generated_files": [
+    "settings.yaml"
+  ]
+}

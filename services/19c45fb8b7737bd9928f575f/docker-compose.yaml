@@ -1,0 +1,32 @@
+services:
+  graphrag-search:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: graphrag-search
+    ports:
+      - "49021:8501"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - GRAPHRAG_API_KEY=${GRAPHRAG_API_KEY:-}
+      - GRAPHRAG_API_BASE=${GRAPHRAG_API_BASE:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - AZURE_AI_SEARCH_URL_ENDPOINT=${AZURE_AI_SEARCH_URL_ENDPOINT:-}
+      - AZURE_AI_SEARCH_API_KEY=${AZURE_AI_SEARCH_API_KEY:-}
+      - AZURE_STORAGE_CONNECTION_STRING=${AZURE_STORAGE_CONNECTION_STRING:-}
+      - AZURE_COSMOSDB_ACCOUNT_URL=${AZURE_COSMOSDB_ACCOUNT_URL:-}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
