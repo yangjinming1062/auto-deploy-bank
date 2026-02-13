@@ -1,0 +1,17 @@
+{
+  "service_id": "be5458938564e61c4cb696b9",
+  "repo_name": "microsoft/monaco-editor",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main",
+  "status": "deploying",
+  "package_size": "4.34MB",
+  "language": "nodejs",
+  "star": 45571,
+  "repo_flag": "Microsoft",
+  "uploaded_at": "2026-02-13T17:07:03.708122",
+  "generated_files": [
+    "Dockerfile",
+    "docker-compose.yaml"
+  ]
+}

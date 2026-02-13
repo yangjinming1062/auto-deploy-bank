@@ -1,0 +1,24 @@
+services:
+  monaco-editor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: monaco-editor
+    ports:
+      - "42986:8080"
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--delete-after", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
