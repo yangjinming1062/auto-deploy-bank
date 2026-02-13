@@ -1,0 +1,36 @@
+services:
+  autogenstudio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: autogenstudio
+    ports:
+      - "41974:8081"
+    environment:
+      - AUTOGENSTUDIO_DATABASE_URI=sqlite:///./autogen04203.db
+      - AUTOGENSTUDIO_API_DOCS=False
+      - AUTOGENSTUDIO_CLEANUP_INTERVAL=300
+      - AUTOGENSTUDIO_SESSION_TIMEOUT=3600
+      - AUTOGENSTUDIO_DEFAULT_USER_ID=guestuser@gmail.com
+      - AUTOGENSTUDIO_UPGRADE_DATABASE=False
+      - AUTOGENSTUDIO_LITE_MODE=False
+      - AUTOGENSTUDIO_HOST=0.0.0.0
+      - AUTOGENSTUDIO_PORT=8081
+      - AUTOGENSTUDIO_AUTH_DISABLED=True
+      - AUTOGENSTUDIO_AUTH_TYPE=none
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped

@@ -1,0 +1,18 @@
+{
+  "service_id": "211c51b5ac0f19a19c5be827",
+  "repo_name": "microsoft/autogen",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main",
+  "status": "deploying",
+  "package_size": "22.90MB",
+  "language": "python",
+  "star": 54528,
+  "repo_flag": "Microsoft",
+  "uploaded_at": "2026-02-13T17:16:15.394096",
+  "generated_files": [
+    "Dockerfile",
+    "docker-compose.yaml",
+    "python/packages/autogen-studio/frontend/src/images/icon.png"
+  ]
+}
