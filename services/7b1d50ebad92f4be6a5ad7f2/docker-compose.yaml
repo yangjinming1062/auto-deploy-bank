@@ -1,0 +1,28 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: claude-code-scripts
+    ports:
+      - "42799:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - GITHUB_REPOSITORY_OWNER=${GITHUB_REPOSITORY_OWNER:-anthropics}
+      - GITHUB_REPOSITORY_NAME=${GITHUB_REPOSITORY_NAME:-claude-code}
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s

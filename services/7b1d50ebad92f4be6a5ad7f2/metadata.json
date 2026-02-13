@@ -1,0 +1,14 @@
+{
+  "service_id": "7b1d50ebad92f4be6a5ad7f2",
+  "repo_name": "anthropics/claude-code",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main",
+  "status": "deploying",
+  "package_size": "10.67MB",
+  "language": "nodejs",
+  "star": 66499,
+  "repo_flag": "Auto-CVE",
+  "uploaded_at": "2026-02-13T15:03:42.329940",
+  "generated_files": []
+}
