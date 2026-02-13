@@ -1,0 +1,33 @@
+services:
+  playwright:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: playwright-service
+    ports:
+      - "42770:3000"
+    environment:
+      - PWTEST_UNDER_TEST=1
+      - PWTEST_MODE=default
+      - PLAYWRIGHT_SERVICE_OS=linux
+      - PWTEST_VIDEO=false
+      - PWTEST_TRACE=false
+      - NODE_ENV=production
+      - PORT=3000
+    stdin_open: true
+    tty: true
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped

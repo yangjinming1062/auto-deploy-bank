@@ -1,0 +1,16 @@
+{
+  "service_id": "5e5c581c85f4eba6d5688d82",
+  "repo_name": "microsoft/playwright",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main",
+  "status": "deploying",
+  "package_size": "39.17MB",
+  "language": "nodejs",
+  "star": 82538,
+  "repo_flag": "Microsoft",
+  "uploaded_at": "2026-02-13T15:38:43.646267",
+  "generated_files": [
+    "/home/ubuntu/deploy-projects/5e5c581c85f4eba6d5688d82/docker-compose.yaml"
+  ]
+}
