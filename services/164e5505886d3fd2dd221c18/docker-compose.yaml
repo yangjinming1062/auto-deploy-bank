@@ -1,0 +1,25 @@
+services:
+  typescript-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: typescript-compiler
+    ports:
+      - "41963:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s

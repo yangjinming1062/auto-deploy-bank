@@ -1,0 +1,18 @@
+{
+  "service_id": "164e5505886d3fd2dd221c18",
+  "repo_name": "microsoft/TypeScript",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main",
+  "status": "deploying",
+  "package_size": "64.92MB",
+  "language": "nodejs",
+  "star": 107808,
+  "repo_flag": "Microsoft",
+  "uploaded_at": "2026-02-13T13:15:10.690409",
+  "generated_files": [
+    "/home/ubuntu/deploy-projects/164e5505886d3fd2dd221c18/docker-compose.yaml",
+    "/home/ubuntu/deploy-projects/164e5505886d3fd2dd221c18/Dockerfile",
+    "/home/ubuntu/deploy-projects/164e5505886d3fd2dd221c18/server.js"
+  ]
+}
