@@ -1,0 +1,18 @@
+{
+  "service_id": "371e5a0dab254e684d3befe2",
+  "repo_name": "microsoft/cascadia-code",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main",
+  "status": "deploying",
+  "package_size": "30.56MB",
+  "language": "python",
+  "star": 27511,
+  "repo_flag": "Microsoft",
+  "uploaded_at": "2026-02-13T22:42:33.049666",
+  "generated_files": [
+    "app.py",
+    "Dockerfile",
+    "docker-compose.yaml"
+  ]
+}
