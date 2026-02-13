@@ -1,0 +1,33 @@
+services:
+  genai-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: genai-service
+    ports:
+      - "42801:5000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - AZURE_OPENAI_API_VERSION=${AZURE_OPENAI_API_VERSION}
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT}
+      - AZURE_OPENAI_DEPLOYMENT=${AZURE_OPENAI_DEPLOYMENT}
+      - AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT=${AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT}
+      - HUGGING_FACE_API_KEY=${HUGGING_FACE_API_KEY}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - GOOGLE_DEVELOPER_API_KEY=${GOOGLE_DEVELOPER_API_KEY}
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s

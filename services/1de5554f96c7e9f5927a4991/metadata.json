@@ -1,0 +1,19 @@
+{
+  "service_id": "1de5554f96c7e9f5927a4991",
+  "repo_name": "microsoft/generative-ai-for-beginners",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main",
+  "status": "deploying",
+  "package_size": "782.31MB",
+  "language": "python",
+  "star": 106353,
+  "repo_flag": "Microsoft",
+  "uploaded_at": "2026-02-13T17:38:02.585757",
+  "generated_files": [
+    ".env",
+    "main.py",
+    "Dockerfile",
+    "docker-compose.yaml"
+  ]
+}
