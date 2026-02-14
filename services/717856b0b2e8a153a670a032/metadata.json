@@ -1,0 +1,17 @@
+{
+  "service_id": "717856b0b2e8a153a670a032",
+  "repo_name": "microsoft/OmniParser",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:master",
+  "status": "deploying",
+  "package_size": "18.97MB",
+  "language": "python",
+  "star": 24368,
+  "repo_flag": "Microsoft",
+  "uploaded_at": "2026-02-14T12:35:00.355369",
+  "generated_files": [
+    ".env",
+    "omnitool/omniparserserver/omniparserserver.py"
+  ]
+}

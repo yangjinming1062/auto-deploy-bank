@@ -1,0 +1,35 @@
+services:
+  omniparser:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: omniparser-server
+    ports:
+      - "0.0.0.0:40177:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - HIDE_WARNING=false
+      - PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY:-}
+      - CLOUD_ML_REGION=${CLOUD_ML_REGION:-}
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS:-}
+    volumes:
+      - ./weights:/home/ubuntu/deploy-projects/717856b0b2e8a153a670a032/weights
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/probe/"]
+      interval: 30s
+      timeout: 60s
+      start_period: 600s
+      retries: 3
