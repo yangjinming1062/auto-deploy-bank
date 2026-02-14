@@ -9,8 +9,10 @@
   "language": "python",
   "star": 30914,
   "repo_flag": "Microsoft",
-  "uploaded_at": "2026-02-13T22:58:47.312494",
+  "uploaded_at": "2026-02-14T17:04:18.497910",
   "generated_files": [
-    "settings.yaml"
+    "Dockerfile",
+    "docker-compose.yaml",
+    "server.py"
   ]
 }
