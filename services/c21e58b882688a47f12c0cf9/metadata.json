@@ -1,0 +1,14 @@
+{
+  "service_id": "c21e58b882688a47f12c0cf9",
+  "repo_name": "microsoft/Swin-Transformer",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main",
+  "status": "deploying",
+  "package_size": "1013KB",
+  "language": "python",
+  "star": 15710,
+  "repo_flag": "Microsoft",
+  "uploaded_at": "2026-02-14T22:34:30.781763",
+  "generated_files": []
+}
