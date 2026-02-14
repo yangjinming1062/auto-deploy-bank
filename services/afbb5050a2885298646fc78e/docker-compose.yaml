@@ -3,13 +3,17 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: fastjson-service
+    container_name: fastjson-server
     ports:
-      - "40518:8080"
+      - "40266:8080"
     environment:
-      - server.port=8080
-    volumes:
-      - ./target.jar:/app/app.jar
+      - SERVER_PORT=8080
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/version || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     deploy:
       resources:
         limits:
@@ -18,10 +22,4 @@ services:
         reservations:
           cpus: '1.0'
           memory: 1G
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
     restart: unless-stopped

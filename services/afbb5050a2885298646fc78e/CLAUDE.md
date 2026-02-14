@@ -5,75 +5,66 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Build Commands
 
 ```bash
-# Compile the project
-mvn compile
+# Run all tests
+mvn test -B
 
-# Run all tests (bvt tests only per pom.xml configuration)
-mvn test
-
-# Run a single test class
-mvn test -Dtest=com.alibaba.json.bvt.JSONObjectTest
+# Run a single test class (tests are in src/test/java/com/alibaba/json/bvt/)
+mvn test -Dtest=ClassName -B
 
 # Run a specific test method
-mvn test -Dtest=com.alibaba.json.bvt.JSONObjectTest#testParseObject
+mvn test -Dtest=ClassName#methodName -B
+
+# Compile without running tests
+mvn compile
 
 # Package the JAR
-mvn package
-
-# Skip tests during build
 mvn package -DskipTests
 ```
 
-## Project Overview
+Note: Maven Surefire is configured to include only `**/bvt/**/*.java` tests by default. The test package is `com.alibaba.json.bvt` (legacy naming).
 
-Fastjson is a Java JSON library (version 1.x) that provides JSON serialization and deserialization. The project uses Maven for build management and targets **Java 1.5** compatibility.
+## Architecture Overview
 
-**Note:** FASTJSON 2.0.x is the recommended version for new projects, offering better performance and security. This is the legacy 1.x branch.
+Fastjson 1.x is a JSON processor (parser + generator) with a pluggable architecture centered around `ParserConfig` and `SerializeConfig`.
 
-## Architecture
+### Core Components
 
-The main source code is organized into these key packages:
+- **JSON.java** - Main public API entry point for `toJSONString()` and `parseObject()` methods
+- **parser/** - Tokenization and deserialization pipeline
+  - `DefaultJSONParser.java` - Main parser orchestrator
+  - `JSONScanner.java` / `JSONReaderScanner.java` - Lexical analysis
+  - `ParserConfig.java` - Parsing configuration and deserializer registry
+  - `deserializer/` - Type-specific deserializers (ASMDeserializerFactory, JavaBeanDeserializer, etc.)
+- **serializer/** - Serialization pipeline
+  - `JSONSerializer.java` - Main serialization orchestrator
+  - `SerializeWriter.java` - Buffered output writer
+  - `SerializeConfig.java` - Serialization configuration and serializer registry
+  - Individual `*Codec.java` and `*Serializer.java` classes for specific types
+- **asm/** - Custom lightweight ASM bytecode library for generating fast serialization/deserialization code at runtime
+- **util/** - Utility classes including `TypeUtils.java` (~3500 lines, handles reflection and generics)
+- **annotation/** - User annotations: `@JSONField`, `@JSONType`, `@JSONCreator`, `@JSONPOJOBuilder`
 
-- **`com.alibaba.fastjson.JSON`** - Main entry point with `toJSONString()` and `parseObject()` methods
-- **`parser/`** - JSON parsing layer
-  - `JSONLexer` / `JSONLexerBase` / `JSONScanner` / `JSONReaderScanner` - Tokenization and lexical analysis
-  - `DefaultJSONParser` - Main parser orchestration
-  - `ParserConfig` - Parser configuration and feature flags
-  - `deserializer/` - Type-specific deserializers (Object, Collection, Enum, Date, etc.)
-- **`serializer/`** - JSON serialization layer
-  - `JSONSerializer` - Main serialization orchestration
-  - `SerializeConfig` - Serializer configuration
-  - Type-specific serializers (DateCodec, CollectionCodec, EnumSerializer, etc.)
-  - `ASMSerializerFactory` - Generates bytecode for high-performance serialization
-- **`asm/`** - Bytecode generation utilities for ASM-based optimization
-- **`annotation/`** - User-facing annotations (`@JSONField`, `@JSONType`)
-- **`support/`** - Third-party integrations (Spring, Guava, Hibernate, etc.)
+### Key Design Patterns
 
-## Test Organization
+- **SPI Registry**: `SerializeConfig` and `ParserConfig` maintain maps of type-to-serializer/deserializer mappings
+- **Filter Chain**: `SerializeFilter` interface enables pre/post-processing during serialization
+- **ASM Optimization**: The library generates bytecode via `ASMSerializerFactory` and `ASMDeserializerFactory` for hot paths
+- **Feature Flags**: Both parsing (`Feature` enum) and serialization (`SerializerFeature` enum) use bitmask features
 
-- Tests are located in `src/test/java/com/alibaba/json/bvt/` (Business Verification Tests)
-- The surefire plugin is configured to only run tests matching `**/bvt/**/*.java`
-- Nearly 3000 test files covering parsing, serialization, and integrations
-- Tests are often named after GitHub issues they fix (e.g., `issue_1234`, `bugfix_5678`)
+### Support Modules
 
-## Key Concepts
+The `support/` directory contains integrations with other frameworks:
+- **spring/** - Spring Framework integration
+- **jaxrs/** - JAX-RS (REST) integration
+- **retrofit/** - Retrofit integration
+- **hsf/** - Alibaba HSF protocol support
+- **geo/** - Geographic data format support
+- **moneta/** - JSR-354 Money/Currency support
 
-- **Features** - Parser behavior flags controlled via `Feature` enum (e.g., `Feature.SortFeidFastMatch`, `Feature.AutoTypeSupport`)
-- **SerializerFeature** - Serializer behavior flags (e.g., `SerializerFeature.WriteMapNullValue`, `SerializerFeature.WriteClassName`)
-- **Type References** - Used for generic type preservation: `TypeReference<List<T>>`
-- **Filters** - `SerializeFilter` and `ParseProcess` extensions for custom processing
-- **Symbol Table** - `SymbolTable` for string interning optimization during parsing
-- **Annotations**
-  - `@JSONField` - Field-level serialization/deserialization control (name, format, ordinal, etc.)
-  - `@JSONType` - Class-level type configuration (serializer, deserializer, features)
+## Compiler Target
 
-## Optional Dependencies
+Java 1.5+ (configured in pom.xml as `jdk.version=1.5`). The library maintains backward compatibility with older Java versions.
 
-The project uses optional dependencies for framework integrations in `support/`:
-- Spring (WebMVC, WebSocket)
-- Apache CXF (JAX-RS)
-- Guava
-- Hibernate Validator
-- javax.servlet, javax.ws.rs
+## Note on Version
 
-These are marked `provided` in pom.xml to avoid transitive dependency conflicts.
+This is fastjson 1.x. Fastjson 2.x has been released separately at https://github.com/alibaba/fastjson2 with improved performance and security.

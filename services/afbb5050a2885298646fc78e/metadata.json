@@ -7,10 +7,11 @@
   "status": "deploying",
   "package_size": "4.10MB",
   "language": "java",
-  "star": 25723,
+  "star": 25721,
   "repo_flag": "Auto-CVE",
-  "uploaded_at": "2026-02-10T16:05:49.766489",
+  "uploaded_at": "2026-02-14T12:41:47.830890",
   "generated_files": [
-    "fastjson.properties"
+    "/home/ubuntu/deploy-projects/afbb5050a2885298646fc78e/src/main/java/com/alibaba/fastjson/FastjsonServer.java",
+    "/home/ubuntu/deploy-projects/afbb5050a2885298646fc78e/docker-compose.yaml"
   ]
 }
