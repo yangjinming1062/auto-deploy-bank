@@ -1,0 +1,14 @@
+{
+  "service_id": "2cc4573fb7f93a4c546ec0a7",
+  "repo_name": "microsoft/VibeVoice",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main",
+  "status": "deploying",
+  "package_size": "84.62MB",
+  "language": "python",
+  "star": 23181,
+  "repo_flag": "Microsoft",
+  "uploaded_at": "2026-02-14T11:24:39.911433",
+  "generated_files": []
+}

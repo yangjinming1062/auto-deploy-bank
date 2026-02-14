@@ -1,0 +1,24 @@
+services:
+  app:
+    build: .
+    container_name: vibe-voice-app
+    ports:
+      - "40094:8000"
+    environment:
+      - MODEL_PATH=${MODEL_PATH:-microsoft/VibeVoice-1.5B}
+      - MODEL_DEVICE=${MODEL_DEVICE:-cpu}
+      - VOICE_PRESET=${VOICE_PRESET:-en-Carter_man}
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 12G
+        reservations:
+          cpus: '1.0'
+          memory: 6G
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/config"]
+      interval: 30s
+      timeout: 60s
+      retries: 10
+      start_period: 900s
