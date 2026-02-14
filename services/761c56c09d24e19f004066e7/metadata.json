@@ -7,14 +7,10 @@
   "status": "deploying",
   "package_size": "38.17MB",
   "language": "python",
-  "star": 20327,
+  "star": 20345,
   "repo_flag": "Auto-CVE",
-  "uploaded_at": "2026-02-10T18:37:54.243486",
+  "uploaded_at": "2026-02-14T17:10:38.124700",
   "generated_files": [
-    "templates/login.html",
-    "auth_module.py",
-    "Dockerfile",
-    "docker-compose.yaml",
-    "auth_module.py"
+    "/home/ubuntu/deploy-projects/761c56c09d24e19f004066e7/Dockerfile"
   ]
 }
