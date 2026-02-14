@@ -7,8 +7,10 @@
   "status": "deploying",
   "package_size": "1.21MB",
   "language": "python",
-  "star": 16256,
+  "star": 16260,
   "repo_flag": "Auto-CVE",
-  "uploaded_at": "2026-02-10T00:11:04.510199",
-  "generated_files": []
+  "uploaded_at": "2026-02-14T18:16:24.680660",
+  "generated_files": [
+    "/home/ubuntu/deploy-projects/cb145d60880b5e6eef7740c8/docker-compose.yaml"
+  ]
 }
