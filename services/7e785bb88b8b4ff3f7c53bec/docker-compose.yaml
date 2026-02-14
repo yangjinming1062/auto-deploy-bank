@@ -1,0 +1,25 @@
+services:
+  fluentui-docsite:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fluentui-docsite
+    ports:
+      - "42280:3000"
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+    restart: unless-stopped

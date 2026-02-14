@@ -1,0 +1,17 @@
+{
+  "service_id": "7e785bb88b8b4ff3f7c53bec",
+  "repo_name": "microsoft/fluentui",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:master",
+  "status": "deploying",
+  "package_size": "39.48MB",
+  "language": "nodejs",
+  "star": 19848,
+  "repo_flag": "Microsoft",
+  "uploaded_at": "2026-02-14T19:58:59.928452",
+  "generated_files": [
+    "/home/ubuntu/deploy-projects/7e785bb88b8b4ff3f7c53bec/docker-compose.yaml",
+    "/home/ubuntu/deploy-projects/7e785bb88b8b4ff3f7c53bec/Dockerfile"
+  ]
+}
