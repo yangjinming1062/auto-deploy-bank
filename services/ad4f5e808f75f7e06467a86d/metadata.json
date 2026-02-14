@@ -1,0 +1,17 @@
+{
+  "service_id": "ad4f5e808f75f7e06467a86d",
+  "repo_name": "microsoft/playwright-mcp",
+  "platform": "github",
+  "ref": null,
+  "version": "branch:main",
+  "status": "deploying",
+  "package_size": "129KB",
+  "language": "nodejs",
+  "star": 27077,
+  "repo_flag": "Microsoft",
+  "uploaded_at": "2026-02-14T12:30:10.215050",
+  "generated_files": [
+    "/home/ubuntu/deploy-projects/ad4f5e808f75f7e06467a86d/docker-compose.yaml",
+    "/home/ubuntu/deploy-projects/ad4f5e808f75f7e06467a86d/nginx.conf"
+  ]
+}
