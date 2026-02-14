@@ -9,10 +9,9 @@
   "language": "python",
   "star": 24548,
   "repo_flag": "Microsoft",
-  "uploaded_at": "2026-02-14T02:35:19.842158",
+  "uploaded_at": "2026-02-14T21:16:06.486196",
   "generated_files": [
     "hugginggpt/server/configs/config.default.yaml",
-    "hugginggpt/server/.env.template",
-    "/home/ubuntu/deploy-projects/f59d5d74a942f12dc01d8b16/hugginggpt/server/awesome_chat.py"
+    "hugginggpt/server/awesome_chat.py - added root route handler"
   ]
 }

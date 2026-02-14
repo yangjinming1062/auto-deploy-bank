@@ -3,11 +3,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: hugginggpt-server
     ports:
-      - "43300:8004"
+      - "42532:8004"
     environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-sk-test-dummy-key-for-startup}
-      - HUGGINGFACE_ACCESS_TOKEN=${HUGGINGFACE_ACCESS_TOKEN:-hf_test_dummy_token}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-sk-placeholder-api-key-for-testing}
+      - HUGGINGFACE_ACCESS_TOKEN=${HUGGINGFACE_ACCESS_TOKEN:-hf_placeholder_access_token_for_testing}
     deploy:
       resources:
         limits:
@@ -17,8 +18,9 @@ services:
           cpus: '1.0'
           memory: 1G
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8004/health", "--max-time", "5"]
+      test: ["CMD", "curl", "-f", "http://localhost:8004/hugginggpt", "--header", "Content-Type: application/json", "--data-raw", '{"messages": [{"role": "user", "content": "test"}]}']
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 120s
+      start_period: 60s
+    restart: unless-stopped
