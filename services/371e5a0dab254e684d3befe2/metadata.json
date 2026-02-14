@@ -9,10 +9,13 @@
   "language": "python",
   "star": 27511,
   "repo_flag": "Microsoft",
-  "uploaded_at": "2026-02-13T22:42:33.049666",
+  "uploaded_at": "2026-02-14T11:48:20.887843",
   "generated_files": [
-    "app.py",
     "Dockerfile",
-    "docker-compose.yaml"
+    "docker-compose.yaml",
+    "/home/ubuntu/deploy-projects/371e5a0dab254e684d3befe2/web_server.py",
+    "/home/ubuntu/deploy-projects/371e5a0dab254e684d3befe2/entrypoint.sh",
+    "/home/ubuntu/deploy-projects/371e5a0dab254e684d3befe2/Dockerfile",
+    "/home/ubuntu/deploy-projects/371e5a0dab254e684d3befe2/docker-compose.yaml"
   ]
 }

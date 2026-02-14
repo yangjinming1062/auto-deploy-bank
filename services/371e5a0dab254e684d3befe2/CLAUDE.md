@@ -4,58 +4,79 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Cascadia Code is Microsoft's coding font with support for ligatures, arrows, and stylistic sets. The repository contains the font source files and a Python build system to compile them.
+Cascadia Code is a coding font from Microsoft. The project uses UFO (Unified Font Object) format for source fonts and Python (build.py) for font compilation. Font sources are in `sources/` and compiled outputs go to `build/`.
 
 ## Build Commands
 
-Install dependencies:
 ```bash
-pip install -r requirements.txt
+# Install dependencies
+pip install -r requirements.txt ufolint
+brew install ttfautohint  # macOS required for hinting
+
+# Lint source fonts
+ufolint sources/*.ufo
+
+# Build variable fonts only (default)
+python ./build.py
+
+# Build with all options (static + web fonts)
+python ./build.py -S -W
+
+# Build variable fonts with web fonts
+python ./build.py -W
+
+# Build minimal variant (skip powerline, nerdfonts, mono, italic)
+python ./build.py -P -NF -M -I
+
+# Skip VTT compilation (leave VTT sources in output)
+python ./build.py --no-vtt-compile
 ```
 
-Build variable fonts (default, includes ligatures):
-```bash
-python build.py
-```
+## Font Variants
 
-Build with all variants:
-```bash
-python build.py -S -W -I  # Static + web fonts + italic
-```
+The build script produces multiple variants based on designspace files:
+- **Cascadia Code** / **Cascadia Code Italic** - Standard with ligatures
+- **Cascadia Mono** / **Cascadia Mono Italic** - No ligatures
+- **Cascadia Code PL** / **Cascadia Code PL Italic** - PowerLine symbols
+- **Cascadia Mono PL** / **Cascadia Mono PL Italic** - PowerLine without ligatures
+- **Cascadia Code NF** / **Cascadia Code NF Italic** - Nerd Font symbols
+- **Cascadia Mono NF** / **Cascadia Mono NF Italic** - Nerd Font without ligatures
 
-Build options:
-- `-P/--no-powerline`: Skip PowerLine variants
-- `-NF/--no-nerdfonts`: Skip Nerd Font variants
-- `-M/--no-mono`: Skip Mono (no-ligature) variants
-- `-S/--static-fonts`: Build static TTF/OTF fonts
-- `-I/--no-italic`: Skip italic variants
-- `-V/--no-vtt-compile`: Skip VTT hinting compilation
-- `-W/--web-fonts`: Generate WOFF2 web fonts
-
-Output goes to `build/{ttf,otf,woff2}/` directories.
+Static instances are generated from the variable font masters for each weight (200-700).
 
 ## Architecture
 
-**Source Files** (`sources/`):
-- `.ufo/` folders: UFO (Unified Font Object) master sources for each weight (ExtraLight, Regular, Bold)
-- `CascadiaCode_variable.designspace`: Variable font definition with weight axis
-- `CascadiaCode_variable_italic.designspace`: Italic variable font definition
-- `features/*.fea`: OpenType feature files (ligatures, stylistic sets, etc.)
-- `vtt_data/*.ttf`: VTT (TrueType hinting) source files
-- `nerdfonts/`: Nerd Font symbol glyphs for NF variants
-- `stat.yaml`: STAT table configuration
+### Source Structure
+- `sources/CascadiaCode-*.ufo/` - UFO master fonts organized by weight/style
+- `sources/CascadiaCode_variable.designspace` - Variable font definition (weight axis 200-700)
+- `sources/CascadiaCode_variable_italic.designspace` - Italic variable font definition
+- `sources/features/*.fea` - OpenType feature files merged during build
+- `sources/nerdfonts/` - Nerd Font glyphs merged into PL/NF variants
+- `sources/vtt_data/` - TrueType hinting data merged during compilation
+- `sources/stat.yaml` - STAT table configuration for variable font
 
-**Build Pipeline** (`build.py`):
-1. Load designspace files and prepare fonts (merge features, set metadata)
-2. Compile variable TTF fonts using ufo2ft
-3. Merge VTT hinting data from source TTF files
-4. Generate static font instances if `-S` flag
-5. Add STAT tables using gftools
-6. Autohint OTF (psautohint/cffsubr) and TTF (ttfautohint)
-7. Compress to WOFF2 if `-W` flag
+### Build Pipeline (build.py)
+1. **prepare_fonts()** - Loads designspace, merges feature files and Nerd Font glyphs, sets metadata
+2. **compile_variable_and_save()** - Generates variable TTF, merges VTT hinting data
+3. **compile_static_and_save()** - Generates static TTF/OTF instances
+4. **autohint() / ttfautohint()** - Applies PostScript and TrueType hinting to static fonts
+5. **to_woff2()** - Compresses TTF to WOFF2 for web use
 
-**Font Variants**:
-- `Cascadia Code`: Standard with ligatures
-- `Cascadia Mono`: Without ligatures
-- `Cascadia Code PL`: With PowerLine symbols
-- `Cascadia Code NF`: With Nerd Font symbols
+### Output Structure
+```
+build/
+├── ttf/           # Variable fonts
+│   ├── CascadiaCode.ttf
+│   ├── CascadiaCodeItalic.ttf
+│   └── ...
+├── ttf/static/    # Static TTF instances
+├── otf/static/    # Static OTF instances
+└── woff2/         # Web fonts
+```
+
+## Key Design Decisions
+
+- **Weight mapping**: The variable font uses non-linear weight axis mapping (400→500, 700→750) for better visual progression
+- **VTT hinting**: TrueType hinting data is merged from separate VTT source files and compiled
+- **Feature assembly**: OpenType features are concatenated from multiple `.fea` files based on font variant
+- **Overlap removal**: Static fonts use pathops backend for faster overlap removal during compilation

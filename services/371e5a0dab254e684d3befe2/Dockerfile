@@ -1,20 +1,24 @@
 FROM python:3.11-slim
 
 ENV PYTHONUNBUFFERED=1
+ENV PORT=8080
 
-WORKDIR /home/ubuntu/deploy-projects/371e5a0dab254e684d3befe2
+# Install system dependencies including ttfautohint and build tools
+RUN apt-get update && apt-get install -y \
+    ttfautohint \
+    gcc \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install curl for healthcheck
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
-
-# No additional dependencies needed - this is a simple HTTP server
-# The font build dependencies (requirements.txt) are not needed for the web service
+# Copy requirements and install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY app.py .
+COPY . .
 
-# Expose the internal port
-EXPOSE 8080
+# Make entrypoint script executable
+RUN chmod +x entrypoint.sh
 
-# Run the HTTP server
-CMD ["python", "app.py"]
+# Default command runs entrypoint script
+CMD ["./entrypoint.sh"]
